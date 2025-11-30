@@ -22,10 +22,13 @@ internal object StringQuoting {
      * Number pattern that matches valid TOON numbers. Includes integers and decimals, with optional
      * minus sign.
      */
-    private val NUMBER_PATTERN = Regex("""^-?(?:0|[1-9]\d*)(?:\.\d+)?$""")
+    private val NUMBER_PATTERN = Regex("""^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$""")
 
     /** Pattern for strings with leading/trailing whitespace or control characters. */
     private val WHITESPACE_OR_CONTROL = Regex("""^\s.*|.*\s$|[\u0000-\u001F]""")
+
+    /** Pattern for unquoted keys (identifier-like). */
+    private val UNQUOTED_KEY_PATTERN = Regex("""^[A-Za-z_][A-Za-z0-9_.]*$""")
 
     /** Context in which a string is being quoted. */
     enum class QuotingContext {
@@ -81,11 +84,19 @@ internal object StringQuoting {
                 // Array elements containing the delimiter must be quoted
                 if (str.contains(delimiter)) return true
             }
+            QuotingContext.OBJECT_KEY -> {
+                // Keys must match identifier pattern to be unquoted
+                if (!UNQUOTED_KEY_PATTERN.matches(str)) return true
+            }
+            QuotingContext.OBJECT_VALUE -> {
+                // Object values containing the delimiter must be quoted
+                if (str.contains(delimiter)) return true
+            }
             else -> {}
         }
 
-        // Strings starting with hyphen followed by space (could be confused with list marker)
-        if (str.startsWith("- ")) return true
+        // Strings starting with hyphen (could be confused with list marker or negative number)
+        if (str.startsWith("-")) return true
 
         // Strings starting with bracket or containing special TOON characters
         if (str.any { it == '[' || it == ']' || it == '{' || it == '}' }) {
