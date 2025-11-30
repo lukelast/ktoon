@@ -19,13 +19,14 @@ inline fun <reified T> doTest(
     data: T,
     ktoonConfig: ToonConfiguration = ToonConfiguration.Default,
 ) {
+    val ktoon = Ktoon(configuration = ktoonConfig)
     val rawJson = readFile(test.javaClass, "data.json")
     val rawToon = readFile(test.javaClass, "data.toon")
 
     val dataToJson = json.encodeToString(data)
-    assertEquals(rawJson, dataToJson)
+    assertEquals(rawJson, dataToJson, "JSON serialization did not match expected output")
 
-    val dataToToon = Ktoon(configuration = ktoonConfig).encodeToString(data)
+    val dataToToon = ktoon.encodeToString(data)
     assertEquals(rawToon, dataToToon)
 
     val rawJsonToData: T = json.decodeFromString(rawJson)

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(do sed -i 's/class Toon/class Ktoon/g' \"$f\")",
+      "Bash(./gradlew build:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(./gradlew test:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(find:*)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
