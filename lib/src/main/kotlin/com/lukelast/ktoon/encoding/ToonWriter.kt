@@ -30,6 +30,14 @@ internal class ToonWriter(private val config: ToonConfiguration, initialCapacity
         buffer.append(value)
     }
 
+    fun write(value: Char) {
+        buffer.append(value)
+    }
+
+    fun write(value: Int) {
+        buffer.append(value)
+    }
+
     fun writeSpace() {
         buffer.append(' ')
     }
