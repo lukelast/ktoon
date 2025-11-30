@@ -1,26 +1,24 @@
-package com.lukelast.ktoon
+package com.lukelast.ktoon.rand
 
-import com.lukelast.ktoon.testdata.FarmTestData
-import dev.toonformat.jtoon.JToon
+import com.lukelast.ktoon.Ktoon
 import org.instancio.Instancio
 import org.instancio.settings.Keys
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class InstancioRandomTest {
     @Test
-    @Disabled
     fun random() {
-        repeat(10) { time ->
+        repeat(100) {
             val randomData =
                 Instancio.of(FarmTestData::class.java)
                     .withSetting(Keys.COLLECTION_MIN_SIZE, 20)
                     .withMaxDepth(100)
+                    .withSetting(Keys.STRING_NULLABLE, true)
+                    .withSetting(Keys.STRING_MAX_LENGTH, 100)
                     .create()
-            //            println(Json.encodeToString(randomData))
             val ktoon = Ktoon().encodeToString(randomData)
-            val jtoon = JToon.encode(randomData)
-            //            assertEquals(jtoon, ktoon)
+            Assertions.assertNotNull(ktoon)
         }
     }
 }

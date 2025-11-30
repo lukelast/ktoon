@@ -1,4 +1,4 @@
-package com.lukelast.ktoon.testdata
+package com.lukelast.ktoon.rand
 
 import kotlinx.serialization.Serializable
 
