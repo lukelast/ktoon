@@ -96,9 +96,13 @@ internal class ToonWriter(private val config: ToonConfiguration, initialCapacity
         buffer.append('-')
     }
 
-    /** Writes array header for inline format: `key[length]:` */
-    fun writeInlineArrayHeader(key: String, length: Int) {
-        buffer.append(key).append('[').append(length).append(']').append(':')
+    /** Writes array header for inline format: `key[length]:` or `key[length|]:` */
+    fun writeInlineArrayHeader(key: String, length: Int, delimiter: Char) {
+        buffer.append(key).append('[').append(length)
+        if (delimiter != ',') {
+            buffer.append(delimiter)
+        }
+        buffer.append(']').append(':')
     }
 
     /**
@@ -107,22 +111,36 @@ internal class ToonWriter(private val config: ToonConfiguration, initialCapacity
      * @param key Array key
      * @param length Array length
      * @param fields Field names for tabular format
+     * @param delimiter The delimiter to use
      */
-    fun writeTabularArrayHeader(key: String, length: Int, fields: List<String>) {
+    fun writeTabularArrayHeader(
+        key: String,
+        length: Int,
+        fields: List<String>,
+        delimiter: Char,
+    ) {
         buffer
             .append(key)
             .append('[')
             .append(length)
+        if (delimiter != ',') {
+            buffer.append(delimiter)
+        }
+        buffer
             .append(']')
             .append('{')
-            .append(fields.joinToString(config.delimiter.char.toString()))
+            .append(fields.joinToString(delimiter.toString()))
             .append('}')
             .append(':')
     }
 
     /** Writes array header for expanded format: `key[length]:` */
-    fun writeExpandedArrayHeader(key: String, length: Int) {
-        buffer.append(key).append('[').append(length).append(']').append(':')
+    fun writeExpandedArrayHeader(key: String, length: Int, delimiter: Char) {
+        buffer.append(key).append('[').append(length)
+        if (delimiter != ',') {
+            buffer.append(delimiter)
+        }
+        buffer.append(']').append(':')
     }
 
     /** Checks if we're currently at the start of a line. */

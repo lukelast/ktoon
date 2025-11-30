@@ -43,13 +43,15 @@ internal class ToonArrayEncoder(
     private var selectedFormat: ArrayFormatSelector.ArrayFormat? = null
 
     /** Represents an encoded array element (for buffering before format decision). */
-    private sealed class EncodedElement {
+    sealed class EncodedElement {
         data class Primitive(val value: String) : EncodedElement()
 
         data class Structure(
             val descriptor: SerialDescriptor,
             val values: List<Pair<String, String>>,
         ) : EncodedElement()
+
+        data class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
     }
 
     /** Begins encoding an element in the array. */
@@ -158,6 +160,17 @@ internal class ToonArrayEncoder(
                     },
                 )
             }
+            StructureKind.LIST -> {
+                // For nested arrays, capture elements to handle formatting
+                NestedArrayCapturer(
+                    config = config,
+                    serializersModule = serializersModule,
+                    descriptor = descriptor,
+                    onComplete = { nestedElements ->
+                        elements.add(EncodedElement.NestedArray(nestedElements))
+                    },
+                )
+            }
             else -> {
                 // For other structures, fall back to expanded format
                 // This is handled by writing directly in endStructure
@@ -169,18 +182,18 @@ internal class ToonArrayEncoder(
     /** Ends encoding of the array and writes it in the selected format. */
     override fun endStructure(descriptor: SerialDescriptor) {
         // Select format based on collected elements
-        val format = selectArrayFormat()
+        val format = selectArrayFormat(elements)
 
         // Write array in the selected format
         when (format) {
-            ArrayFormatSelector.ArrayFormat.INLINE -> writeInlineArray()
-            ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabularArray()
-            ArrayFormatSelector.ArrayFormat.EXPANDED -> writeExpandedArray()
+            ArrayFormatSelector.ArrayFormat.INLINE -> writeInlineArray(elements, key)
+            ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabularArray(elements, key, indentLevel)
+            ArrayFormatSelector.ArrayFormat.EXPANDED -> writeExpandedArray(elements, key, indentLevel)
         }
     }
 
     /** Selects the array format based on analyzed content. */
-    private fun selectArrayFormat(): ArrayFormatSelector.ArrayFormat {
+    private fun selectArrayFormat(elements: List<EncodedElement>): ArrayFormatSelector.ArrayFormat {
         // If format is already selected (e.g., by annotation), use it
         if (selectedFormat != null) {
             return selectedFormat!!
@@ -219,13 +232,16 @@ internal class ToonArrayEncoder(
     }
 
     /** Writes array in inline format: `key[N]: val1,val2,val3` */
-    private fun writeInlineArray() {
+    private fun writeInlineArray(elements: List<EncodedElement>, key: String?) {
         if (key != null) {
-            writer.writeInlineArrayHeader(key, elements.size)
+            writer.writeInlineArrayHeader(key, elements.size, config.delimiter.char)
         } else {
             // Root-level array - no key prefix
             writer.writeString("[")
             writer.writeString(elements.size.toString())
+            if (config.delimiter.char != ',') {
+                writer.writeString(config.delimiter.char.toString())
+            }
             writer.writeString("]:")
         }
         writer.writeSpace()
@@ -241,9 +257,9 @@ internal class ToonArrayEncoder(
     }
 
     /** Writes array in tabular format: `key[N]{field1,field2}:\n val1,val2\n val3,val4` */
-    private fun writeTabularArray() {
+    private fun writeTabularArray(elements: List<EncodedElement>, key: String?, indentLevel: Int) {
         if (elements.isEmpty()) {
-            writeInlineArray() // Empty arrays use inline format
+            writeInlineArray(elements, key) // Empty arrays use inline format
             return
         }
 
@@ -256,11 +272,14 @@ internal class ToonArrayEncoder(
 
         // Write header: [N]{field1,field2}: or key[N]{field1,field2}:
         if (key != null) {
-            writer.writeTabularArrayHeader(key, elements.size, fieldNames)
+            writer.writeTabularArrayHeader(key, elements.size, fieldNames, config.delimiter.char)
         } else {
             // Root-level array - no key prefix
             writer.writeString("[")
             writer.writeString(elements.size.toString())
+            if (config.delimiter.char != ',') {
+                writer.writeString(config.delimiter.char.toString())
+            }
             writer.writeString("]{")
             writer.writeString(fieldNames.joinToString(config.delimiter.char.toString()))
             writer.writeString("}:")
@@ -283,13 +302,16 @@ internal class ToonArrayEncoder(
     }
 
     /** Writes array in expanded format: `key[N]:\n - val1\n - val2` */
-    private fun writeExpandedArray() {
+    private fun writeExpandedArray(elements: List<EncodedElement>, key: String?, indentLevel: Int) {
         if (key != null) {
-            writer.writeExpandedArrayHeader(key, elements.size)
+            writer.writeExpandedArrayHeader(key, elements.size, config.delimiter.char)
         } else {
             // Root-level array - no key prefix
             writer.writeString("[")
             writer.writeString(elements.size.toString())
+            if (config.delimiter.char != ',') {
+                writer.writeString(config.delimiter.char.toString())
+            }
             writer.writeString("]:")
         }
 
@@ -307,6 +329,15 @@ internal class ToonArrayEncoder(
                     // For structures in expanded format, write as nested object
                     // This is simplified - full implementation would use ToonObjectEncoder
                     writer.writeString("{...}")
+                }
+                is EncodedElement.NestedArray -> {
+                    // Recursive write for nested array
+                    val format = selectArrayFormat(element.elements)
+                    when (format) {
+                        ArrayFormatSelector.ArrayFormat.INLINE -> writeInlineArray(element.elements, null)
+                        ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabularArray(element.elements, null, indentLevel + 1)
+                        ArrayFormatSelector.ArrayFormat.EXPANDED -> writeExpandedArray(element.elements, null, indentLevel + 1)
+                    }
                 }
             }
         }
@@ -407,5 +438,121 @@ private class TabularElementEncoder(
 
     override fun endStructure(descriptor: SerialDescriptor) {
         onComplete(fieldValues)
+    }
+}
+
+/** Helper encoder for capturing nested array elements. */
+@OptIn(ExperimentalSerializationApi::class)
+private class NestedArrayCapturer(
+    private val config: ToonConfiguration,
+    override val serializersModule: SerializersModule,
+    private val descriptor: SerialDescriptor,
+    private val onComplete: (List<ToonArrayEncoder.EncodedElement>) -> Unit,
+) : AbstractEncoder() {
+
+    private val elements = mutableListOf<ToonArrayEncoder.EncodedElement>()
+    private var elementDescriptor: SerialDescriptor? = null
+
+    override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+        if (elementDescriptor == null && descriptor.elementsCount > 0) {
+            elementDescriptor = descriptor.getElementDescriptor(0)
+        }
+        return true
+    }
+
+    override fun encodeNull() {
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive("null"))
+    }
+
+    override fun encodeBoolean(value: Boolean) {
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(if (value) "true" else "false"))
+    }
+
+    override fun encodeByte(value: Byte) {
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeShort(value: Short) {
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeInt(value: Int) {
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeLong(value: Long) {
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeFloat(value: Float) {
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeDouble(value: Double) {
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
+    }
+
+    override fun encodeChar(value: Char) {
+        val quoted =
+            StringQuoting.quote(
+                value.toString(),
+                StringQuoting.QuotingContext.ARRAY_ELEMENT,
+                config.delimiter.char,
+            )
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(quoted))
+    }
+
+    override fun encodeString(value: String) {
+        val quoted =
+            StringQuoting.quote(
+                value,
+                StringQuoting.QuotingContext.ARRAY_ELEMENT,
+                config.delimiter.char,
+            )
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(quoted))
+    }
+
+    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
+        val enumName = enumDescriptor.getElementName(index)
+        val quoted =
+            StringQuoting.quote(
+                enumName,
+                StringQuoting.QuotingContext.ARRAY_ELEMENT,
+                config.delimiter.char,
+            )
+        elements.add(ToonArrayEncoder.EncodedElement.Primitive(quoted))
+    }
+
+    override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
+        return when (descriptor.kind) {
+            StructureKind.LIST -> {
+                // Recursive nested array
+                NestedArrayCapturer(
+                    config = config,
+                    serializersModule = serializersModule,
+                    descriptor = descriptor,
+                    onComplete = { nestedElements ->
+                        elements.add(ToonArrayEncoder.EncodedElement.NestedArray(nestedElements))
+                    },
+                )
+            }
+            StructureKind.CLASS,
+            StructureKind.OBJECT -> {
+                // Nested object (tabular row candidate)
+                TabularElementEncoder(
+                    config = config,
+                    serializersModule = serializersModule,
+                    descriptor = descriptor,
+                    onComplete = { values ->
+                        elements.add(ToonArrayEncoder.EncodedElement.Structure(descriptor, values))
+                    },
+                )
+            }
+            else -> this
+        }
+    }
+
+    override fun endStructure(descriptor: SerialDescriptor) {
+        onComplete(elements)
     }
 }
