@@ -41,7 +41,13 @@ internal class ToonEncoder(
         StructureKind.CLASS, StructureKind.OBJECT, StructureKind.MAP ->
             ToonObjectEncoder(writer, config, serializersModule, descriptor, 0, true)
         StructureKind.LIST ->
-            ToonArrayEncoder(writer, config, serializersModule, descriptor, 0, true, null)
+            ToonArrayEncoder(
+                writer = writer,
+                config = config,
+                serializersModule = serializersModule,
+                indentLevel = 0,
+                key = null
+            )
         else -> this
     }
 

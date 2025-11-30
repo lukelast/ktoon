@@ -15,9 +15,7 @@ internal class ToonArrayEncoder(
     private val writer: ToonWriter,
     private val config: ToonConfiguration,
     override val serializersModule: SerializersModule,
-    private val descriptor: SerialDescriptor,
     private val indentLevel: Int,
-    private val isRoot: Boolean,
     private val key: String?,
 ) : AbstractEncoder() {
 

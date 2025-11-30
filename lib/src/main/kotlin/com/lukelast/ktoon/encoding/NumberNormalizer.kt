@@ -26,19 +26,4 @@ internal object NumberNormalizer {
     fun normalize(value: Short): String = value.toString()
     fun normalize(value: Byte): String = value.toString()
 
-    fun normalize(value: Number): String = when (value) {
-        is Double -> normalize(value)
-        is Float -> normalize(value)
-        is BigDecimal -> value.stripTrailingZeros().toPlainString()
-            .let { if (it == "-0" || it == "-0.0") "0" else it }
-        else -> value.toString()
-    }
-
-    fun parseDouble(str: String): Double = if (str == "null") Double.NaN else str.toDouble()
-    fun parseFloat(str: String): Float = if (str == "null") Float.NaN else str.toFloat()
-    fun parseLong(str: String): Long = str.toLong()
-    fun parseInt(str: String): Int = str.toInt()
-
-    fun isValidNumber(str: String): Boolean =
-        str == "null" || (str.isNotEmpty() && str.toDoubleOrNull() != null)
 }
