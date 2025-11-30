@@ -69,7 +69,7 @@ internal class ToonEncoder(
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = 0,
-                    isRoot = true
+                    isRoot = true,
                 )
             StructureKind.LIST ->
                 ToonArrayEncoder(

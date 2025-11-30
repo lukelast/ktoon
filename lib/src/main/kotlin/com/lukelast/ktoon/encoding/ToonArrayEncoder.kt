@@ -1,7 +1,6 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.ToonConfiguration
-import com.lukelast.ktoon.ToonEncodingException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
@@ -134,7 +133,10 @@ internal class ToonArrayEncoder(
     }
 
     private fun writeTabular() {
-        if (elements.isEmpty()) { writeInline(); return }
+        if (elements.isEmpty()) {
+            writeInline()
+            return
+        }
         writeTabularImpl(key, elements, indentLevel)
     }
 
@@ -155,15 +157,30 @@ internal class ToonArrayEncoder(
         }
     }
 
-    private fun writeStructureFields(values: List<Pair<String, EncodedElement>>, indent: Int, firstInline: Boolean = true) {
-        if (values.isEmpty() && !firstInline) { writer.writeSpace(); writer.write("{}"); return }
+    private fun writeStructureFields(
+        values: List<Pair<String, EncodedElement>>,
+        indent: Int,
+        firstInline: Boolean = true,
+    ) {
+        if (values.isEmpty() && !firstInline) {
+            writer.writeSpace()
+            writer.write("{}")
+            return
+        }
         values.forEachIndexed { i, (name, value) ->
-            if (i > 0 || !firstInline) { writer.writeNewline(); writer.writeIndent(indent + 1) }
+            if (i > 0 || !firstInline) {
+                writer.writeNewline()
+                writer.writeIndent(indent + 1)
+            }
             val qk = quoteKey(name)
             when (value) {
                 is EncodedElement.Primitive -> writer.writeKeyValue(qk, value.value)
-                is EncodedElement.NestedArray -> writeNestedArrayImpl(qk, value.elements, indent + 1)
-                is EncodedElement.Structure -> { writer.writeKey(qk); writeStructureFields(value.values, indent + 1, false) }
+                is EncodedElement.NestedArray ->
+                    writeNestedArrayImpl(qk, value.elements, indent + 1)
+                is EncodedElement.Structure -> {
+                    writer.writeKey(qk)
+                    writeStructureFields(value.values, indent + 1, false)
+                }
             }
         }
     }
@@ -190,7 +207,11 @@ internal class ToonArrayEncoder(
 
     private fun writeArrayHeader(key: String?, size: Int, delim: Char) {
         if (key != null) writer.writeArrayHeader(key, size, delim)
-        else { writer.write("[$size"); if (delim != ',') writer.write(delim.toString()); writer.write("]:") }
+        else {
+            writer.write("[$size")
+            if (delim != ',') writer.write(delim.toString())
+            writer.write("]:")
+        }
     }
 
     private fun writeTabularImpl(key: String?, elements: List<EncodedElement>, indent: Int) {
@@ -198,7 +219,11 @@ internal class ToonArrayEncoder(
         val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
         val delim = config.delimiter.char
         if (key != null) writer.writeTabularArrayHeader(key, elements.size, fields, delim)
-        else { writer.write("[${elements.size}"); if (delim != ',') writer.write(delim.toString()); writer.write("]{${fields.joinToString(delim.toString())}}:") }
+        else {
+            writer.write("[${elements.size}")
+            if (delim != ',') writer.write(delim.toString())
+            writer.write("]{${fields.joinToString(delim.toString())}}:")
+        }
         elements.filterIsInstance<EncodedElement.Structure>().forEach { s ->
             writer.writeNewline()
             writer.writeIndent(indent + 1)
