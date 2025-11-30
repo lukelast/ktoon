@@ -132,12 +132,6 @@ class Ktoon(
         val Compact = Ktoon(configuration = ToonConfiguration.Compact)
 
         /**
-         * Lenient TOON instance for more permissive parsing. Disables strict validation for better
-         * compatibility.
-         */
-        val Lenient = Ktoon(configuration = ToonConfiguration.Lenient)
-
-        /**
          * Creates a Ktoon instance with a custom configuration using a DSL-style builder.
          *
          * Example:

@@ -46,12 +46,6 @@ data class ToonConfiguration(
          * compact representation.
          */
         val Compact = ToonConfiguration(keyFolding = true)
-
-        /**
-         * Lenient configuration for more permissive parsing. Disables strict validation for better
-         * compatibility.
-         */
-        val Lenient = ToonConfiguration(strictMode = false)
     }
 }
 
