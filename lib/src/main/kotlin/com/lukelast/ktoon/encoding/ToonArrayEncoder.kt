@@ -114,32 +114,12 @@ internal class ToonArrayEncoder(
     }
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        val format = selectFormat()
+        val format = ArrayFormatSelector.selectFormat(elements)
         when (format) {
             ArrayFormatSelector.ArrayFormat.INLINE -> writeInline()
             ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabular()
             ArrayFormatSelector.ArrayFormat.EXPANDED -> writeExpanded()
         }
-    }
-
-    private fun selectFormat(): ArrayFormatSelector.ArrayFormat {
-        if (elements.all { it is EncodedElement.Primitive })
-            return ArrayFormatSelector.ArrayFormat.INLINE
-        if (elements.all { it is EncodedElement.Structure }) {
-            val structures = elements.filterIsInstance<EncodedElement.Structure>()
-            if (structures.isNotEmpty()) {
-                val first = structures.first()
-                val allSame =
-                    structures.all { it.descriptor == first.descriptor } &&
-                        ArrayFormatSelector.allPropertiesArePrimitive(first.descriptor) &&
-                        structures.all {
-                            it.values.map { p -> p.first }.toSet() ==
-                                first.values.map { p -> p.first }.toSet()
-                        }
-                if (allSame) return ArrayFormatSelector.ArrayFormat.TABULAR
-            }
-        }
-        return ArrayFormatSelector.ArrayFormat.EXPANDED
     }
 
     private fun writeHeader(key: String?) {
@@ -247,7 +227,7 @@ internal class ToonArrayEncoder(
     }
 
     private fun writeNestedArray(elements: List<EncodedElement>, indent: Int) {
-        val format = selectNestedFormat(elements)
+        val format = ArrayFormatSelector.selectFormat(elements)
         when (format) {
             ArrayFormatSelector.ArrayFormat.INLINE -> {
                 writer.write("[${elements.size}")
@@ -285,7 +265,7 @@ internal class ToonArrayEncoder(
     }
 
     private fun writeNestedArrayField(key: String, elements: List<EncodedElement>, indent: Int) {
-        val format = selectNestedFormat(elements)
+        val format = ArrayFormatSelector.selectFormat(elements)
         when (format) {
             ArrayFormatSelector.ArrayFormat.INLINE -> {
                 writer.writeArrayHeader(key, elements.size, config.delimiter.char)
@@ -314,28 +294,6 @@ internal class ToonArrayEncoder(
                 elements.forEach { writeElement(it, indent + 1) }
             }
         }
-    }
-
-    private fun selectNestedFormat(
-        elements: List<EncodedElement>
-    ): ArrayFormatSelector.ArrayFormat {
-        if (elements.all { it is EncodedElement.Primitive })
-            return ArrayFormatSelector.ArrayFormat.INLINE
-        if (elements.all { it is EncodedElement.Structure }) {
-            val structures = elements.filterIsInstance<EncodedElement.Structure>()
-            if (structures.isNotEmpty()) {
-                val first = structures.first()
-                val allSame =
-                    structures.all { it.descriptor == first.descriptor } &&
-                        ArrayFormatSelector.allPropertiesArePrimitive(first.descriptor) &&
-                        structures.all {
-                            it.values.map { p -> p.first }.toSet() ==
-                                first.values.map { p -> p.first }.toSet()
-                        }
-                if (allSame) return ArrayFormatSelector.ArrayFormat.TABULAR
-            }
-        }
-        return ArrayFormatSelector.ArrayFormat.EXPANDED
     }
 }
 
