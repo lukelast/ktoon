@@ -1,8 +1,19 @@
-# ktoon [![](https://jitpack.io/v/lukelast/ktoon.svg)](https://jitpack.io/#lukelast/ktoon)
+# ktoon
+[![](https://jitpack.io/v/lukelast/ktoon.svg)](https://jitpack.io/#lukelast/ktoon)
 
 Kotlin serializer for TOON (Token-Oriented Object Notation).
 
-For format details and motivation, see https://toonformat.dev/ and the authoritative spec at https://github.com/toon-format/spec.
+To learn about the TOON format and why you should use it read the official website:
+- https://toonformat.dev/
+- TOON specification: https://github.com/toon-format/spec.
+
+
+## Features
+
+- **Full TOON 3.0 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimeters.
+- **Minimal Dependencies** - Only depends on kotlinx.serialization, no additional runtime dependencies.
+- **High Performance** - CharArray-based encoding optimized for minimal allocations and fast string operations, inspired by kotlinx.serialization internals.
+- **Flexible Configuration** - Configurable delimiters, indentation, and key folding.
 
 ## Add to your project (JitPack)
 
