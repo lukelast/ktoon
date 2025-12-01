@@ -29,7 +29,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         }
 
         // Determine root type from first token
-        return when (val first = peek()) {
+        val result = when (val first = peek()) {
             is Token.ArrayHeader -> {
                 // §5: Root array header has NO KEY; if there's a key, treat as object field with array value
                 if (first.key.isEmpty()) {
@@ -53,6 +53,14 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 throw KtoonParsingException("Unexpected token type at root", 1)
             }
         }
+
+        // Check for trailing tokens in strict mode
+        if (config.strictMode && position < tokens.size) {
+            val token = peek()
+            throw KtoonParsingException("Unexpected content after root value", token.line)
+        }
+
+        return result
     }
 
     /** Reads an object (collection of key-value pairs). */

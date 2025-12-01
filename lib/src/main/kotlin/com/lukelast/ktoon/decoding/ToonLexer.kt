@@ -213,6 +213,8 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
 
 /** Token types produced by the lexer. */
 internal sealed class Token {
+    abstract val line: Int
+
     /**
      * Object key token.
      *
@@ -220,7 +222,7 @@ internal sealed class Token {
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
-    data class Key(val name: String, val indent: Int, val line: Int) : Token()
+    data class Key(val name: String, val indent: Int, override val line: Int) : Token()
 
     /**
      * Value token (primitive or string).
@@ -228,7 +230,7 @@ internal sealed class Token {
      * @property content The raw value content
      * @property line Line number (1-based)
      */
-    data class Value(val content: String, val line: Int) : Token()
+    data class Value(val content: String, override val line: Int) : Token()
 
     /**
      * Array header token.
@@ -246,7 +248,7 @@ internal sealed class Token {
         val fields: List<String>?,
         val delimiter: KtoonConfiguration.Delimiter,
         val indent: Int,
-        val line: Int,
+        override val line: Int,
     ) : Token()
 
     /**
@@ -255,7 +257,7 @@ internal sealed class Token {
      * @property content The raw value content
      * @property line Line number (1-based)
      */
-    data class InlineArrayValue(val content: String, val line: Int) : Token()
+    data class InlineArrayValue(val content: String, override val line: Int) : Token()
 
     /**
      * Dash marker for expanded array element.
@@ -263,7 +265,7 @@ internal sealed class Token {
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
-    data class Dash(val indent: Int, val line: Int) : Token()
+    data class Dash(val indent: Int, override val line: Int) : Token()
 
     /**
      * Tabular array row (values separated by delimiter).
@@ -272,5 +274,5 @@ internal sealed class Token {
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
-    data class TabularRow(val values: List<String>, val indent: Int, val line: Int) : Token()
+    data class TabularRow(val values: List<String>, val indent: Int, override val line: Int) : Token()
 }
