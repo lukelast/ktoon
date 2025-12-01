@@ -9,47 +9,52 @@ import org.instancio.settings.Keys
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(BenchmarkTimeUnit.MICROSECONDS)
-@Warmup(iterations = 8, time = 1, timeUnit = BenchmarkTimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 2, timeUnit = BenchmarkTimeUnit.SECONDS)
+@Warmup(iterations = 5, time = 2, timeUnit = BenchmarkTimeUnit.SECONDS)
+@Measurement(iterations = 10, time = 5, timeUnit = BenchmarkTimeUnit.SECONDS)
 open class KtoonBenchmark {
-
-    @Serializable
-    data class BenchmarkData(
-        val name: String,
-        val id: Int,
-        val items: List<String>,
-        val nested: NestedData,
-        val moreItems: List<Int>,
-        val rows: List<Row>,
-    )
-
-    @Serializable data class Row(val id: Long, val name: String, val value: String)
-
-    @Serializable
-    data class NestedData(val description: String, val active: Boolean, val score: Double)
-
     private lateinit var data: BenchmarkData
-    private val ktoon = Ktoon()
+    private val ktoon = Ktoon.Default
 
     @Setup
     fun setup() {
         data =
             Instancio.of(BenchmarkData::class.java)
                 .withSeed(0)
-                .withSetting(Keys.COLLECTION_MIN_SIZE, 100)
+                .withSetting(Keys.COLLECTION_MIN_SIZE, 200)
+                .withSetting(Keys.COLLECTION_MAX_SIZE, 200)
+                .withSetting(Keys.STRING_MIN_LENGTH, 25)
+                .withSetting(Keys.STRING_MAX_LENGTH, 50)
+                .withSetting(Keys.LONG_MIN, 100)
+                .withSetting(Keys.LONG_MAX, Int.MAX_VALUE.toLong())
                 .create()
-        println(data)
     }
 
     @Benchmark
-    //    @org.openjdk.jmh.annotations.Fork(value = 1, jvmArgsAppend =
-    // ["-XX:StartFlightRecording=filename=benchmark.jfr,settings=profile,dumponexit=true,jdk.ExecutionSample#period=2ms"])
+//    @org.openjdk.jmh.annotations.Fork(value = 1, jvmArgsAppend = [JFR_ARGS])
     fun benchmarkKtoon(): String {
         return ktoon.encodeToString(data)
     }
 
     @Benchmark
+    @Measurement(iterations = 3, time = 5, timeUnit = BenchmarkTimeUnit.SECONDS)
     fun benchmarkJtoon(): String {
         return JToon.encode(data)
     }
 }
+
+@Serializable
+data class BenchmarkData(
+    val name: String,
+    val id: Long,
+    val items: List<String>,
+    val nested: NestedData,
+    val moreItems: List<Long>,
+    val rows: List<Row>,
+)
+
+@Serializable data class Row(val id: Long, val active: Boolean, val name: String, val value: String)
+
+@Serializable data class NestedData(val description: String, val active: Boolean, val score: Double)
+
+private const val JFR_ARGS =
+    "-XX:StartFlightRecording=filename=../benchmark.jfr,settings=profile,dumponexit=true,jdk.ExecutionSample#period=2ms"

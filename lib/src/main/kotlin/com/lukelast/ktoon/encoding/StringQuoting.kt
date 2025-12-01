@@ -1,10 +1,10 @@
 package com.lukelast.ktoon.encoding
 
+import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
 
 /** Utility for quoting and unquoting strings according to TOON format rules. */
 internal object StringQuoting {
-    private val KEYWORDS = setOf("true", "false", "null")
 
     enum class QuotingContext {
         OBJECT_KEY,
@@ -15,13 +15,16 @@ internal object StringQuoting {
     fun needsQuoting(
         str: String,
         context: QuotingContext = QuotingContext.OBJECT_VALUE,
-        delimiter: Char = ',',
+        delimiter: Char = KtoonConfiguration.Delimiter.COMMA.char,
     ): Boolean {
         if (str.isEmpty()) return true
-        if (str in KEYWORDS) return true
-        if (isNumber(str)) return true
-
         val len = str.length
+        if (len == 4 && (str == "true" || str == "null")) {
+            return true
+        } else if (len == 5 && str == "false") {
+            return true
+        }
+
         val first = str[0]
         if (first == '-') return true
         if (first <= ' ') return true // Starts with whitespace or control
@@ -29,14 +32,15 @@ internal object StringQuoting {
         val last = str[len - 1]
         if (last <= ' ') return true // Ends with whitespace or control
 
-        for (i in 0 until len) {
+        if (isNumber(str)) return true
+        val contextIsArrayOrObject =
+            (context == QuotingContext.OBJECT_VALUE || context == QuotingContext.ARRAY_ELEMENT)
+
+        for (i in str.indices) {
             val c = str[i]
             if (c < ' ') return true // Control char
             if (shouldQuoteChar(c)) return true
-            if (
-                (context == QuotingContext.OBJECT_VALUE ||
-                    context == QuotingContext.ARRAY_ELEMENT) && c == delimiter
-            ) {
+            if (contextIsArrayOrObject && c == delimiter) {
                 return true
             }
         }
@@ -76,7 +80,7 @@ internal object StringQuoting {
 
         while (i < len) {
             val c = str[i]
-            if (c in '0'..'9') {
+            if (c.isDigit()) {
                 hasDigit = true
             } else if (c == '.') {
                 if (hasDot || hasExp) return false
@@ -100,28 +104,37 @@ internal object StringQuoting {
     private fun isValidUnquotedKey(str: String): Boolean {
         if (str.isEmpty()) return false
         val first = str[0]
-        if (!isAlpha(first) && first != '_') return false
+        if (!first.isAlpha() && first != '_') return false
         for (i in 1 until str.length) {
             val c = str[i]
-            if (!isAlpha(c) && !isDigit(c) && c != '_' && c != '.') return false
+            if (!c.isAlpha() && !c.isDigit() && c != '_' && c != '.') return false
         }
         return true
     }
 
-    private fun isAlpha(c: Char): Boolean = c in 'a'..'z' || c in 'A'..'Z'
+    private fun Char.isAlpha(): Boolean {
+        // 1. (c.code or 0x20): Force the char to lowercase (e.g., 'A' becomes 'a')
+        // 2. Subtract 'a': Align the range to start at 0
+        // 3. Check if result is < 26 (the number of letters in alphabet)
+        return ((code or 0x20) - 'a'.code).toUInt() < 26u
+    }
 
-    private fun isDigit(c: Char): Boolean = c in '0'..'9'
+    private fun Char.isDigit(): Boolean {
+        // Subtracts '0'. If c was less than '0', it wraps around to a huge
+        // positive number (because of UInt). If it's 0-9, it stays small.
+        return (this - '0').toUInt() < 10u
+    }
 
     fun quote(
         str: String,
         context: QuotingContext = QuotingContext.OBJECT_VALUE,
-        delimiter: Char = ',',
+        delimiter: Char = KtoonConfiguration.Delimiter.COMMA.char,
     ): String {
         if (!needsQuoting(str, context, delimiter)) return str
         val len = str.length
         val sb = StringBuilder(len + 2)
         sb.append('"')
-        for (i in 0 until len) {
+        for (i in str.indices) {
             when (val c = str[i]) {
                 '\\' -> sb.append("\\\\")
                 '"' -> sb.append("\\\"")

@@ -208,8 +208,9 @@ internal class ToonArrayEncoder(
     }
 
     private fun writeArrayHeader(key: String?, size: Int, delim: Char) {
-        if (key != null) writer.writeArrayHeader(key, size, delim)
-        else {
+        if (key != null) {
+            writer.writeArrayHeader(key, size, delim)
+        } else {
             writer.write('[')
             writer.write(size)
             if (delim != ',') writer.write(delim)
@@ -221,8 +222,9 @@ internal class ToonArrayEncoder(
         val first = elements.first() as EncodedElement.Structure
         val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
         val delim = config.delimiter.char
-        if (key != null) writer.writeTabularArrayHeader(key, elements.size, fields, delim)
-        else {
+        if (key != null) {
+            writer.writeTabularArrayHeader(key, elements.size, fields, delim)
+        } else {
             writer.write('[')
             writer.write(elements.size)
             if (delim != ',') writer.write(delim)
