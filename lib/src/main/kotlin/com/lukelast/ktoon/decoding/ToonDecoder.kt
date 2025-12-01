@@ -36,11 +36,18 @@ internal class ToonDecoder(
             rootValue = reader.readRoot()
         }
 
-        // Create appropriate decoder based on root value type
+        // Create appropriate decoder based on root value type and target type
         return when (val value = rootValue!!) {
             is ToonValue.Object -> {
-                ToonObjectDecoder(value, serializersModule, config)
-                    .decodeSerializableValue(deserializer)
+                // Check if target is a Map
+                when (deserializer.descriptor.kind) {
+                    StructureKind.MAP ->
+                        ToonMapDecoder(value, serializersModule, config)
+                            .decodeSerializableValue(deserializer)
+                    else ->
+                        ToonObjectDecoder(value, serializersModule, config)
+                            .decodeSerializableValue(deserializer)
+                }
             }
             is ToonValue.Array -> {
                 ToonArrayDecoder(value, serializersModule, config)
@@ -271,7 +278,7 @@ internal class ToonObjectDecoder(
                         fieldValue::class.simpleName ?: "unknown",
                     )
                 }
-                ToonObjectDecoder(fieldValue, serializersModule, config)
+                ToonMapDecoder(fieldValue, serializersModule, config)
             }
             else -> this
         }
@@ -384,5 +391,132 @@ internal class ToonArrayDecoder(
     override fun decodeNotNullMark(): Boolean {
         val element = getCurrentElement()
         return element != ToonValue.Null
+    }
+}
+
+/**
+ * Decoder for TOON objects as Maps.
+ *
+ * Handles the conversion of TOON objects to Map structures, where keys are property names
+ * and values are property values. kotlinx.serialization expects alternating key-value pairs
+ * with sequential indices.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+internal class ToonMapDecoder(
+    private val value: ToonValue.Object,
+    override val serializersModule: SerializersModule,
+    private val config: KtoonConfiguration,
+) : AbstractDecoder() {
+
+    private val entries = value.properties.entries.toList()
+    private var currentIndex = 0
+    private var currentEntry: Map.Entry<String, ToonValue>? = null
+
+    override fun decodeCollectionSize(descriptor: SerialDescriptor): Int {
+        return entries.size
+    }
+
+    override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
+        // Maps are decoded as alternating key-value pairs
+        // Even indices (0, 2, 4, ...) = keys
+        // Odd indices (1, 3, 5, ...) = values
+        if (currentIndex >= entries.size * 2) {
+            return CompositeDecoder.DECODE_DONE
+        }
+        val result = currentIndex
+        val entryIndex = currentIndex / 2
+        if (currentIndex % 2 == 0) {
+            currentEntry = entries[entryIndex]
+        }
+        currentIndex++
+        return result
+    }
+
+    override fun decodeNull(): Nothing? = null
+
+    override fun decodeBoolean(): Boolean = decodePrimitiveValue { it.decodeBoolean() }
+
+    override fun decodeByte(): Byte = decodePrimitiveValue { it.decodeByte() }
+
+    override fun decodeShort(): Short = decodePrimitiveValue { it.decodeShort() }
+
+    override fun decodeInt(): Int = decodePrimitiveValue { it.decodeInt() }
+
+    override fun decodeLong(): Long = decodePrimitiveValue { it.decodeLong() }
+
+    override fun decodeFloat(): Float = decodePrimitiveValue { it.decodeFloat() }
+
+    override fun decodeDouble(): Double = decodePrimitiveValue { it.decodeDouble() }
+
+    override fun decodeChar(): Char = decodePrimitiveValue { it.decodeChar() }
+
+    override fun decodeString(): String {
+        val entry = currentEntry ?: throw KtoonDecodingException("No current map entry")
+        // For keys (even indices after increment = odd currentIndex), return the key
+        // For values (odd indices after increment = even currentIndex), return the value as string
+        return if ((currentIndex - 1) % 2 == 0) {
+            // Key
+            entry.key
+        } else {
+            // Value - decode as primitive
+            decodePrimitiveValue { it.decodeString() }
+        }
+    }
+
+    override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
+        return decodePrimitiveValue { it.decodeEnum(enumDescriptor) }
+    }
+
+    private fun <T> decodePrimitiveValue(decode: (ToonPrimitiveDecoder) -> T): T {
+        val entry = currentEntry ?: throw KtoonDecodingException("No current map entry")
+        val decoder = ToonPrimitiveDecoder(entry.value, serializersModule, config)
+        return decode(decoder)
+    }
+
+    override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
+        // If this is the map structure itself, return this decoder
+        if (currentEntry == null) {
+            return this
+        }
+
+        val entry = currentEntry ?: throw KtoonDecodingException("No current map entry")
+        val fieldValue = entry.value
+
+        return when (descriptor.kind) {
+            StructureKind.CLASS,
+            StructureKind.OBJECT -> {
+                if (fieldValue !is ToonValue.Object) {
+                    throw KtoonDecodingException.typeMismatch(
+                        "Object",
+                        fieldValue::class.simpleName ?: "unknown",
+                    )
+                }
+                ToonObjectDecoder(fieldValue, serializersModule, config)
+            }
+            StructureKind.LIST -> {
+                if (fieldValue !is ToonValue.Array) {
+                    throw KtoonDecodingException.typeMismatch(
+                        "Array",
+                        fieldValue::class.simpleName ?: "unknown",
+                    )
+                }
+                ToonArrayDecoder(fieldValue, serializersModule, config)
+            }
+            StructureKind.MAP -> {
+                if (fieldValue !is ToonValue.Object) {
+                    throw KtoonDecodingException.typeMismatch(
+                        "Map",
+                        fieldValue::class.simpleName ?: "unknown",
+                    )
+                }
+                ToonMapDecoder(fieldValue, serializersModule, config)
+            }
+            else -> this
+        }
+    }
+
+    override fun decodeNotNullMark(): Boolean {
+        val entry = currentEntry ?: return false
+        return entry.value != ToonValue.Null
     }
 }
