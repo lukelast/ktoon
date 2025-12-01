@@ -4,3 +4,4 @@
 build/
 .gradle-linux/
 benchmark.jfr
+.claude/settings.local.json
