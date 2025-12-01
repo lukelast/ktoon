@@ -96,8 +96,20 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                         properties[key] = arrayValue
                     }
                 }
+                is Token.Value -> {
+                    // In strict mode, a Value token inside an object context is an error
+                    // (missing colon per §14.2)
+                    if (config.strictMode) {
+                        throw KtoonParsingException(
+                            "Missing colon in key-value context: '${token.content}'",
+                            token.line,
+                        )
+                    }
+                    // In non-strict mode, skip this token
+                    advance()
+                }
                 else -> {
-                    // Unexpected token
+                    // Unexpected token, exit object parsing
                     break
                 }
             }
