@@ -31,7 +31,12 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         // Determine root type from first token
         return when (val first = peek()) {
             is Token.ArrayHeader -> {
-                readArray()
+                // §5: Root array header has NO KEY; if there's a key, treat as object field with array value
+                if (first.key.isEmpty()) {
+                    readArray()
+                } else {
+                    readObject(baseIndent = 0)
+                }
             }
             is Token.Dash -> {
                 readExpandedArrayFromRoot()
@@ -142,12 +147,12 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     private fun readInlineArray(header: Token.ArrayHeader): ToonValue.Array {
         val valueToken = consume<Token.InlineArrayValue>()
 
-        // Split by delimiter
+        // Split by delimiter (§12: surrounding whitespace SHOULD be tolerated; empty tokens decode to empty string)
         val values =
             valueToken.content
                 .split(header.delimiter.char)
                 .map { it.trim() }
-                .filter { it.isNotEmpty() }
+                // Note: Empty tokens (after trimming) decode to empty string per §12
                 .map { parsePrimitive(it, valueToken.line) }
 
         // Validate array length in strict mode
