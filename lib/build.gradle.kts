@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlinx.benchmark)
+    alias(libs.plugins.kotlin.jvm.base)
+    alias(libs.plugins.kotlin.serialization.base)
+    alias(libs.plugins.kotlinx.benchmark.base)
     `java-library`
     `maven-publish`
 }
@@ -46,7 +46,17 @@ dependencies {
     "benchImplementation"(libs.kotlinToon)
 }
 
-tasks.test { useJUnitPlatform() }
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
 
 java { withSourcesJar() }
 

@@ -21,3 +21,8 @@ kotlinToon = { module = "br.com.vexpera:kotlin-toon", version = "1.0.0"}
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
+
+# Unversioned plugins for subprojects
+kotlin-jvm-base = { id = "org.jetbrains.kotlin.jvm" }
+kotlin-serialization-base = { id = "org.jetbrains.kotlin.plugin.serialization" }
+kotlinx-benchmark-base = { id = "org.jetbrains.kotlinx.benchmark" }
