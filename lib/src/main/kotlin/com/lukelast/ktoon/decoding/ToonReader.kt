@@ -409,54 +409,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         return token
     }
 
-    /**
-     * Splits a string by the given delimiter, respecting quoted segments.
-     *
-     * Per TOON spec Appendix B.3:
-     * - Iterates characters left-to-right while maintaining a current token and an inQuotes flag.
-     * - On a double quote, toggle inQuotes.
-     * - While inQuotes, treat backslash + next char as a literal pair (string parser validates later).
-     * - Only split on the active delimiter when not in quotes (unquoted occurrences).
-     * - Trim surrounding spaces around each token. Empty tokens decode to empty string.
-     */
-    private fun splitDelimitedValues(content: String, delimiter: Char): List<String> {
-        val result = mutableListOf<String>()
-        val current = StringBuilder()
-        var inQuotes = false
-        var i = 0
-
-        while (i < content.length) {
-            val c = content[i]
-            when {
-                inQuotes && c == '\\' && i + 1 < content.length -> {
-                    // Escape sequence inside quotes - include both chars literally
-                    current.append(c)
-                    current.append(content[i + 1])
-                    i += 2
-                }
-                c == '"' -> {
-                    inQuotes = !inQuotes
-                    current.append(c)
-                    i++
-                }
-                c == delimiter && !inQuotes -> {
-                    // Split point - add trimmed token and reset
-                    result.add(current.toString().trim())
-                    current.clear()
-                    i++
-                }
-                else -> {
-                    current.append(c)
-                    i++
-                }
-            }
-        }
-
-        // Add final token
-        result.add(current.toString().trim())
-
-        return result
-    }
+    /** Delegate to shared utility for splitting delimited values. */
+    private fun splitDelimitedValues(content: String, delimiter: Char): List<String> =
+        StringUtils.splitDelimitedValues(content, delimiter)
 }
 
 /** Represents a parsed TOON value. */

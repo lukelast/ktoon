@@ -475,11 +475,7 @@ internal class ToonMapDecoder(
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         // If this is the map structure itself, return this decoder
-        if (currentEntry == null) {
-            return this
-        }
-
-        val entry = currentEntry ?: throw KtoonDecodingException("No current map entry")
+        val entry = currentEntry ?: return this
         val fieldValue = entry.value
 
         return when (descriptor.kind) {
