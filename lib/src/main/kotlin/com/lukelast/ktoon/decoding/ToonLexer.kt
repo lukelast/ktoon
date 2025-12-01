@@ -46,12 +46,29 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         // Check for dash (expanded array element marker)
         if (trimmed.startsWith("- ")) {
             tokens.add(Token.Dash(indent, currentLine))
-            val value = trimmed.substring(2).trim()
-            if (value.isNotEmpty()) {
-                tokens.add(Token.Value(value, currentLine))
+            val afterDash = trimmed.substring(2)
+            if (afterDash.isNotEmpty()) {
+                // Content after dash is at dash's level + indentSize logically
+                // But we pass the dash's indent and let the reader handle it
+                processLineContent(afterDash, indent + config.indentSize)
             }
             return
         }
+
+        // Check for bare dash (empty object list item)
+        if (trimmed == "-") {
+            tokens.add(Token.Dash(indent, currentLine))
+            return
+        }
+
+        // Process as regular content
+        processLineContent(trimmed, indent)
+    }
+
+    /** Processes the content of a line (after stripping indentation and optional dash). */
+    private fun processLineContent(content: String, indent: Int) {
+        val trimmed = content.trim()
+        if (trimmed.isEmpty()) return
 
         // Check for array header or key-value pair
         val colonIndex = findUnquotedColon(trimmed)
@@ -113,6 +130,11 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
 
     /** Finds the first unquoted colon in a string. Returns -1 if no unquoted colon is found. */
     private fun findUnquotedColon(str: String): Int {
+        return findFirstUnquoted(str, ':')
+    }
+
+    /** Finds the first unquoted occurrence of a character. Returns -1 if not found. */
+    private fun findFirstUnquoted(str: String, target: Char): Int {
         var inQuotes = false
         var escapeNext = false
 
@@ -127,7 +149,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                 char == '"' -> {
                     inQuotes = !inQuotes
                 }
-                char == ':' && !inQuotes -> {
+                char == target && !inQuotes -> {
                     return index
                 }
             }
@@ -146,7 +168,8 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
      * - `key[length|]` - Pipe delimiter
      */
     private fun parseArrayHeader(keyPart: String): ArrayHeaderMatch? {
-        val bracketStart = keyPart.indexOf('[')
+        // Find the first unquoted '[' to handle quoted keys like "key[test]"[3]
+        val bracketStart = findFirstUnquoted(keyPart, '[')
         if (bracketStart == -1) return null
 
         val bracketEnd = keyPart.indexOf(']', bracketStart)
@@ -194,12 +217,61 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                     )
                 }
                 val fieldsStr = keyPart.substring(bracketEnd + 2, fieldsEnd)
-                fieldsStr.split(delimiter.char).map { it.trim() }
+                splitDelimitedValues(fieldsStr, delimiter.char)
             } else {
                 null
             }
 
         return ArrayHeaderMatch(key, length, fields, delimiter)
+    }
+
+    /**
+     * Splits a string by the given delimiter, respecting quoted segments.
+     *
+     * Per TOON spec Appendix B.3:
+     * - Iterates characters left-to-right while maintaining a current token and an inQuotes flag.
+     * - On a double quote, toggle inQuotes.
+     * - While inQuotes, treat backslash + next char as a literal pair.
+     * - Only split on the active delimiter when not in quotes.
+     * - Trim surrounding spaces around each token.
+     */
+    private fun splitDelimitedValues(content: String, delimiter: Char): List<String> {
+        val result = mutableListOf<String>()
+        val current = StringBuilder()
+        var inQuotes = false
+        var i = 0
+
+        while (i < content.length) {
+            val c = content[i]
+            when {
+                inQuotes && c == '\\' && i + 1 < content.length -> {
+                    // Escape sequence inside quotes - include both chars literally
+                    current.append(c)
+                    current.append(content[i + 1])
+                    i += 2
+                }
+                c == '"' -> {
+                    inQuotes = !inQuotes
+                    current.append(c)
+                    i++
+                }
+                c == delimiter && !inQuotes -> {
+                    // Split point - add trimmed token and reset
+                    result.add(current.toString().trim())
+                    current.clear()
+                    i++
+                }
+                else -> {
+                    current.append(c)
+                    i++
+                }
+            }
+        }
+
+        // Add final token
+        result.add(current.toString().trim())
+
+        return result
     }
 
     /** Result of parsing an array header. */

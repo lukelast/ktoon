@@ -109,7 +109,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     /** Reads a value (can be primitive, object, or array). */
     private fun readValue(parentIndent: Int): ToonValue {
         if (position >= tokens.size) {
-            return ToonValue.Null
+            // At end of input - return empty object for list item context
+            // This handles bare dash at end of expanded array
+            return ToonValue.Object(emptyMap())
         }
 
         return when (val token = peek()) {
@@ -121,11 +123,23 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 readArray()
             }
             is Token.Key -> {
-                // Nested object
-                readObject(baseIndent = parentIndent + config.indentSize)
+                // Check if this key belongs to a nested object at the expected indent
+                if (token.indent >= parentIndent + config.indentSize) {
+                    readObject(baseIndent = parentIndent + config.indentSize)
+                } else {
+                    // Key is at or before parent level - this dash had no content
+                    // Per §10: bare dash means empty object
+                    ToonValue.Object(emptyMap())
+                }
+            }
+            is Token.Dash -> {
+                // Another dash before any content - this was a bare dash
+                // Per §10: empty object list item
+                ToonValue.Object(emptyMap())
             }
             else -> {
-                ToonValue.Null
+                // InlineArrayValue or other - should not normally happen
+                ToonValue.Object(emptyMap())
             }
         }
     }
@@ -155,11 +169,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     private fun readInlineArray(header: Token.ArrayHeader): ToonValue.Array {
         val valueToken = consume<Token.InlineArrayValue>()
 
-        // Split by delimiter (§12: surrounding whitespace SHOULD be tolerated; empty tokens decode to empty string)
+        // Split by delimiter respecting quotes (§B.3: only split on unquoted delimiters)
         val values =
-            valueToken.content
-                .split(header.delimiter.char)
-                .map { it.trim() }
+            splitDelimitedValues(valueToken.content, header.delimiter.char)
                 // Note: Empty tokens (after trimming) decode to empty string per §12
                 .map { parsePrimitive(it, valueToken.line) }
 
@@ -187,9 +199,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 // Parse it as a row of values
                 val rowContent = token.name
                 val values =
-                    rowContent
-                        .split(header.delimiter.char)
-                        .map { it.trim() }
+                    splitDelimitedValues(rowContent, header.delimiter.char)
                         .map { parsePrimitive(it, token.line) }
 
                 // Validate field count
@@ -203,9 +213,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             } else if (token is Token.Value) {
                 // Value-only line (no key) - this is a tabular row
                 val values =
-                    token.content
-                        .split(header.delimiter.char)
-                        .map { it.trim() }
+                    splitDelimitedValues(token.content, header.delimiter.char)
                         .map { parsePrimitive(it, token.line) }
 
                 // Validate field count
@@ -387,6 +395,55 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         }
         position++
         return token
+    }
+
+    /**
+     * Splits a string by the given delimiter, respecting quoted segments.
+     *
+     * Per TOON spec Appendix B.3:
+     * - Iterates characters left-to-right while maintaining a current token and an inQuotes flag.
+     * - On a double quote, toggle inQuotes.
+     * - While inQuotes, treat backslash + next char as a literal pair (string parser validates later).
+     * - Only split on the active delimiter when not in quotes (unquoted occurrences).
+     * - Trim surrounding spaces around each token. Empty tokens decode to empty string.
+     */
+    private fun splitDelimitedValues(content: String, delimiter: Char): List<String> {
+        val result = mutableListOf<String>()
+        val current = StringBuilder()
+        var inQuotes = false
+        var i = 0
+
+        while (i < content.length) {
+            val c = content[i]
+            when {
+                inQuotes && c == '\\' && i + 1 < content.length -> {
+                    // Escape sequence inside quotes - include both chars literally
+                    current.append(c)
+                    current.append(content[i + 1])
+                    i += 2
+                }
+                c == '"' -> {
+                    inQuotes = !inQuotes
+                    current.append(c)
+                    i++
+                }
+                c == delimiter && !inQuotes -> {
+                    // Split point - add trimmed token and reset
+                    result.add(current.toString().trim())
+                    current.clear()
+                    i++
+                }
+                else -> {
+                    current.append(c)
+                    i++
+                }
+            }
+        }
+
+        // Add final token
+        result.add(current.toString().trim())
+
+        return result
     }
 }
 
