@@ -219,9 +219,7 @@ internal class ToonObjectEncoder(
         return indentLevel + 1
     }
 
-    private fun isValidIdentifier(key: String): Boolean {
-        return key.matches(Regex("^[A-Za-z_][A-Za-z0-9_]*$"))
-    }
+    private fun isValidIdentifier(key: String): Boolean = StringQuoting.isIdentifierSegment(key)
 
     override fun <T : Any> encodeNullableSerializableElement(
         descriptor: SerialDescriptor,

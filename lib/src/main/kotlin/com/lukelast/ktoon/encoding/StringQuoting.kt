@@ -125,6 +125,21 @@ internal object StringQuoting {
         return (this - '0').toUInt() < 10u
     }
 
+    /**
+     * Checks if a string is a valid IdentifierSegment per §1.9:
+     * matching `^[A-Za-z_][A-Za-z0-9_]*$`
+     */
+    fun isIdentifierSegment(str: String): Boolean {
+        if (str.isEmpty()) return false
+        val first = str[0]
+        if (!first.isAlpha() && first != '_') return false
+        for (i in 1 until str.length) {
+            val c = str[i]
+            if (!c.isAlpha() && !c.isDigit() && c != '_') return false
+        }
+        return true
+    }
+
     fun quote(
         str: String,
         context: QuotingContext = QuotingContext.OBJECT_VALUE,

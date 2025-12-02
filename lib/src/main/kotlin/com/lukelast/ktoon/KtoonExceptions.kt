@@ -4,7 +4,17 @@ import kotlinx.serialization.SerializationException
 
 /** Base exception for all TOON format-related errors. */
 open class KtoonException(message: String, cause: Throwable? = null) :
-    SerializationException(message, cause)
+    SerializationException(message, cause) {
+    companion object {
+        internal fun buildMessage(message: String, line: Int, column: Int): String {
+            return when {
+                line > 0 && column > 0 -> "$message at line $line, column $column"
+                line > 0 -> "$message at line $line"
+                else -> message
+            }
+        }
+    }
+}
 
 /**
  * Exception thrown when TOON validation fails in strict mode.
@@ -17,16 +27,8 @@ class KtoonValidationException(
     val line: Int = -1,
     val column: Int = -1,
     cause: Throwable? = null,
-) : KtoonException(buildMessage(message, line, column), cause) {
+) : KtoonException(KtoonException.buildMessage(message, line, column), cause) {
     companion object {
-        private fun buildMessage(message: String, line: Int, column: Int): String {
-            return when {
-                line > 0 && column > 0 -> "$message at line $line, column $column"
-                line > 0 -> "$message at line $line"
-                else -> message
-            }
-        }
-
         /** Creates a validation exception for array length mismatch. */
         fun arrayLengthMismatch(declared: Int, actual: Int, line: Int) =
             KtoonValidationException(
@@ -65,16 +67,8 @@ class KtoonParsingException(
     val line: Int = -1,
     val column: Int = -1,
     cause: Throwable? = null,
-) : KtoonException(buildMessage(message, line, column), cause) {
+) : KtoonException(KtoonException.buildMessage(message, line, column), cause) {
     companion object {
-        private fun buildMessage(message: String, line: Int, column: Int): String {
-            return when {
-                line > 0 && column > 0 -> "$message at line $line, column $column"
-                line > 0 -> "$message at line $line"
-                else -> message
-            }
-        }
-
         /** Creates a parsing exception for unexpected token. */
         fun unexpectedToken(expected: String, actual: String, line: Int, column: Int = -1) =
             KtoonParsingException("Expected $expected but found '$actual'", line, column)

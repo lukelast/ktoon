@@ -160,14 +160,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         properties[key] = value
     }
 
-    private fun isValidIdentifier(s: String): Boolean {
-        if (s.isEmpty()) return false
-        if (!s[0].isLetter() && s[0] != '_') return false
-        for (i in 1 until s.length) {
-            if (!s[i].isLetterOrDigit() && s[i] != '_') return false
-        }
-        return true
-    }
+    private fun isValidIdentifier(s: String): Boolean = StringQuoting.isIdentifierSegment(s)
 
     private fun insertExpandedProperty(
         properties: MutableMap<String, ToonValue>,
