@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.encode
 
-import com.lukelast.ktoon.fixtures.runFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
@@ -19,7 +19,7 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -28,7 +28,7 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -37,7 +37,7 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -46,7 +46,7 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -59,6 +59,6 @@ class ArraysTabularEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 }

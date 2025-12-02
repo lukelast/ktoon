@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.decode
 
-import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
@@ -35,22 +35,22 @@ class ArraysTabularDecodeTest {
 
     @Test
     fun `parses tabular arrays of uniform objects`() {
-        runDecodeFixtureTest<TabularResult>(fixture)
+        runFixtureDecodeTest<TabularResult>(fixture)
     }
 
     @Test
     fun `parses nulls and quoted values in tabular rows`() {
-        runDecodeFixtureTest<IdValueResult>(fixture)
+        runFixtureDecodeTest<IdValueResult>(fixture)
     }
 
     @Test
     fun `parses quoted colon in tabular row as data`() {
-        runDecodeFixtureTest<IdNoteResult>(fixture)
+        runFixtureDecodeTest<IdNoteResult>(fixture)
     }
 
     @Test
     fun `parses quoted header keys in tabular arrays`() {
-        runDecodeFixtureTest<OrderKeyResult>(fixture)
+        runFixtureDecodeTest<OrderKeyResult>(fixture)
     }
 
     @Serializable data class CustomItem(val id: Int, val name: String)
@@ -58,12 +58,12 @@ class ArraysTabularDecodeTest {
     @Test
     fun `parses quoted key with tabular array format`() {
         @Serializable data class CustomItemResult(val `x-items`: List<CustomItem>)
-        runDecodeFixtureTest<CustomItemResult>(fixture)
+        runFixtureDecodeTest<CustomItemResult>(fixture)
     }
 
     @Test
     fun `treats unquoted colon as terminator for tabular rows and start of key-value pair`() {
         @Serializable data class CountResult(val items: List<CustomItem>, val count: Int)
-        runDecodeFixtureTest<CountResult>(fixture)
+        runFixtureDecodeTest<CountResult>(fixture)
     }
 }

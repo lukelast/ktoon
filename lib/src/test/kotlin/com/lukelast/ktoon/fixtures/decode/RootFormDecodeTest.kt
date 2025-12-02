@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.decode
 
-import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
@@ -15,6 +15,6 @@ class RootFormDecodeTest {
     @Test
     fun `parses empty document as empty object`() {
         @Serializable class EmptyObject
-        runDecodeFixtureTest<EmptyObject>(fixture)
+        runFixtureDecodeTest<EmptyObject>(fixture)
     }
 }
