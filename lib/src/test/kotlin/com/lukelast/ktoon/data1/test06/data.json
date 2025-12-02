@@ -13,7 +13,7 @@
         "type": "Flat-6",
         "displacement": 4.0,
         "horsepower": 502,
-        "torque": 346
+        "torque": 346.0
       },
       "features": [
         "PCCB",
@@ -65,7 +65,7 @@
         "type": "V6 Hybrid",
         "displacement": 3.0,
         "horsepower": 819,
-        "torque": 546
+        "torque": 546.0
       },
       "features": [
         "Hybrid",

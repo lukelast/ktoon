@@ -13,7 +13,7 @@
         "type": "V8 Twin-Turbo",
         "displacement": 4.0,
         "horsepower": 755,
-        "torque": 590
+        "torque": 590.0
       },
       "features": [
         "Carbon Tub",
@@ -62,7 +62,7 @@
         "type": "V10 NA",
         "displacement": 5.2,
         "horsepower": 630,
-        "torque": 417
+        "torque": 417.0
       },
       "features": [
         "RWD",
@@ -103,7 +103,7 @@
         "type": "V10 NA",
         "displacement": 8.4,
         "horsepower": 645,
-        "torque": 600
+        "torque": 600.0
       },
       "features": [
         "Manual",

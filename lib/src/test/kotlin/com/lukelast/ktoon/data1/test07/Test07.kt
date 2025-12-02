@@ -29,7 +29,7 @@ private val data =
                             type = "V8 Twin-Turbo",
                             displacement = 4.0,
                             horsepower = 755,
-                            torque = 590,
+                            torque = 590f,
                         ),
                     features =
                         listOf("Carbon Tub", "Active Aero", "Titanium Exhaust", "Roof Scoop"),
@@ -67,7 +67,7 @@ private val data =
                             type = "V10 NA",
                             displacement = 5.2,
                             horsepower = 630,
-                            torque = 417,
+                            torque = 417f,
                         ),
                     features = listOf("RWD", "CCMR Brakes", "Cofango"),
                     lapTimes =
@@ -106,7 +106,7 @@ private val data =
                             type = "V10 NA",
                             displacement = 8.4,
                             horsepower = 645,
-                            torque = 600,
+                            torque = 600f,
                         ),
                     // Long primitive list
                     features =

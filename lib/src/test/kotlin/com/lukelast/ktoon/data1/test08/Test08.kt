@@ -28,7 +28,7 @@ private val data =
                             type = "Flat-6 NA",
                             displacement = 4.0,
                             horsepower = 414,
-                            torque = 309,
+                            torque = 309f,
                         ),
                     // Tests Inline Primitive Array of length 1 (No delimiters needed)
                     features = listOf("Bucket Seats"),

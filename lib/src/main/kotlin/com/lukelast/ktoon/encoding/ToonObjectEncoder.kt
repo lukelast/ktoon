@@ -13,18 +13,27 @@ import kotlinx.serialization.modules.SerializersModule
 /** Encoder for TOON objects (structures with named fields). */
 @OptIn(ExperimentalSerializationApi::class)
 internal class ToonObjectEncoder(
-    private val writer: ToonWriter,
+    private val rawWriter: ToonWriter,
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
     private val indentLevel: Int,
     private val isRoot: Boolean = false,
     private val pendingKeys: List<String> = emptyList(),
     private val siblingKeys: Set<String> = emptySet(),
+    private val onEnd: (() -> Unit)? = null,
 ) : AbstractEncoder() {
 
     private var elementIndex = 0
     private var currentKey: String? = null
     private var hasWrittenElement = false
+
+    // Sorting support: buffer fields when sortFields is enabled
+    private val sortedFields: MutableList<Pair<String, String>>? =
+        if (config.sortFields && pendingKeys.isEmpty()) mutableListOf() else null
+    private var fieldWriter: ToonWriter? = null
+
+    private val writer: ToonWriter
+        get() = fieldWriter ?: rawWriter
 
     override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = false
 
@@ -32,10 +41,19 @@ internal class ToonObjectEncoder(
         elementIndex = index
         currentKey = descriptor.getElementName(index)
         hasWrittenElement = true
-        if (!isRoot || elementIndex > 0) {
-            if (pendingKeys.isEmpty()) writer.writeNewline()
+
+        // Start capturing to field buffer if sorting
+        if (sortedFields != null) {
+            fieldWriter = ToonWriter(config)
+            // When sorting, only write indent to buffer (newlines added during sorted write)
+            fieldWriter!!.writeIndent(indentLevel)
+            return true
         }
-        if (pendingKeys.isEmpty()) writer.writeIndent(indentLevel)
+
+        if (!isRoot || elementIndex > 0) {
+            if (pendingKeys.isEmpty()) rawWriter.writeNewline()
+        }
+        if (pendingKeys.isEmpty()) rawWriter.writeIndent(indentLevel)
         return true
     }
 
@@ -86,7 +104,7 @@ internal class ToonObjectEncoder(
         return if (canFoldKey(descriptor, key) && !collision) {
             // Continue folding
             ToonObjectEncoder(
-                writer = writer,
+                rawWriter = writer,
                 config = config,
                 serializersModule = serializersModule,
                 indentLevel = indentLevel, // Indent doesn't increase while folding
@@ -117,6 +135,7 @@ internal class ToonObjectEncoder(
                     serializersModule = serializersModule,
                     indentLevel = indentLevel,
                     key = fullKey,
+                    onEnd = { finishField() },
                 )
             } else {
                 val newIndent = flushPendingKeys()
@@ -133,13 +152,14 @@ internal class ToonObjectEncoder(
                     StructureKind.OBJECT -> {
                         writeKey(key)
                         ToonObjectEncoder(
-                            writer = writer,
+                            rawWriter = writer,
                             config = config,
                             serializersModule = serializersModule,
                             indentLevel = newIndent + 1,
                             isRoot = false,
                             pendingKeys = emptyList(),
                             siblingKeys = newSiblingKeys,
+                            onEnd = { finishField() },
                         )
                     }
                     StructureKind.MAP -> {
@@ -150,6 +170,7 @@ internal class ToonObjectEncoder(
                             serializersModule = serializersModule,
                             indentLevel = newIndent + 1,
                             isRoot = false,
+                            onEnd = { finishField() },
                         )
                     }
                     StructureKind.LIST ->
@@ -159,6 +180,7 @@ internal class ToonObjectEncoder(
                             serializersModule = serializersModule,
                             indentLevel = newIndent,
                             key = key,
+                            onEnd = { finishField() },
                         )
                     else -> this
                 }
@@ -170,6 +192,16 @@ internal class ToonObjectEncoder(
         if (pendingKeys.isNotEmpty() && !hasWrittenElement) {
             flushPendingKeys(writeNewline = false)
         }
+
+        // Write sorted fields to actual writer
+        if (sortedFields != null) {
+            val sorted = sortedFields.sortedBy { it.first }
+            sorted.forEachIndexed { index, (_, output) ->
+                if (!isRoot || index > 0) rawWriter.writeNewline()
+                rawWriter.write(output)
+            }
+        }
+        onEnd?.invoke()
     }
 
     private fun quoteValue(value: String) =
@@ -203,6 +235,14 @@ internal class ToonObjectEncoder(
                 writer.writeKeyValue(quoteKey(key), value)
             }
         }
+        finishField()
+    }
+
+    private fun finishField() {
+        val fw = fieldWriter ?: return
+        val key = currentKey ?: return
+        sortedFields?.add(key to fw.toString())
+        fieldWriter = null
     }
 
     private fun flushPendingKeys(writeNewline: Boolean = true): Int {

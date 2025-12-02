@@ -41,8 +41,8 @@ private val data =
                             displacement =
                                 0.000001, // Tests: Canonical decimal format (no Scientific
                             // notation)
-                            horsepower = 0,
-                            torque = -100, // Tests: Negative integer
+                            horsepower = -100,
+                            torque = 50.12345f,
                         ),
 
                     // Tests: Inline Array with special characters (Spec §7.2)

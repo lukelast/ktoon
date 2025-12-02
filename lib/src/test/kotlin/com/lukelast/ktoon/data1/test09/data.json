@@ -12,8 +12,8 @@
       "engineSpec": {
         "type": "",
         "displacement": 1.0E-6,
-        "horsepower": 0,
-        "torque": -100
+        "horsepower": -100,
+        "torque": 50.12345
       },
       "features": [
         ",",

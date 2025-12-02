@@ -41,7 +41,7 @@ data class EngineSpec(
     val type: String,
     val displacement: Double, // Tests Canonical Number formatting (Section 2)
     val horsepower: Int,
-    val torque: Int,
+    val torque: Float,
 )
 
 /** Designed for Tabular Array testing (Section 9.3). Uniform keys, primitive values only. */

@@ -28,7 +28,7 @@ private val data =
                             type = "Flat-6",
                             displacement = 4.0,
                             horsepower = 502,
-                            torque = 346,
+                            torque = 346f,
                         ),
                     features = listOf("PCCB", "Cage", "Wing"),
                     lapTimes =
@@ -64,7 +64,7 @@ private val data =
                             type = "V6 Hybrid",
                             displacement = 3.0,
                             horsepower = 819,
-                            torque = 546,
+                            torque = 546f,
                         ),
                     features = listOf("Hybrid", "Active Aero"),
                     lapTimes = emptyList(), // Tests empty tabular array: lapTimes[0]{...}:

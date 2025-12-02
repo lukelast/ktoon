@@ -66,7 +66,7 @@ internal class ToonEncoder(
                 val siblingKeys =
                     (0 until descriptor.elementsCount).map { descriptor.getElementName(it) }.toSet()
                 ToonObjectEncoder(
-                    writer = writer,
+                    rawWriter = writer,
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = 0,

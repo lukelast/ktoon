@@ -10,8 +10,8 @@ inventory[1]:
     engineSpec:
       type: ""
       displacement: 0.000001
-      horsepower: 0
-      torque: -100
+      horsepower: -100
+      torque: 50.12345
     features[5]: ",",":","["," ","-"
     lapTimes[2]{track,seconds}:
       "Track, A",60

@@ -7,11 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-java@v5
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-    - uses: gradle/actions/setup-gradle@v5
-    - run: ./gradlew check
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v5
+      - run: ./gradlew check
+      - name: Publish Test Report
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: JUnit Tests
+          path: '**/build/test-results/test/TEST-*.xml'
+          reporter: java-junit

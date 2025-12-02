@@ -16,6 +16,7 @@ internal class ToonArrayEncoder(
     override val serializersModule: SerializersModule,
     private val indentLevel: Int,
     private val key: String?,
+    private val onEnd: (() -> Unit)? = null,
 ) : AbstractEncoder() {
 
     private val elements = ArrayList<EncodedElement>(64)
@@ -121,6 +122,7 @@ internal class ToonArrayEncoder(
             ArrayFormatSelector.ArrayFormat.TABULAR -> writeTabular()
             ArrayFormatSelector.ArrayFormat.EXPANDED -> writeExpanded()
         }
+        onEnd?.invoke()
     }
 
     private fun writeInline() {
@@ -216,7 +218,7 @@ internal class ToonArrayEncoder(
 
     private fun writeArrayHeader(key: String?, size: Int, delim: Char) {
         if (key != null) {
-            writer.writeArrayHeader(key, size, delim)
+            writer.writeArrayHeader(quoteKey(key), size, delim)
         } else {
             writer.write('[')
             writer.write(size)
@@ -230,7 +232,7 @@ internal class ToonArrayEncoder(
         val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
         val delim = config.delimiter.char
         if (key != null) {
-            writer.writeTabularArrayHeader(key, elements.size, fields, delim)
+            writer.writeTabularArrayHeader(quoteKey(key), elements.size, fields, delim)
         } else {
             writer.write('[')
             writer.write(elements.size)

@@ -11,6 +11,7 @@ package com.lukelast.ktoon
  *   (default: false)
  * @property delimiter Delimiter character for array values and tabular format (default: COMMA)
  * @property indentSize Number of spaces per indentation level (default: 2)
+ * @property sortFields Enable alphabetical sorting of object fields (default: false)
  */
 data class KtoonConfiguration(
     val strictMode: Boolean = true,
@@ -19,6 +20,7 @@ data class KtoonConfiguration(
     val pathExpansion: Boolean = false,
     val delimiter: Delimiter = Delimiter.COMMA,
     val indentSize: Int = 2,
+    val sortFields: Boolean = false,
 ) {
     init {
         require(indentSize > 0) { "indentSize must be positive, got $indentSize" }
@@ -94,6 +96,12 @@ class KtoonConfigurationBuilder {
     /** A decoder setting. */
     var pathExpansion: Boolean = false
 
+    /**
+     * Enable alphabetical sorting of object fields. Default is field order stays as they are
+     * originally defined. Note this goes against the TOON specification.
+     */
+    var sortFields: Boolean = false
+
     fun build(): KtoonConfiguration =
         KtoonConfiguration(
             strictMode = strictMode,
@@ -102,5 +110,6 @@ class KtoonConfigurationBuilder {
             pathExpansion = pathExpansion,
             delimiter = delimiter,
             indentSize = indentSize,
+            sortFields = sortFields,
         )
 }

@@ -16,6 +16,7 @@ internal class ToonMapEncoder(
     override val serializersModule: SerializersModule,
     private val indentLevel: Int,
     private val isRoot: Boolean = false,
+    private val onEnd: (() -> Unit)? = null,
 ) : AbstractEncoder() {
 
     private var currentKey: String? = null
@@ -97,7 +98,7 @@ internal class ToonMapEncoder(
             StructureKind.OBJECT -> {
                 writer.writeKey(quoteKey(key))
                 ToonObjectEncoder(
-                    writer = writer,
+                    rawWriter = writer,
                     config = config,
                     serializersModule = serializersModule,
                     indentLevel = indentLevel + 1,
@@ -116,6 +117,10 @@ internal class ToonMapEncoder(
             }
             else -> this
         }
+    }
+
+    override fun endStructure(descriptor: SerialDescriptor) {
+        onEnd?.invoke()
     }
 
     private fun quoteValue(value: String) =

@@ -31,7 +31,9 @@ internal object NumberNormalizer {
             return longValue.toString()
         }
 
-        return normalize(value.toDouble())
+        return value.toBigDecimal().stripTrailingZeros().toPlainString().let {
+            if (it == "-0" || it == "-0.0") "0" else it
+        }
     }
 
     fun normalize(value: Long): String = value.toString()

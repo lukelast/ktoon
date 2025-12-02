@@ -13,7 +13,7 @@
         "type": "Flat-6 NA",
         "displacement": 4.0,
         "horsepower": 414,
-        "torque": 309
+        "torque": 309.0
       },
       "features": [
         "Bucket Seats"

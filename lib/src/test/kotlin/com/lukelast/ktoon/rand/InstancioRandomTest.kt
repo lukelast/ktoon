@@ -3,7 +3,8 @@ package com.lukelast.ktoon.rand
 import com.lukelast.ktoon.Ktoon
 import org.instancio.Instancio
 import org.instancio.settings.Keys
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class InstancioRandomTest {
@@ -19,14 +20,14 @@ class InstancioRandomTest {
                     .withSetting(Keys.STRING_MAX_LENGTH, 10)
                     .create()
             //            Path("original.txt").writeText(randomData.toString())
-            val toonText = Ktoon().encodeToString(randomData)
-            Assertions.assertTrue(toonText.isNotBlank())
+            val toonText = Ktoon.Default.encodeToString(randomData)
+            assertTrue(toonText.isNotBlank())
             //            Path("test.toon").writeText(toonText)
 
-            val parsedData = Ktoon().decodeFromString<FarmTestData>(toonText)
+            val parsedData = Ktoon.Default.decodeFromString<FarmTestData>(toonText)
             //            Path("parsed.txt").writeText(parsedData.toString())
 
-            Assertions.assertEquals(randomData, parsedData)
+            assertEquals(randomData, parsedData)
         }
     }
 }
