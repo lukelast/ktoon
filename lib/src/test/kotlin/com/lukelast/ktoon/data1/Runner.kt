@@ -47,6 +47,13 @@ abstract class Runner {
 
         val toonFileTextToData: T = ktoon.decodeFromString(toonFileText)
         assertEquals(data, toonFileTextToData, "ktoon decodeFromString checked against the data")
+
+        val toonFromJsonText = ktoon.encodeJsonToToon(dataToJsonText)
+        assertEquals(
+            toonFileText,
+            toonFromJsonText,
+            "ktoon encodeJsonToToon checked against the toon file",
+        )
     }
 
     fun execToonCli(json: Path, toon: Path) {

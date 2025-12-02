@@ -3,9 +3,7 @@ package com.lukelast.ktoon.encoding
 import com.lukelast.ktoon.encoding.ArrayFormatSelector.ArrayFormat.*
 import com.lukelast.ktoon.encoding.ToonArrayEncoder.EncodedElement
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.elementDescriptors
 
 /** Utility for selecting the appropriate TOON array format based on content analysis. */
 @OptIn(ExperimentalSerializationApi::class)
@@ -35,10 +33,11 @@ internal object ArrayFormatSelector {
         if (structures.any { it.descriptor != first.descriptor }) {
             return EXPANDED
         }
-        if (first.descriptor.elementDescriptors.any { it.kind !is PrimitiveKind }) {
+        // Check if all values in all structures are primitives
+        if (structures.any { s -> s.values.any { (_, v) -> v !is EncodedElement.Primitive } }) {
             return EXPANDED
         }
-        if (structures.any { it.fieldNames != first.fieldNames }) {
+        if (structures.any { !it.fieldNamesEqual(first) }) {
             return EXPANDED
         }
         return TABULAR

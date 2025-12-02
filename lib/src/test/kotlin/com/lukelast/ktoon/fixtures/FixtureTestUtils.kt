@@ -56,6 +56,18 @@ fun <T> runFixtureEncodeTest(
             testCase.specSection?.let { append("\nSpec: §$it") }
         },
     )
+
+    val ktoonJsonToToon = ktoon.encodeJsonToToon(testCase.input)
+    assertEquals(
+        expectedToon,
+        ktoonJsonToToon,
+        buildString {
+            append("Test '$testName' failed")
+            append("\nktoon.encodeJsonToToon()")
+            testCase.note?.let { append("\nNote: $it") }
+            testCase.specSection?.let { append("\nSpec: §$it") }
+        },
+    )
 }
 
 inline fun <reified T> runFixtureEncodeTest(

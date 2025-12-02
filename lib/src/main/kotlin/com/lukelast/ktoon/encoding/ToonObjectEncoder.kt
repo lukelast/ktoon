@@ -84,7 +84,7 @@ internal class ToonObjectEncoder(
         siblingKeys.contains(foldedKey) || siblingKeys.any { it.startsWith("$foldedKey.") }
 
     private fun canFoldKey(descriptor: SerialDescriptor, key: String): Boolean =
-        canFoldKey(key) && descriptor.elementsCount == 1 && descriptor.kind != StructureKind.LIST
+        canFoldKey(key) && descriptor.elementsCount <= 1 && descriptor.kind != StructureKind.LIST
 
     private fun canFoldKey(key: String): Boolean =
         config.keyFolding == KeyFoldingMode.SAFE &&
