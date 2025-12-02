@@ -70,7 +70,7 @@ internal class ToonObjectEncoder(
 
     private fun canFoldKey(key: String): Boolean =
         config.keyFolding == KeyFoldingMode.SAFE &&
-            isValidIdentifier(key) &&
+            StringQuoting.isIdentifierSegment(key) &&
             pendingKeys.size + 1 <= (config.flattenDepth ?: Int.MAX_VALUE)
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
@@ -103,7 +103,7 @@ internal class ToonObjectEncoder(
             // we can merge the pending keys with the list key and let ToonArrayEncoder handle it.
             if (
                 descriptor.kind == StructureKind.LIST &&
-                    isValidIdentifier(key) &&
+                    StringQuoting.isIdentifierSegment(key) &&
                     !collision &&
                     pendingKeys.isNotEmpty()
             ) {
@@ -218,8 +218,6 @@ internal class ToonObjectEncoder(
 
         return indentLevel + 1
     }
-
-    private fun isValidIdentifier(key: String): Boolean = StringQuoting.isIdentifierSegment(key)
 
     override fun <T : Any> encodeNullableSerializableElement(
         descriptor: SerialDescriptor,

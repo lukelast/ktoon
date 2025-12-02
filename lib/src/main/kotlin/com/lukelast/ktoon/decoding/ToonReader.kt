@@ -147,7 +147,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         if (config.pathExpansion && !rawKey.startsWith("\"") && key.contains('.')) {
             val parts = key.split('.')
             // Only expand if all parts are valid identifiers (Safe Mode)
-            if (parts.all { isValidIdentifier(it) }) {
+            if (parts.all { StringQuoting.isIdentifierSegment(it) }) {
                 insertExpandedProperty(properties, parts, value, line)
                 return
             }
@@ -159,8 +159,6 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         }
         properties[key] = value
     }
-
-    private fun isValidIdentifier(s: String): Boolean = StringQuoting.isIdentifierSegment(s)
 
     private fun insertExpandedProperty(
         properties: MutableMap<String, ToonValue>,
