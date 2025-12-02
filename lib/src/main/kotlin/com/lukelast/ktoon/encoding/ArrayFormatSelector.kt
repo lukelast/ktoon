@@ -8,31 +8,25 @@ import kotlinx.serialization.ExperimentalSerializationApi
 internal object ArrayFormatSelector {
 
     enum class ArrayFormat {
-        /**
-         * A delimiter seperated list of primitive values.
-         */
+        /** A delimiter seperated list of primitive values. */
         INLINE,
 
-        /**
-         * A compact table of the same object. This is what TOON is known for.
-         */
+        /** A compact table of the same object. This is what TOON is known for. */
         TABULAR,
 
-        /**
-         * A list of objects where objects can be complex and nested.
-         */
+        /** A list of objects where objects can be complex and nested. */
         EXPANDED,
     }
 
     fun selectFormat(elements: List<EncodedElement>): ArrayFormat {
-        if(elements.isEmpty()){
+        if (elements.isEmpty()) {
             return INLINE
         }
         if (elements.all { it is EncodedElement.Primitive }) {
             return INLINE
         }
         val structures = elements.filterIsInstance<EncodedElement.Structure>()
-        if(elements.size != structures.size) {
+        if (elements.size != structures.size) {
             return EXPANDED
         }
         val first = structures.first()

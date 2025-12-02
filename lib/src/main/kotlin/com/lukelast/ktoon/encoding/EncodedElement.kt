@@ -1,7 +1,6 @@
 package com.lukelast.ktoon.encoding
 
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.elementNames
 import kotlinx.serialization.encoding.CompositeDecoder
 
 internal sealed class EncodedElement {

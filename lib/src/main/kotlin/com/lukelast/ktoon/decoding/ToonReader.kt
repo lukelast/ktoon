@@ -3,7 +3,7 @@ package com.lukelast.ktoon.decoding
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
 import com.lukelast.ktoon.KtoonValidationException
-import com.lukelast.ktoon.encoding.StringQuoting
+import com.lukelast.ktoon.util.isIdentifierSegment
 import com.lukelast.ktoon.validation.ValidationEngine
 
 /**
@@ -109,7 +109,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 is Token.Key -> {
                     advance()
                     val rawKey = token.name
-                    val key = StringQuoting.unquote(rawKey, token.line)
+                    val key = unquote(rawKey, token.line)
                     val value = readValue(token.indent)
 
                     insertProperty(properties, key, rawKey, value, token.line)
@@ -122,7 +122,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                     val arrayValue = readArray()
                     if (arrayValue is ToonValue.Array) {
                         val rawKey = token.key
-                        val key = StringQuoting.unquote(rawKey, token.line)
+                        val key = unquote(rawKey, token.line)
                         insertProperty(properties, key, rawKey, arrayValue, token.line)
                     }
                 }
@@ -147,7 +147,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         if (config.pathExpansion && !rawKey.startsWith("\"") && key.contains('.')) {
             val parts = key.split('.')
             // Only expand if all parts are valid identifiers (Safe Mode)
-            if (parts.all { StringQuoting.isIdentifierSegment(it) }) {
+            if (parts.all { it.isIdentifierSegment() }) {
                 insertExpandedProperty(properties, parts, value, line)
                 return
             }
@@ -262,7 +262,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         // Split by delimiter (§12: surrounding whitespace SHOULD be tolerated; empty tokens decode
         // to empty string)
         val values =
-            StringQuoting.splitRespectingQuotes(valueToken.content, header.delimiter.char)
+            splitRespectingQuotes(valueToken.content, header.delimiter.char)
                 .map { it.trim() }
                 // Note: Empty tokens (after trimming) decode to empty string per §12
                 .map { parsePrimitive(it, valueToken.line) }
@@ -276,7 +276,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     /** Reads a tabular array: `key[2]{id,name}:\n 1,Alice\n 2,Bob` */
     private fun readTabularArray(header: Token.ArrayHeader): ToonValue.Array {
         val fields =
-            header.fields?.map { StringQuoting.unquote(it.trim(), header.line) }
+            header.fields?.map { unquote(it.trim(), header.line) }
                 ?: throw KtoonParsingException("Tabular array missing field list", header.line)
 
         val elements = mutableListOf<ToonValue.Object>()
@@ -338,7 +338,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         line: Int,
     ) {
         val values =
-            StringQuoting.splitRespectingQuotes(content, header.delimiter.char)
+            splitRespectingQuotes(content, header.delimiter.char)
                 .map { it.trim() }
                 .map { parsePrimitive(it, line) }
 
@@ -435,7 +435,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         val isQuoted = content.startsWith('"')
 
         // Unquote if quoted
-        val unquoted = StringQuoting.unquote(content, line)
+        val unquoted = unquote(content, line)
 
         // If originally quoted, return as string (prevents parsing "42" as number, etc.)
         if (isQuoted) {

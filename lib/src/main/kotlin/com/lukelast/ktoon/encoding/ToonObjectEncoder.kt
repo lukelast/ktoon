@@ -2,6 +2,7 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KeyFoldingMode
 import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.util.isIdentifierSegment
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -88,7 +89,7 @@ internal class ToonObjectEncoder(
 
     private fun canFoldKey(key: String): Boolean =
         config.keyFolding == KeyFoldingMode.SAFE &&
-            StringQuoting.isIdentifierSegment(key) &&
+            key.isIdentifierSegment() &&
             pendingKeys.size + 1 <= (config.flattenDepth ?: Int.MAX_VALUE)
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
@@ -121,7 +122,7 @@ internal class ToonObjectEncoder(
             // we can merge the pending keys with the list key and let ToonArrayEncoder handle it.
             if (
                 descriptor.kind == StructureKind.LIST &&
-                    StringQuoting.isIdentifierSegment(key) &&
+                    key.isIdentifierSegment() &&
                     !collision &&
                     pendingKeys.isNotEmpty()
             ) {

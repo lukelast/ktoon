@@ -2,7 +2,6 @@ package com.lukelast.ktoon.decoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
-import com.lukelast.ktoon.encoding.StringQuoting
 
 /**
  * Lexer for tokenizing TOON format text.
@@ -200,7 +199,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                     )
                 }
                 val fieldsContent = keyPart.substring(braceStart + 1, braceEnd)
-                StringQuoting.splitRespectingQuotes(fieldsContent, delimiter.char).map { it.trim() }
+                splitRespectingQuotes(fieldsContent, delimiter.char).map { it.trim() }
             } else {
                 null
             }

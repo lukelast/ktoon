@@ -254,4 +254,3 @@ internal class ToonArrayEncoder(
         }
     }
 }
-
