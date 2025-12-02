@@ -1,32 +1,38 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.encoding.ArrayFormatSelector.ArrayFormat.*
-import com.lukelast.ktoon.encoding.ToonArrayEncoder.EncodedElement
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.descriptors.SerialDescriptor
 
 /** Utility for selecting the appropriate TOON array format based on content analysis. */
 @OptIn(ExperimentalSerializationApi::class)
 internal object ArrayFormatSelector {
 
     enum class ArrayFormat {
+        /**
+         * A delimiter seperated list of primitive values.
+         */
         INLINE,
+
+        /**
+         * A compact table of the same object. This is what TOON is known for.
+         */
         TABULAR,
+
+        /**
+         * A list of objects where objects can be complex and nested.
+         */
         EXPANDED,
     }
 
-    fun getFieldNames(descriptor: SerialDescriptor): List<String> =
-        (0 until descriptor.elementsCount).map { descriptor.getElementName(it) }
-
     fun selectFormat(elements: List<EncodedElement>): ArrayFormat {
+        if(elements.isEmpty()){
+            return INLINE
+        }
         if (elements.all { it is EncodedElement.Primitive }) {
             return INLINE
         }
-        if (elements.any { it !is EncodedElement.Structure }) {
-            return EXPANDED
-        }
         val structures = elements.filterIsInstance<EncodedElement.Structure>()
-        if (structures.isEmpty()) {
+        if(elements.size != structures.size) {
             return EXPANDED
         }
         val first = structures.first()
