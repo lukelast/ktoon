@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.encode
 
-import com.lukelast.ktoon.fixtures.runFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
@@ -16,21 +16,21 @@ class DelimitersEncodeTest {
     fun `encodes primitive arrays with tab delimiter`() {
         @Serializable data class Root(val tags: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `encodes primitive arrays with pipe delimiter`() {
         @Serializable data class Root(val tags: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `encodes primitive arrays with comma delimiter`() {
         @Serializable data class Root(val tags: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -39,7 +39,7 @@ class DelimitersEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -48,73 +48,73 @@ class DelimitersEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `encodes nested arrays with tab delimiter`() {
         @Serializable data class Root(val pairs: List<List<String>>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `encodes nested arrays with pipe delimiter`() {
         @Serializable data class Root(val pairs: List<List<String>>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `encodes root-level array with tab delimiter`() {
-        runFixtureTest<List<String>>(fixture)
+        runFixtureEncodeTest<List<String>>(fixture)
     }
 
     @Test
     fun `encodes root-level array with pipe delimiter`() {
-        runFixtureTest<List<String>>(fixture)
+        runFixtureEncodeTest<List<String>>(fixture)
     }
 
     @Test
     fun `encodes root-level array of objects with tab delimiter`() {
         @Serializable data class Item(val id: Int)
 
-        runFixtureTest<List<Item>>(fixture)
+        runFixtureEncodeTest<List<Item>>(fixture)
     }
 
     @Test
     fun `encodes root-level array of objects with pipe delimiter`() {
         @Serializable data class Item(val id: Int)
 
-        runFixtureTest<List<Item>>(fixture)
+        runFixtureEncodeTest<List<Item>>(fixture)
     }
 
     @Test
     fun `quotes strings containing tab delimiter`() {
         @Serializable data class Root(val items: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `quotes strings containing pipe delimiter`() {
         @Serializable data class Root(val items: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `does not quote commas with tab delimiter`() {
         @Serializable data class Root(val items: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `does not quote commas with pipe delimiter`() {
         @Serializable data class Root(val items: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -123,7 +123,7 @@ class DelimitersEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -132,41 +132,41 @@ class DelimitersEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `does not quote commas in object values with pipe delimiter`() {
         @Serializable data class Root(val note: String)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `does not quote commas in object values with tab delimiter`() {
         @Serializable data class Root(val note: String)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `quotes nested array values containing pipe delimiter`() {
         @Serializable data class Root(val pairs: List<List<String>>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `quotes nested array values containing tab delimiter`() {
         @Serializable data class Root(val pairs: List<List<String>>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
     fun `preserves ambiguity quoting regardless of delimiter`() {
         @Serializable data class Root(val items: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 }

@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.decode
 
-import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
@@ -14,7 +14,7 @@ class BlankLinesDecodeTest {
 
     @Test
     fun `throws on blank line inside list array`() {
-        runDecodeFixtureTest<Map<String, List<String>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 
     @Serializable data class TabularItem(val id: Int)
@@ -23,17 +23,17 @@ class BlankLinesDecodeTest {
 
     @Test
     fun `throws on blank line inside tabular array`() {
-        runDecodeFixtureTest<TabularResult>(fixture)
+        runFixtureDecodeTest<TabularResult>(fixture)
     }
 
     @Test
     fun `throws on multiple blank lines inside array`() {
-        runDecodeFixtureTest<Map<String, List<String>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 
     @Test
     fun `throws on blank line with spaces inside array`() {
-        runDecodeFixtureTest<Map<String, List<String>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 
     @Serializable data class NestedItem(val inner: List<String>)
@@ -42,33 +42,33 @@ class BlankLinesDecodeTest {
 
     @Test
     fun `throws on blank line in nested list array`() {
-        runDecodeFixtureTest<OuterResult>(fixture)
+        runFixtureDecodeTest<OuterResult>(fixture)
     }
 
     @Serializable data class TwoFields(val a: Int, val b: Int)
 
     @Test
     fun `accepts blank line between root-level fields`() {
-        runDecodeFixtureTest<TwoFields>(fixture)
+        runFixtureDecodeTest<TwoFields>(fixture)
     }
 
     @Serializable data class SingleField(val a: Int)
 
     @Test
     fun `accepts trailing newline at end of file`() {
-        runDecodeFixtureTest<SingleField>(fixture)
+        runFixtureDecodeTest<SingleField>(fixture)
     }
 
     @Test
     fun `accepts multiple trailing newlines`() {
-        runDecodeFixtureTest<SingleField>(fixture)
+        runFixtureDecodeTest<SingleField>(fixture)
     }
 
     @Serializable data class WithArray(val items: List<String>, val b: Int)
 
     @Test
     fun `accepts blank line after array ends`() {
-        runDecodeFixtureTest<WithArray>(fixture)
+        runFixtureDecodeTest<WithArray>(fixture)
     }
 
     @Serializable data class NestedWithBlank(val a: NestedB)
@@ -77,12 +77,12 @@ class BlankLinesDecodeTest {
 
     @Test
     fun `accepts blank line between nested object fields`() {
-        runDecodeFixtureTest<NestedWithBlank>(fixture)
+        runFixtureDecodeTest<NestedWithBlank>(fixture)
     }
 
     @Test
     fun `ignores blank lines inside list array when strict=false`() {
-        runDecodeFixtureTest<Map<String, List<String>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 
     @Serializable data class TabularWithBlank(val id: Int, val name: String)
@@ -91,11 +91,11 @@ class BlankLinesDecodeTest {
 
     @Test
     fun `ignores blank lines inside tabular array when strict=false`() {
-        runDecodeFixtureTest<TabularBlankResult>(fixture)
+        runFixtureDecodeTest<TabularBlankResult>(fixture)
     }
 
     @Test
     fun `ignores multiple blank lines in arrays when strict=false`() {
-        runDecodeFixtureTest<Map<String, List<String>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 }

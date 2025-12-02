@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.decode
 
-import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
@@ -18,17 +18,17 @@ class WhitespaceDecodeTest {
 
     @Test
     fun `tolerates spaces around commas in inline arrays`() {
-        runDecodeFixtureTest<TagsResult>(fixture)
+        runFixtureDecodeTest<TagsResult>(fixture)
     }
 
     @Test
     fun `tolerates spaces around pipes in inline arrays`() {
-        runDecodeFixtureTest<TagsResult>(fixture)
+        runFixtureDecodeTest<TagsResult>(fixture)
     }
 
     @Test
     fun `tolerates spaces around tabs in inline arrays`() {
-        runDecodeFixtureTest<TagsResult>(fixture)
+        runFixtureDecodeTest<TagsResult>(fixture)
     }
 
     @Test
@@ -36,16 +36,16 @@ class WhitespaceDecodeTest {
         @Serializable data class TabularItem(val id: Int, val name: String)
         @Serializable data class TabularResult(val items: List<TabularItem>)
 
-        runDecodeFixtureTest<TabularResult>(fixture)
+        runFixtureDecodeTest<TabularResult>(fixture)
     }
 
     @Test
     fun `tolerates spaces around delimiters with quoted values`() {
-        runDecodeFixtureTest<ItemsResult>(fixture)
+        runFixtureDecodeTest<ItemsResult>(fixture)
     }
 
     @Test
     fun `parses empty tokens as empty string`() {
-        runDecodeFixtureTest<ItemsResult>(fixture)
+        runFixtureDecodeTest<ItemsResult>(fixture)
     }
 }

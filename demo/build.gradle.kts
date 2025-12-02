@@ -14,8 +14,6 @@ dependencies {
     // implementation("com.github.lukelast:ktoon:VERSION")
 
     implementation(project(":lib"))
-
-    implementation(libs.kotlin.serialization)
 }
 
 application { mainClass.set("com.lukelast.ktoon.demo.encode.DefaultKt") }

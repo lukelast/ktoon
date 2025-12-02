@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.decode
 
-import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
@@ -13,12 +13,12 @@ class ValidationErrorsDecodeTest {
 
     @Test
     fun `throws on array length mismatch (inline primitives - too many)`() {
-        runDecodeFixtureTest<Map<String, List<String>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 
     @Test
     fun `throws on array length mismatch (list format - too many)`() {
-        runDecodeFixtureTest<Map<String, List<Int>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<Int>>>(fixture)
     }
 
     @Serializable data class TabularItem(val id: Int, val name: String)
@@ -27,45 +27,45 @@ class ValidationErrorsDecodeTest {
 
     @Test
     fun `throws on tabular row value count mismatch with header field count`() {
-        runDecodeFixtureTest<TabularResult>(fixture)
+        runFixtureDecodeTest<TabularResult>(fixture)
     }
 
     @Serializable data class IdOnly(val id: Int)
 
     @Test
     fun `throws on tabular row count mismatch with header length`() {
-        runDecodeFixtureTest<List<IdOnly>>(fixture)
+        runFixtureDecodeTest<List<IdOnly>>(fixture)
     }
 
     @Test
     fun `throws on invalid escape sequence`() {
-        runDecodeFixtureTest<String>(fixture)
+        runFixtureDecodeTest<String>(fixture)
     }
 
     @Test
     fun `throws on unterminated string`() {
-        runDecodeFixtureTest<String>(fixture)
+        runFixtureDecodeTest<String>(fixture)
     }
 
     @Test
     fun `throws on missing colon in key-value context`() {
         @Serializable data class User(val user: String)
         @Serializable data class Root(val a: User)
-        runDecodeFixtureTest<Root>(fixture)
+        runFixtureDecodeTest<Root>(fixture)
     }
 
     @Test
     fun `throws on two primitives at root depth in strict mode`() {
-        runDecodeFixtureTest<String>(fixture)
+        runFixtureDecodeTest<String>(fixture)
     }
 
     @Test
     fun `throws on delimiter mismatch (header declares tab, row uses comma)`() {
-        runDecodeFixtureTest<Map<String, List<TabularItem>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<TabularItem>>>(fixture)
     }
 
     @Test
     fun `throws on mismatched delimiter between bracket and brace fields`() {
-        runDecodeFixtureTest<Map<String, List<TabularItem>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<TabularItem>>>(fixture)
     }
 }

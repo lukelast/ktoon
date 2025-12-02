@@ -29,7 +29,13 @@ internal class ToonArrayEncoder(
             val descriptor: SerialDescriptor,
             val values: List<Pair<String, EncodedElement>>,
         ) : EncodedElement() {
-            val fieldNames = values.map(Pair<String, EncodedElement>::first)
+            private val fieldNamesSet: Set<String> by lazy {
+                values.map(Pair<String, EncodedElement>::first).toSet()
+            }
+
+            fun fieldNamesEqual(other: Structure): Boolean {
+                return fieldNamesSet == other.fieldNamesSet
+            }
         }
 
         data class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
@@ -247,9 +253,21 @@ internal class ToonArrayEncoder(
         elements.filterIsInstance<EncodedElement.Structure>().forEach { s ->
             writer.writeNewline()
             writer.writeIndent(indent + 1)
-            s.values.forEachIndexed { i, (_, v) ->
-                writer.write(if (v is EncodedElement.Primitive) v.value else v.toString())
-                if (i < s.values.lastIndex) writer.writeDelimiter()
+            val valueMap = s.values.toMap()
+            // We use 'first.fieldNames' (not 'fields' which are quoted) to look up values
+            first.values.forEachIndexed { i, (name, _) ->
+                val v = valueMap[name]
+                // If v is null, it means the field is missing, which shouldn't happen if sets
+                // match.
+                // But if it does, we might want to write null or error.
+                // Given ArrayFormatSelector ensures sets match, v should be present.
+                if (v != null) {
+                    writer.write(if (v is EncodedElement.Primitive) v.value else v.toString())
+                } else {
+                    // Should not happen if ArrayFormatSelector is correct
+                    writer.write("null")
+                }
+                if (i < first.values.lastIndex) writer.writeDelimiter()
             }
         }
     }

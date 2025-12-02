@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.encode
 
-import com.lukelast.ktoon.fixtures.runFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -32,7 +32,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val data: Data)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -45,7 +45,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: A)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -56,7 +56,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val data: Data)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -68,7 +68,7 @@ class KeyFoldingEncodeTest {
         @Serializable
         data class Root(val data: Data, @SerialName("data.meta.items") val dataMetaItems: String)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -81,7 +81,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -94,7 +94,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -105,7 +105,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -116,7 +116,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -127,7 +127,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: B)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -139,7 +139,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: A)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -148,7 +148,7 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val a: A)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -162,6 +162,6 @@ class KeyFoldingEncodeTest {
 
         @Serializable data class Root(val first: First, val simple: Int, val short: Short)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 }

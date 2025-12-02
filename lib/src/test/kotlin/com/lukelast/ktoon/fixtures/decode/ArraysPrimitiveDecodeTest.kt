@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.decode
 
-import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -19,72 +19,72 @@ class ArraysPrimitiveDecodeTest {
     @Test
     fun `parses string arrays inline`() {
         @Serializable data class Tags(val tags: List<String>)
-        runDecodeFixtureTest<Tags>(fixture)
+        runFixtureDecodeTest<Tags>(fixture)
     }
 
     @Test
     fun `parses number arrays inline`() {
         @Serializable data class Nums(val nums: List<Int>)
-        runDecodeFixtureTest<Nums>(fixture)
+        runFixtureDecodeTest<Nums>(fixture)
     }
 
     @Test
     @Disabled("Requires JsonElement support")
     fun `parses mixed primitive arrays inline`() {
         @Serializable data class Data(val data: List<JsonElement>)
-        runDecodeFixtureTest<Data>(fixture)
+        runFixtureDecodeTest<Data>(fixture)
     }
 
     @Test
     fun `parses empty arrays`() {
-        runDecodeFixtureTest<Items>(fixture)
+        runFixtureDecodeTest<Items>(fixture)
     }
 
     @Test
     fun `parses single-item array with empty string`() {
-        runDecodeFixtureTest<Items>(fixture)
+        runFixtureDecodeTest<Items>(fixture)
     }
 
     @Test
     fun `parses multi-item array with empty string`() {
-        runDecodeFixtureTest<Items>(fixture)
+        runFixtureDecodeTest<Items>(fixture)
     }
 
     @Test
     fun `parses whitespace-only strings in arrays`() {
-        runDecodeFixtureTest<Items>(fixture)
+        runFixtureDecodeTest<Items>(fixture)
     }
 
     @Test
     fun `parses strings with delimiters in arrays`() {
-        runDecodeFixtureTest<Items>(fixture)
+        runFixtureDecodeTest<Items>(fixture)
     }
 
     @Test
     fun `parses strings that look like primitives when quoted`() {
-        runDecodeFixtureTest<Items>(fixture)
+        runFixtureDecodeTest<Items>(fixture)
     }
 
     @Test
     fun `parses strings with structural tokens in arrays`() {
-        runDecodeFixtureTest<Items>(fixture)
+        runFixtureDecodeTest<Items>(fixture)
     }
 
     @Test
     fun `parses quoted key with inline array`() {
         @Serializable data class MyKey(@SerialName("my-key") val myKey: List<Int>)
-        runDecodeFixtureTest<MyKey>(fixture)
+        runFixtureDecodeTest<MyKey>(fixture)
     }
 
     @Test
     fun `parses quoted key containing brackets with inline array`() {
         @Serializable data class CustomKey(@SerialName("key[test]") val keyTest: List<Int>)
-        runDecodeFixtureTest<CustomKey>(fixture)
+        runFixtureDecodeTest<CustomKey>(fixture)
     }
 
     @Test
     fun `parses quoted key with empty array`() {
         @Serializable data class CustomKey(@SerialName("x-custom") val xCustom: List<String>)
-        runDecodeFixtureTest<CustomKey>(fixture)
+        runFixtureDecodeTest<CustomKey>(fixture)
     }
 }

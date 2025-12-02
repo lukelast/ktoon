@@ -20,7 +20,7 @@ import org.junit.jupiter.api.assertThrows
  * @param deserializer Deserializer for the input type
  * @param serializer Serializer for encoding with Ktoon
  */
-fun <T> runFixtureTest(
+fun <T> runFixtureEncodeTest(
     fixtureName: String,
     testName: String,
     deserializer: DeserializationStrategy<T>,
@@ -43,26 +43,38 @@ fun <T> runFixtureTest(
     val ktoon = Ktoon(configuration = config)
 
     // Encode with Ktoon
-    val encoded = ktoon.encodeToString(serializer, input)
+    val ktoonObjectToToon = ktoon.encodeToString(serializer, input)
 
     // Compare with expected
-    val expected = testCase.expected.asString()
+    val expectedToon = testCase.expected.asString()
     assertEquals(
-        expected,
-        encoded,
+        expectedToon,
+        ktoonObjectToToon,
         buildString {
             append("Test '$testName' failed")
             testCase.note?.let { append("\nNote: $it") }
             testCase.specSection?.let { append("\nSpec: §$it") }
         },
     )
+
+    val ktoonJsonToToon = ktoon.encodeJsonToToon(testCase.input)
+    assertEquals(
+        expectedToon,
+        ktoonJsonToToon,
+        buildString {
+            append("Test '$testName' failed")
+            append("\nktoon.encodeJsonToToon()")
+            testCase.note?.let { append("\nNote: $it") }
+            testCase.specSection?.let { append("\nSpec: §$it") }
+        },
+    )
 }
 
-inline fun <reified T> runFixtureTest(
+inline fun <reified T> runFixtureEncodeTest(
     fixture: String,
     testName: String = currentFixtureTestName(),
 ) {
-    runFixtureTest(fixture, testName, serializer<T>(), serializer<T>())
+    runFixtureEncodeTest(fixture, testName, serializer<T>(), serializer<T>())
 }
 
 /**
@@ -73,7 +85,7 @@ inline fun <reified T> runFixtureTest(
  * @param deserializer Deserializer for decoding from Ktoon
  * @param serializer Serializer for encoding to JSON
  */
-fun <T> runDecodeFixtureTest(
+fun <T> runFixtureDecodeTest(
     fixtureName: String,
     testName: String,
     deserializer: DeserializationStrategy<T>,
@@ -121,11 +133,11 @@ fun <T> runDecodeFixtureTest(
     }
 }
 
-inline fun <reified T> runDecodeFixtureTest(
+inline fun <reified T> runFixtureDecodeTest(
     fixture: String,
     testName: String = currentFixtureTestName(),
 ) {
-    runDecodeFixtureTest(fixture, testName, serializer<T>(), serializer<T>())
+    runFixtureDecodeTest(fixture, testName, serializer<T>(), serializer<T>())
 }
 
 fun currentFixtureTestName(): String {

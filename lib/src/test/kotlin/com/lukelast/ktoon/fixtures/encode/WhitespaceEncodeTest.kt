@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.encode
 
-import com.lukelast.ktoon.fixtures.runFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
@@ -13,7 +13,7 @@ class WhitespaceEncodeTest {
     fun `produces no trailing newline at end of output`() {
         @Serializable data class Id(val id: Int)
 
-        runFixtureTest<Id>(fixture)
+        runFixtureEncodeTest<Id>(fixture)
     }
 
     @Test
@@ -22,7 +22,7 @@ class WhitespaceEncodeTest {
 
         @Serializable data class Root(val user: User, val items: List<String>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -31,6 +31,6 @@ class WhitespaceEncodeTest {
 
         @Serializable data class Root(val user: User)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 }

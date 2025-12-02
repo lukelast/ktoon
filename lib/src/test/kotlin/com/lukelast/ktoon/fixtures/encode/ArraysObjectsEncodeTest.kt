@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.encode
 
-import com.lukelast.ktoon.fixtures.runFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import org.junit.jupiter.api.Disabled
@@ -20,7 +20,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -31,7 +31,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -40,7 +40,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -49,7 +49,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -58,7 +58,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -69,7 +69,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -80,7 +80,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -89,7 +89,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -98,7 +98,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -107,7 +107,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -118,7 +118,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -129,7 +129,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -138,7 +138,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -146,7 +146,7 @@ class ArraysObjectsEncodeTest {
     fun `encodes empty object list items as bare hyphen`() {
         @Serializable data class Root(val items: List<JsonElement>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -155,7 +155,7 @@ class ArraysObjectsEncodeTest {
 
         @Serializable data class Root(val items: List<Item>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
@@ -163,6 +163,6 @@ class ArraysObjectsEncodeTest {
     fun `uses list format when one object has nested field`() {
         @Serializable data class Root(val items: List<JsonElement>)
 
-        runFixtureTest<Root>(fixture)
+        runFixtureEncodeTest<Root>(fixture)
     }
 }

@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.decode
 
-import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ class PathExpansionDecodeTest {
 
     @Test
     fun `expands dotted key to nested object in safe mode`() {
-        runDecodeFixtureTest<DeepNested>(fixture)
+        runFixtureDecodeTest<DeepNested>(fixture)
     }
 
     @Serializable data class DeepData(val data: DataMeta)
@@ -32,7 +32,7 @@ class PathExpansionDecodeTest {
 
     @Test
     fun `expands dotted key with inline array`() {
-        runDecodeFixtureTest<DeepData>(fixture)
+        runFixtureDecodeTest<DeepData>(fixture)
     }
 
     @Serializable data class Item(val id: Int, val name: String)
@@ -45,12 +45,12 @@ class PathExpansionDecodeTest {
 
     @Test
     fun `expands dotted key with tabular array`() {
-        runDecodeFixtureTest<DeepTabular>(fixture)
+        runFixtureDecodeTest<DeepTabular>(fixture)
     }
 
     @Test
     fun `preserves literal dotted keys when expansion is off`() {
-        runDecodeFixtureTest<Map<String, String>>(fixture)
+        runFixtureDecodeTest<Map<String, String>>(fixture)
     }
 
     @Serializable data class DeepMerge(val a: AMerge)
@@ -61,24 +61,24 @@ class PathExpansionDecodeTest {
 
     @Test
     fun `expands and deep-merges preserving document-order insertion`() {
-        runDecodeFixtureTest<DeepMerge>(fixture)
+        runFixtureDecodeTest<DeepMerge>(fixture)
     }
 
     @Test
     fun `throws on expansion conflict (object vs primitive) when strict=true`() {
-        runDecodeFixtureTest<Map<String, String>>(fixture)
+        runFixtureDecodeTest<Map<String, String>>(fixture)
     }
 
     @Test
     fun `throws on expansion conflict (object vs array) when strict=true`() {
-        runDecodeFixtureTest<String>(fixture)
+        runFixtureDecodeTest<String>(fixture)
     }
 
     @Serializable data class LWWPrimitive(val a: Int)
 
     @Test
     fun `applies LWW when strict=false (primitive overwrites expanded object)`() {
-        runDecodeFixtureTest<LWWPrimitive>(fixture)
+        runFixtureDecodeTest<LWWPrimitive>(fixture)
     }
 
     @Serializable data class NestedWithB(val b: Int)
@@ -87,19 +87,19 @@ class PathExpansionDecodeTest {
 
     @Test
     fun `applies LWW when strict=false (expanded object overwrites primitive)`() {
-        runDecodeFixtureTest<LWWObject>(fixture)
+        runFixtureDecodeTest<LWWObject>(fixture)
     }
 
     @Serializable data class PreserveQuoted(val a: Map<String, Int>, @SerialName("c.d") val cd: Int)
 
     @Test
     fun `preserves quoted dotted key as literal when expandPaths=safe`() {
-        runDecodeFixtureTest<PreserveQuoted>(fixture)
+        runFixtureDecodeTest<PreserveQuoted>(fixture)
     }
 
     @Test
     fun `preserves non-IdentifierSegment keys as literals`() {
-        runDecodeFixtureTest<Map<String, Int>>(fixture)
+        runFixtureDecodeTest<Map<String, Int>>(fixture)
     }
 
     @Serializable data class EmptyNested(val a: AEmpty)
@@ -110,6 +110,6 @@ class PathExpansionDecodeTest {
 
     @Test
     fun `expands keys creating empty nested objects`() {
-        runDecodeFixtureTest<EmptyNested>(fixture)
+        runFixtureDecodeTest<EmptyNested>(fixture)
     }
 }

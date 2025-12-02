@@ -5,8 +5,11 @@ import com.lukelast.ktoon.decoding.ToonLexer
 import com.lukelast.ktoon.decoding.ToonReader
 import com.lukelast.ktoon.encoding.ToonEncoder
 import com.lukelast.ktoon.encoding.ToonWriter
+import com.lukelast.ktoon.serializers.JsonElementSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
@@ -104,8 +107,15 @@ class Ktoon(
      * val encoded = ktoon.encodeToString(user)
      * ```
      */
-    inline fun <reified T> encodeToString(value: T): String {
-        return encodeToString(kotlinx.serialization.serializer(), value)
+    inline fun <reified T> encodeToString(value: T): String =
+        encodeToString(kotlinx.serialization.serializer(), value)
+
+    fun encodeJsonToToon(jsonElement: JsonElement): String =
+        encodeToString(JsonElementSerializer, jsonElement)
+
+    fun encodeJsonToToon(json: String): String {
+        val jsonElement = Json.parseToJsonElement(json)
+        return encodeJsonToToon(jsonElement)
     }
 
     /**
@@ -117,9 +127,8 @@ class Ktoon(
      * val user = ktoon.decodeFromString<User>(encoded)
      * ```
      */
-    inline fun <reified T> decodeFromString(string: String): T {
-        return decodeFromString(kotlinx.serialization.serializer(), string)
-    }
+    inline fun <reified T> decodeFromString(string: String): T =
+        decodeFromString(kotlinx.serialization.serializer(), string)
 
     companion object {
         /** Default TOON instance with strict mode enabled. */

@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.fixtures.decode
 
-import com.lukelast.ktoon.fixtures.runDecodeFixtureTest
+import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
@@ -18,61 +18,61 @@ class IndentationErrorsDecodeTest {
 
     @Test
     fun `throws on object field with non-multiple indentation (3 spaces with indent=2)`() {
-        runDecodeFixtureTest<NestedA>(fixture)
+        runFixtureDecodeTest<NestedA>(fixture)
     }
 
     @Test
     fun `throws on list item with non-multiple indentation (3 spaces with indent=2)`() {
         @Serializable data class ListItem(val id: Int)
         @Serializable data class ListResult(val items: List<ListItem>)
-        runDecodeFixtureTest<ListResult>(fixture)
+        runFixtureDecodeTest<ListResult>(fixture)
     }
 
     @Test
     fun `throws on non-multiple indentation with custom indent=4 (3 spaces)`() {
-        runDecodeFixtureTest<NestedA>(fixture)
+        runFixtureDecodeTest<NestedA>(fixture)
     }
 
     @Test
     fun `accepts correct indentation with custom indent size (4 spaces with indent=4)`() {
-        runDecodeFixtureTest<NestedA>(fixture)
+        runFixtureDecodeTest<NestedA>(fixture)
     }
 
     @Test
     fun `throws on tab character used in indentation`() {
-        runDecodeFixtureTest<NestedA>(fixture)
+        runFixtureDecodeTest<NestedA>(fixture)
     }
 
     @Test
     fun `throws on mixed tabs and spaces in indentation`() {
-        runDecodeFixtureTest<NestedA>(fixture)
+        runFixtureDecodeTest<NestedA>(fixture)
     }
 
     @Test
     fun `throws on tab at start of line`() {
-        runDecodeFixtureTest<Map<String, Int>>(fixture)
+        runFixtureDecodeTest<Map<String, Int>>(fixture)
     }
 
     @Test
     fun `accepts tabs in quoted string values`() {
         @Serializable data class WithText(val text: String)
-        runDecodeFixtureTest<WithText>(fixture)
+        runFixtureDecodeTest<WithText>(fixture)
     }
 
     @Test
     fun `accepts tabs in quoted keys`() {
         @Serializable data class WithKeyTab(@SerialName("key\ttab") val keyTab: String)
-        runDecodeFixtureTest<WithKeyTab>(fixture)
+        runFixtureDecodeTest<WithKeyTab>(fixture)
     }
 
     @Test
     fun `accepts tabs in quoted array elements`() {
-        runDecodeFixtureTest<Map<String, List<String>>>(fixture)
+        runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 
     @Test
     fun `accepts non-multiple indentation when strict=false`() {
-        runDecodeFixtureTest<NestedA>(fixture)
+        runFixtureDecodeTest<NestedA>(fixture)
     }
 
     @Test
@@ -80,24 +80,24 @@ class IndentationErrorsDecodeTest {
         @Serializable data class DeepNestedC(val c: Int)
         @Serializable data class DeepNestedB(val b: DeepNestedC)
         @Serializable data class DeepNestedA(val a: DeepNestedB)
-        runDecodeFixtureTest<DeepNestedA>(fixture)
+        runFixtureDecodeTest<DeepNestedA>(fixture)
     }
 
     @Serializable data class TwoFields(val a: Int, val b: Int)
 
     @Test
     fun `parses empty lines without validation errors`() {
-        runDecodeFixtureTest<TwoFields>(fixture)
+        runFixtureDecodeTest<TwoFields>(fixture)
     }
 
     @Test
     fun `parses root-level content (0 indentation) as always valid`() {
         @Serializable data class ThreeFields(val a: Int, val b: Int, val c: Int)
-        runDecodeFixtureTest<ThreeFields>(fixture)
+        runFixtureDecodeTest<ThreeFields>(fixture)
     }
 
     @Test
     fun `parses lines with only spaces without validation if empty`() {
-        runDecodeFixtureTest<TwoFields>(fixture)
+        runFixtureDecodeTest<TwoFields>(fixture)
     }
 }
