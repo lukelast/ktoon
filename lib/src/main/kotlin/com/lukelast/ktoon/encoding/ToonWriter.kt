@@ -5,15 +5,12 @@ import com.lukelast.ktoon.KtoonConfiguration
 /**
  * Buffered writer for TOON format output with indentation management.
  *
- * ## Implementation note
- *
  * This implementation uses a CharArray-based approach similar to kotlinx.serialization's
  * JsonToStringWriter, avoiding StringBuilder overhead and leveraging optimized array operations.
  *
  * Benefits:
  * - Direct CharArray access skips compact string checks in StringBuilder
  * - Batch copying via toCharArray() is up to 8x faster than byte-by-byte operations
- * - Pooled arrays reduce allocations across multiple encoding operations
  */
 internal class ToonWriter(private val config: KtoonConfiguration) {
     private var array: CharArray = CharArray(2048)

@@ -16,8 +16,6 @@ class KtoonRoundTripTest {
         val original = Person("Alice", 30)
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Person>(encoded)
 
@@ -54,8 +52,6 @@ class KtoonRoundTripTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded all primitives:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<AllPrimitives>(encoded)
 
@@ -72,8 +68,6 @@ class KtoonRoundTripTest {
         val original = User(name = "Bob", address = Address("123 Main St", "NYC", 10001))
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded nested:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<User>(encoded)
 
@@ -88,8 +82,6 @@ class KtoonRoundTripTest {
         val original = TaggedItem("Item1", listOf("admin", "ops", "dev"))
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded list:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<TaggedItem>(encoded)
 
@@ -110,8 +102,6 @@ class KtoonRoundTripTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded list of objects:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Team>(encoded)
 
@@ -126,8 +116,6 @@ class KtoonRoundTripTest {
         val original = Optional("required value", null)
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded with null:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Optional>(encoded)
 
@@ -154,8 +142,6 @@ class KtoonRoundTripTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded special chars:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<SpecialStrings>(encoded)
 
@@ -170,8 +156,6 @@ class KtoonRoundTripTest {
         val original = ColonTest(url = "scheme:host:port", items = listOf("key:value", "a:b:c:d"))
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded with colons:")
-        println(encoded)
 
         // Verify colons are quoted
         assertTrue(encoded.contains("\"scheme:host:port\""))
@@ -195,8 +179,6 @@ class KtoonRoundTripTest {
         val original = Root(top = Level1(nested = Level2(data = Level3("deep value"))))
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded deep nesting:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Root>(encoded)
 
@@ -211,8 +193,6 @@ class KtoonRoundTripTest {
         val original = WithEmpty("test", emptyList())
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded empty list:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<WithEmpty>(encoded)
 
@@ -231,8 +211,6 @@ class KtoonRoundTripTest {
         val original = Person("John", "Doe", 25)
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded with custom config:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Person>(encoded)
 
@@ -263,8 +241,6 @@ class KtoonRoundTripTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded edge numbers:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<EdgeNumbers>(encoded)
 

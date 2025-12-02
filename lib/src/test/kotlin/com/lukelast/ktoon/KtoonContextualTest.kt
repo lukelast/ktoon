@@ -1,5 +1,6 @@
 package com.lukelast.ktoon
 
+import java.util.*
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -14,7 +15,6 @@ import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.util.*
 
 // Sealed class for contextual nested in polymorphic test
 @Serializable
@@ -55,8 +55,6 @@ class KtoonContextualTest {
         val original = User(uuid, "Alice")
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded UUID:")
-        println(encoded)
 
         assert(encoded.contains("550e8400-e29b-41d4-a716-446655440000"))
 
@@ -105,8 +103,6 @@ class KtoonContextualTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded theme:")
-        println(encoded)
 
         assert(encoded.contains("#212121"))
         assert(encoded.contains("#0096ff"))
@@ -136,8 +132,6 @@ class KtoonContextualTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded palette:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Palette>(encoded)
         assertEquals(original, decoded)
@@ -187,8 +181,6 @@ class KtoonContextualTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded document:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Document>(encoded)
         assertEquals(original, decoded)
@@ -212,8 +204,6 @@ class KtoonContextualTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded page:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Page>(encoded)
         assertEquals(original, decoded)

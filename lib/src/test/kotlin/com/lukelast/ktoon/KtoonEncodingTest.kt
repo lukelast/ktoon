@@ -15,9 +15,6 @@ class KtoonEncodingTest {
         val person = Person("Alice", 30)
         val encoded = ktoon.encodeToString(person)
 
-        println("Encoded simple object:")
-        println(encoded)
-
         // Verify it contains the expected keys and values
         assertTrue(encoded.contains("name:"))
         assertTrue(encoded.contains("Alice"))
@@ -50,9 +47,6 @@ class KtoonEncodingTest {
 
         val encoded = ktoon.encodeToString(obj)
 
-        println("Encoded all types:")
-        println(encoded)
-
         assertTrue(encoded.contains("stringVal:"))
         assertTrue(encoded.contains("hello"))
         assertTrue(encoded.contains("intVal:"))
@@ -74,9 +68,6 @@ class KtoonEncodingTest {
 
         val encoded = ktoon.encodeToString(item)
 
-        println("Encoded with inline array:")
-        println(encoded)
-
         assertTrue(encoded.contains("tags[3]:"))
         assertTrue(encoded.contains("admin"))
         assertTrue(encoded.contains("ops"))
@@ -91,9 +82,6 @@ class KtoonEncodingTest {
         val nums = Numbers(int = 100, float = 1.5f, double = 2.0)
 
         val encoded = ktoon.encodeToString(nums)
-
-        println("Encoded numbers:")
-        println(encoded)
 
         // Numbers should be normalized (no trailing zeros for 2.0 -> should be 2)
         assertTrue(encoded.contains("int: 100"))
@@ -112,9 +100,6 @@ class KtoonEncodingTest {
         val user = User("Bob", Address("NYC", 10001))
 
         val encoded = ktoon.encodeToString(user)
-
-        println("Encoded nested object:")
-        println(encoded)
 
         assertTrue(encoded.contains("name:"))
         assertTrue(encoded.contains("Bob"))
@@ -146,9 +131,6 @@ class KtoonEncodingTest {
 
         val encoded = ktoon.encodeToString(obj)
 
-        println("Encoded special strings:")
-        println(encoded)
-
         // Empty strings and special cases should be quoted
         assertTrue(encoded.contains("\"\"")) // empty string
         assertTrue(encoded.contains("\"hello world\"") || encoded.contains("hello world")) // spaces
@@ -174,9 +156,6 @@ class KtoonEncodingTest {
 
         val encoded = ktoon.encodeToString(obj)
 
-        println("Encoded colons in all contexts:")
-        println(encoded)
-
         // All strings containing colons must be quoted
         assertTrue(encoded.contains("\"http://example.com:8080\""))
         assertTrue(encoded.contains("\"key:value\""))
@@ -197,9 +176,6 @@ class KtoonEncodingTest {
 
         val person = Person("Charlie", 25)
         val encoded = ktoon.encodeToString(person)
-
-        println("Encoded with custom config:")
-        println(encoded)
 
         assertTrue(encoded.contains("name:"))
         assertTrue(encoded.contains("Charlie"))

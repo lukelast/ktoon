@@ -4,6 +4,7 @@ import com.lukelast.ktoon.KtoonConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.descriptors.elementNames
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.SerializersModule
@@ -21,25 +22,6 @@ internal class ToonArrayEncoder(
 
     private val elements = ArrayList<EncodedElement>(64)
     private var elementDescriptor: SerialDescriptor? = null
-
-    sealed class EncodedElement {
-        class Primitive(val value: String) : EncodedElement()
-
-        data class Structure(
-            val descriptor: SerialDescriptor,
-            val values: List<Pair<String, EncodedElement>>,
-        ) : EncodedElement() {
-            private val fieldNamesSet: Set<String> by lazy {
-                values.map(Pair<String, EncodedElement>::first).toSet()
-            }
-
-            fun fieldNamesEqual(other: Structure): Boolean {
-                return fieldNamesSet == other.fieldNamesSet
-            }
-        }
-
-        data class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
-    }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
         if (elementDescriptor == null && descriptor.elementsCount > 0)
@@ -235,7 +217,7 @@ internal class ToonArrayEncoder(
 
     private fun writeTabularImpl(key: String?, elements: List<EncodedElement>, indent: Int) {
         val first = elements.first() as EncodedElement.Structure
-        val fields = ArrayFormatSelector.getFieldNames(first.descriptor).map { quoteKey(it) }
+        val fields = first.descriptor.elementNames.map(::quoteKey)
         val delim = config.delimiter.char
         if (key != null) {
             writer.writeTabularArrayHeader(quoteKey(key), elements.size, fields, delim)
@@ -273,102 +255,3 @@ internal class ToonArrayEncoder(
     }
 }
 
-/** Captures field values or array elements during encoding. */
-@OptIn(ExperimentalSerializationApi::class)
-private class ElementCapturer(
-    private val config: KtoonConfiguration,
-    override val serializersModule: SerializersModule,
-    private val descriptor: SerialDescriptor,
-    private val onComplete: (List<Pair<String, ToonArrayEncoder.EncodedElement>>) -> Unit,
-) : AbstractEncoder() {
-
-    private val values = mutableListOf<Pair<String, ToonArrayEncoder.EncodedElement>>()
-    private var currentIndex = -1
-    private var isArray = descriptor.kind == StructureKind.LIST
-
-    private fun add(value: ToonArrayEncoder.EncodedElement) {
-        val name =
-            if (isArray) {
-                currentIndex.toString()
-            } else {
-                descriptor.getElementName(currentIndex)
-            }
-        values.add(name to value)
-    }
-
-    private fun quote(value: String) =
-        StringQuoting.quote(
-            value,
-            StringQuoting.QuotingContext.ARRAY_ELEMENT,
-            config.delimiter.char,
-        )
-
-    override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = false
-
-    override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
-        currentIndex = index
-        return true
-    }
-
-    override fun encodeNull() {
-        add(ToonArrayEncoder.EncodedElement.Primitive("null"))
-    }
-
-    override fun encodeBoolean(value: Boolean) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(if (value) "true" else "false"))
-    }
-
-    override fun encodeByte(value: Byte) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
-    }
-
-    override fun encodeShort(value: Short) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
-    }
-
-    override fun encodeInt(value: Int) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
-    }
-
-    override fun encodeLong(value: Long) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
-    }
-
-    override fun encodeFloat(value: Float) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
-    }
-
-    override fun encodeDouble(value: Double) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(NumberNormalizer.normalize(value)))
-    }
-
-    override fun encodeChar(value: Char) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(quote(value.toString())))
-    }
-
-    override fun encodeString(value: String) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(quote(value)))
-    }
-
-    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
-        add(ToonArrayEncoder.EncodedElement.Primitive(quote(enumDescriptor.getElementName(index))))
-    }
-
-    override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
-        when (descriptor.kind) {
-            StructureKind.LIST ->
-                ElementCapturer(config, serializersModule, descriptor) {
-                    add(ToonArrayEncoder.EncodedElement.NestedArray(it.map { (_, v) -> v }))
-                }
-            StructureKind.CLASS,
-            StructureKind.OBJECT ->
-                ElementCapturer(config, serializersModule, descriptor) {
-                    add(ToonArrayEncoder.EncodedElement.Structure(descriptor, it))
-                }
-            else -> this
-        }
-
-    override fun endStructure(descriptor: SerialDescriptor) {
-        onComplete(values)
-    }
-}

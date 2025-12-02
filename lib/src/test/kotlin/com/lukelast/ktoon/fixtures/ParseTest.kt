@@ -16,8 +16,6 @@ class ParseTest {
             fixture.description,
         )
         assertTrue(fixture.tests.isNotEmpty())
-
-        println("Loaded ${fixture.tests.size} test cases from primitives.json")
     }
 
     @Test
@@ -27,11 +25,6 @@ class ParseTest {
         assertTrue(fixtures.isNotEmpty())
         assertTrue("primitives.json" in fixtures.keys)
         assertTrue("arrays-primitive.json" in fixtures.keys)
-
-        println("Loaded ${fixtures.size} encode fixture files")
-        fixtures.forEach { (filename, fixture) ->
-            println("  - $filename: ${fixture.description} (${fixture.tests.size} tests)")
-        }
     }
 
     @Test
@@ -64,9 +57,6 @@ class ParseTest {
         // The expected value should be a string for encode tests
         val expectedString = firstTest.expected.asString()
         assertNotNull(expectedString)
-
-        println("First test: ${firstTest.name}")
-        println("  Expected: $expectedString")
     }
 
     @Test
@@ -84,9 +74,5 @@ class ParseTest {
         // Find a test with specSection
         val testWithSpec = fixture.tests.find { it.specSection != null }
         assertNotNull(testWithSpec)
-
-        println("Test with spec section: ${testWithSpec?.name}")
-        println("  Spec section: ${testWithSpec?.specSection}")
-        println("  Note: ${testWithSpec?.note ?: "(none)"}")
     }
 }
