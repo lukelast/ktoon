@@ -1,0 +1,5 @@
+stringArray[3	]: alpha	beta	gamma
+numberArray[5	]: 1	2	3	4	5
+booleanArray[3	]: true	false	true
+mixedNumbers[4	]: 1.5	2.75	3	4.25
+emptyArray[0	]:

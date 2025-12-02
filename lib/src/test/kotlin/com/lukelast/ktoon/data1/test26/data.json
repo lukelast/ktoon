@@ -1,0 +1,11 @@
+{
+  "my-key": "value1",
+  "full name": "Ada Lovelace",
+  "key:with:colons": "value2",
+  "key[with]brackets": "value3",
+  "key\"with\"quotes": "value4",
+  "key{with}braces": "value5",
+  "key\\with\\backslashes": "value6",
+  "tab\ttab": "value7",
+  "newline\nkey": "value8"
+}

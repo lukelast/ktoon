@@ -1,0 +1,16 @@
+emptyString: ""
+emptyStringArray[0]:
+emptyIntArray[0]:
+emptyObjectArray[0]:
+singleString[1]: only
+singleInt[1]: 42
+singleObject[1]{id,name}:
+  1,single
+normalString: normal value
+normalArray[3]: a,b,c
+nested:
+  emptyInner[0]:
+  singleInner[1]: 99
+  deepNested:
+    emptyList[0]:
+    emptyTabular[0]:

@@ -1,0 +1,12 @@
+{
+  "backslash": "\\",
+  "quote": "\"",
+  "newline": "\n",
+  "carriageReturn": "\r",
+  "tab": "\t",
+  "combined": "Line1\nLine2\tTabbed",
+  "multipleNewlines": "First\nSecond\nThird",
+  "quotedText": "She said \"Hello\"",
+  "pathWithBackslashes": "C:\\Users\\Documents\\file.txt",
+  "csvLike": "Name\tAge\nAlice\t30\nBob\t25"
+}

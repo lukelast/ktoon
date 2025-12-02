@@ -1,0 +1,30 @@
+rootValue: depth-0
+level1:
+  value: depth-1
+  level2:
+    value: depth-2
+    level3:
+      value: depth-3
+      level4:
+        value: depth-4
+        level5:
+          value: depth-5
+          level6:
+            value: depth-6
+            numbers[5]: 1,2,3,4,5
+            level7:
+              value: depth-7
+              level8:
+                value: depth-8
+                level9:
+                  value: depth-9
+                  level10:
+                    value: depth-10
+                    tags[3]: alpha,beta,gamma
+                    level11:
+                      value: depth-11
+                      level12:
+                        value: depth-12
+                        items[2]{id,name}:
+                          1,first
+                          2,second

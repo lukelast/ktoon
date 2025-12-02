@@ -1,0 +1,12 @@
+rootArray[3]: a,b,c
+rootNumbers[4]: 1,2,3,4
+nested:
+  tags[3]: tag1,tag2,tag3
+  data:
+    values[5]: 10,20,30,40,50
+    nested:
+      items[3]: x,y,z
+      matrix[3]:
+        - [2]: 1,2
+        - [2]: 3,4
+        - [2]: 5,6

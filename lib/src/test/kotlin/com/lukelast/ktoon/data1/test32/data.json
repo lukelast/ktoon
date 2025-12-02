@@ -1,0 +1,34 @@
+{
+  "emptyString": "",
+  "emptyStringArray": [],
+  "emptyIntArray": [],
+  "emptyObjectArray": [],
+  "singleString": [
+    "only"
+  ],
+  "singleInt": [
+    42
+  ],
+  "singleObject": [
+    {
+      "id": 1,
+      "name": "single"
+    }
+  ],
+  "normalString": "normal value",
+  "normalArray": [
+    "a",
+    "b",
+    "c"
+  ],
+  "nested": {
+    "emptyInner": [],
+    "singleInner": [
+      99
+    ],
+    "deepNested": {
+      "emptyList": [],
+      "emptyTabular": []
+    }
+  }
+}

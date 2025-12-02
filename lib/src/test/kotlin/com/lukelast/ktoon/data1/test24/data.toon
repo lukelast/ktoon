@@ -1,0 +1,8 @@
+tinyFloat: 0.000001
+subnormal: 5e-324
+almostZero: 1e-308
+precisionTest: 0.3333333333333333
+microValue: 1e-9
+nanoValue: 1e-12
+standardSmall: 0.0001
+repeatingDecimal: 0.3333333333333333

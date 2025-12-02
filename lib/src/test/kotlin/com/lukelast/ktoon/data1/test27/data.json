@@ -1,0 +1,13 @@
+{
+  "file.name": "document.txt",
+  "version.1.0": "1.0.0",
+  "a.b.c": "nested path",
+  "config.setting.value": "enabled",
+  "user.profile.email": "user@example.com",
+  "normalKey": "regular value",
+  "data.items": [
+    1,
+    2,
+    3
+  ]
+}

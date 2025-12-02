@@ -1,0 +1,10 @@
+{
+  "maxLong": 9223372036854775807,
+  "minLong": -9223372036854775808,
+  "maxInt": 2147483647,
+  "minInt": -2147483648,
+  "veryLargeDouble": 1.7976931348623157E308,
+  "largeNegativeDouble": -1.7976931348623157E308,
+  "almostMaxLong": 9223372036854775806,
+  "nearZero": 0
+}

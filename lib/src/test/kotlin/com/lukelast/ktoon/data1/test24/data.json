@@ -1,0 +1,10 @@
+{
+  "tinyFloat": 1.0E-6,
+  "subnormal": 4.9E-324,
+  "almostZero": 1.0E-308,
+  "precisionTest": 0.3333333333333333,
+  "microValue": 1.0E-9,
+  "nanoValue": 1.0E-12,
+  "standardSmall": 1.0E-4,
+  "repeatingDecimal": 0.3333333333333333
+}

@@ -1,0 +1,12 @@
+{
+  "negativeZero": -0.0,
+  "positiveZero": 0.0,
+  "integerFromFloat": 4.0,
+  "trailingZeros": 1.5,
+  "noLeadingZeros": 0.5,
+  "exactInteger": 100.0,
+  "halfValue": 0.5,
+  "quarterValue": 0.25,
+  "zeroInt": 0,
+  "zeroLong": 0
+}

@@ -1,0 +1,26 @@
+{
+  "stringArray": [
+    "alpha",
+    "beta",
+    "gamma"
+  ],
+  "numberArray": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "booleanArray": [
+    true,
+    false,
+    true
+  ],
+  "mixedNumbers": [
+    1.5,
+    2.75,
+    3.0,
+    4.25
+  ],
+  "emptyArray": []
+}
