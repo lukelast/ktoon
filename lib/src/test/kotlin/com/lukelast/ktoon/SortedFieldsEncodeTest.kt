@@ -8,8 +8,7 @@ class SortedFieldsEncodeTest {
 
     @Test
     fun `sorts fields alphabetically when enabled`() {
-        @Serializable
-        data class User(val id: Int, val name: String, val active: Boolean)
+        @Serializable data class User(val id: Int, val name: String, val active: Boolean)
 
         val user = User(1, "Alice", true)
 
@@ -17,19 +16,20 @@ class SortedFieldsEncodeTest {
         val toon = Ktoon(configuration = config)
         val encoded = toon.encodeToString(user)
 
-        val expected = """
+        val expected =
+            """
             active: true
             id: 1
             name: Alice
-        """.trimIndent()
+            """
+                .trimIndent()
 
         Assertions.assertEquals(expected, encoded.trim())
     }
 
     @Test
     fun `preserves order when sortFields is false`() {
-        @Serializable
-        data class User(val id: Int, val name: String, val active: Boolean)
+        @Serializable data class User(val id: Int, val name: String, val active: Boolean)
 
         val user = User(1, "Alice", true)
 
@@ -37,21 +37,21 @@ class SortedFieldsEncodeTest {
         val toon = Ktoon(configuration = config)
         val encoded = toon.encodeToString(user)
 
-        val expected = """
+        val expected =
+            """
             id: 1
             name: Alice
             active: true
-        """.trimIndent()
+            """
+                .trimIndent()
 
         Assertions.assertEquals(expected, encoded.trim())
     }
 
     @Test
     fun `sorts nested objects`() {
-        @Serializable
-        data class Address(val zip: String, val city: String)
-        @Serializable
-        data class User(val name: String, val address: Address)
+        @Serializable data class Address(val zip: String, val city: String)
+        @Serializable data class User(val name: String, val address: Address)
 
         val user = User("Alice", Address("12345", "Wonderland"))
 
@@ -61,12 +61,14 @@ class SortedFieldsEncodeTest {
 
         // address comes before name
         // city comes before zip
-        val expected = """
+        val expected =
+            """
             address:
               city: Wonderland
               zip: "12345"
             name: Alice
-        """.trimIndent()
+            """
+                .trimIndent()
 
         Assertions.assertEquals(expected, encoded.trim())
     }

@@ -1,5 +1,7 @@
 package com.lukelast.ktoon
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -10,8 +12,6 @@ import kotlinx.serialization.encoding.Encoder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 /** Tests for custom serializer support. */
 class KtoonCustomSerializerTest {
@@ -42,8 +42,6 @@ class KtoonCustomSerializerTest {
         val original = Event("Birthday", LocalDate.of(2024, 12, 25))
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded with custom serializer:")
-        println(encoded)
 
         // Should contain ISO date format
         assert(encoded.contains("2024-12-25"))
@@ -78,8 +76,6 @@ class KtoonCustomSerializerTest {
         val original = Location("Home", Coordinate(40.7128, -74.0060))
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded coordinate:")
-        println(encoded)
 
         // Should be encoded as string "x,y"
         assert(encoded.contains("40.7128,-74.006"))
@@ -118,8 +114,6 @@ class KtoonCustomSerializerTest {
         val original = Product("Coffee", 350) // $3.50
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded money:")
-        println(encoded)
 
         // Should contain formatted money
         assert(encoded.contains("$3.50"))
@@ -148,8 +142,6 @@ class KtoonCustomSerializerTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded meeting:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Meeting>(encoded)
         assertEquals(original, decoded)
@@ -181,8 +173,6 @@ class KtoonCustomSerializerTest {
         val original = Config("Server Config", listOf("prod", "web", "east"))
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded with list serializer:")
-        println(encoded)
 
         // Should be pipe-delimited string
         assert(encoded.contains("prod|web|east"))
@@ -211,8 +201,6 @@ class KtoonCustomSerializerTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded schedule:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Schedule>(encoded)
         assertEquals(original, decoded)

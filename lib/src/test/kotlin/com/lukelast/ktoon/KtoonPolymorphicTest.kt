@@ -87,8 +87,6 @@ class KtoonPolymorphicTest {
         val pet = Pet("Alice", Animal.Dog("Golden Retriever", true))
 
         val encoded = ktoon.encodeToString(pet)
-        println("Encoded polymorphic:")
-        println(encoded)
 
         // Should contain type discriminator
         assertTrue(encoded.contains("type"))
@@ -114,8 +112,6 @@ class KtoonPolymorphicTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded shapes:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Drawing>(encoded)
         assertEquals(original, decoded)
@@ -145,8 +141,6 @@ class KtoonPolymorphicTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded with module:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Chat>(encoded)
         assertEquals(original, decoded)
@@ -161,24 +155,18 @@ class KtoonPolymorphicTest {
         // Test with non-null result
         val successResponse = Response(1, Result.Success("OK"))
         val successEncoded = ktoon.encodeToString(successResponse)
-        println("Success response:")
-        println(successEncoded)
         val successDecoded = ktoon.decodeFromString<Response>(successEncoded)
         assertEquals(successResponse, successDecoded)
 
         // Test with null result
         val nullResponse = Response(2, null)
         val nullEncoded = ktoon.encodeToString(nullResponse)
-        println("Null response:")
-        println(nullEncoded)
         val nullDecoded = ktoon.decodeFromString<Response>(nullEncoded)
         assertEquals(nullResponse, nullDecoded)
 
         // Test with error result
         val errorResponse = Response(3, Result.Error("Not found", 404))
         val errorEncoded = ktoon.encodeToString(errorResponse)
-        println("Error response:")
-        println(errorEncoded)
         val errorDecoded = ktoon.decodeFromString<Response>(errorEncoded)
         assertEquals(errorResponse, errorDecoded)
     }
@@ -198,8 +186,6 @@ class KtoonPolymorphicTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded tree:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Tree>(encoded)
         assertEquals(original, decoded)
@@ -213,8 +199,6 @@ class KtoonPolymorphicTest {
         val original = EventLog(1234567890L, Event.Click(100, 200))
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded event:")
-        println(encoded)
 
         // Verify type field is present
         assertTrue(encoded.contains("type:") || encoded.contains("\"type\":"))
@@ -241,8 +225,6 @@ class KtoonPolymorphicTest {
             )
 
         val encoded = ktoon.encodeToString(original)
-        println("Encoded invoice:")
-        println(encoded)
 
         val decoded = ktoon.decodeFromString<Invoice>(encoded)
         assertEquals(original, decoded)
