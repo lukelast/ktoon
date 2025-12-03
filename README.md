@@ -1,6 +1,7 @@
 # ktoon
 [![](https://jitpack.io/v/lukelast/ktoon.svg)](https://jitpack.io/#lukelast/ktoon)
 [![.github/workflows/gradle.yml](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml/badge.svg)](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml)
+[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/v3.0.0/SPEC.md)
 
 Kotlin serializer for TOON (Token-Oriented Object Notation).
 
