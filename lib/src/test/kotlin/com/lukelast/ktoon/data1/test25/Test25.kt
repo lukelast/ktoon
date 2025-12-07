@@ -22,6 +22,7 @@ data class SpecialNumbersData(
     val integerFromFloat: Double,
     val trailingZeros: Double,
     val noLeadingZeros: Double,
+    val negativeNoLeadingZeros: Double,
     val exactInteger: Double,
     val halfValue: Double,
     val quarterValue: Double,
@@ -35,6 +36,7 @@ val data = SpecialNumbersData(
     integerFromFloat = 4.0,                  // Should encode as 4
     trailingZeros = 1.5000,                  // Should encode as 1.5
     noLeadingZeros = 0.5,                    // Should encode as 0.5 (not .5)
+    negativeNoLeadingZeros = -0.5,           // Should encode as -0.5 (not -.5)
     exactInteger = 100.0,                    // Should encode as 100
     halfValue = 0.5,                         // Already canonical
     quarterValue = 0.25,                     // Already canonical

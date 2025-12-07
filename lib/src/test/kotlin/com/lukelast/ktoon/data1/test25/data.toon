@@ -3,6 +3,7 @@ positiveZero: 0
 integerFromFloat: 4
 trailingZeros: 1.5
 noLeadingZeros: 0.5
+negativeNoLeadingZeros: -0.5
 exactInteger: 100
 halfValue: 0.5
 quarterValue: 0.25

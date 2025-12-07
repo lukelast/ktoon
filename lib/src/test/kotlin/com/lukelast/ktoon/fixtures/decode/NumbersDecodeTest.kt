@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.fixtures.decode
 
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
+import com.lukelast.ktoon.util.isDigit
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
@@ -111,6 +112,30 @@ class NumbersDecodeTest {
 
     @Test
     fun `treats leading-zeros in array as strings`() {
+        @Serializable data class Nums(val nums: List<String>)
+        runFixtureDecodeTest<Nums>(fixture)
+    }
+
+    @Test
+    fun `parses zero with exponent as number`() {
+        @Serializable data class Value(val value: Int)
+        runFixtureDecodeTest<Value>(fixture)
+    }
+
+    @Test
+    fun `parses negative zero with exponent as number`() {
+        @Serializable data class Value(val value: Int)
+        '0'.isDigit()
+        runFixtureDecodeTest<Value>(fixture)
+    }
+
+    @Test
+    fun `treats unquoted negative leading-zero number as string`() {
+        runFixtureDecodeTest<String>(fixture)
+    }
+
+    @Test
+    fun `treats negative leading-zeros in array as strings`() {
         @Serializable data class Nums(val nums: List<String>)
         runFixtureDecodeTest<Nums>(fixture)
     }

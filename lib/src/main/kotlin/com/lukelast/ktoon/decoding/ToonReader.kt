@@ -4,6 +4,7 @@ import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
 import com.lukelast.ktoon.KtoonValidationException
 import com.lukelast.ktoon.util.isIdentifierSegment
+import com.lukelast.ktoon.util.isDigit
 import com.lukelast.ktoon.validation.ValidationEngine
 
 /**
@@ -473,10 +474,20 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     /** Checks if a string has a forbidden leading zero (§4). */
     private fun hasLeadingZero(str: String): Boolean {
         if (str.isEmpty() || str.length == 1) return false
-        if (str[0] != '0') return false
+        
+        var startIndex = 0
+        if (str[0] == '-') {
+             // "-0" or "-5" is fine, but "-05" is not
+             if (str.length == 2) return false
+             startIndex = 1
+        }
+        
+        if (str[startIndex] != '0') return false
+        
         // "0.5" or "0e6" are valid, but "05" is not
-        val secondChar = str[1]
-        return secondChar in '0'..'9' // Leading zero followed by digit
+        // check character after 0
+        val nextChar = str[startIndex + 1]
+        return nextChar.isDigit() // Leading zero followed by digit
     }
 
     /** Tries to parse a string as a number. Returns null if not a valid number. */

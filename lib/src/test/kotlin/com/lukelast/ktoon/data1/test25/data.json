@@ -4,6 +4,7 @@
   "integerFromFloat": 4.0,
   "trailingZeros": 1.5,
   "noLeadingZeros": 0.5,
+  "negativeNoLeadingZeros": -0.5,
   "exactInteger": 100.0,
   "halfValue": 0.5,
   "quarterValue": 0.25,
