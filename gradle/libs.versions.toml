@@ -3,7 +3,7 @@ kotlin = "2.2.21"
 kotlin-serialization = "1.9.0"
 junit = "6.0.1"
 slf4j = "2.0.17"
-kotlinx-benchmark = "0.4.14"
+kotlinx-benchmark = "0.4.15"
 
 [libraries]
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
