@@ -1,7 +1,6 @@
 package com.lukelast.ktoon
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -16,17 +15,24 @@ import kotlin.test.Test
 /** Tests for custom serializer support. */
 class KtoonCustomSerializerTest {
 
-    /** Custom serializer for LocalDate that formats as ISO-8601. */
-    object LocalDateSerializer : KSerializer<LocalDate> {
-        override val descriptor: SerialDescriptor =
-            PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
+    /** Local date class for KMP compatibility testing. */
+    data class SimpleDate(val year: Int, val month: Int, val day: Int) {
+        override fun toString(): String =
+            "${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
+    }
 
-        override fun serialize(encoder: Encoder, value: LocalDate) {
-            encoder.encodeString(value.format(DateTimeFormatter.ISO_LOCAL_DATE))
+    /** Custom serializer for SimpleDate that formats as ISO-8601 string. */
+    object SimpleDateSerializer : KSerializer<SimpleDate> {
+        override val descriptor: SerialDescriptor =
+            PrimitiveSerialDescriptor("SimpleDate", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: SimpleDate) {
+            encoder.encodeString(value.toString())
         }
 
-        override fun deserialize(decoder: Decoder): LocalDate {
-            return LocalDate.parse(decoder.decodeString(), DateTimeFormatter.ISO_LOCAL_DATE)
+        override fun deserialize(decoder: Decoder): SimpleDate {
+            val parts = decoder.decodeString().split("-")
+            return SimpleDate(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
         }
     }
 
@@ -35,11 +41,11 @@ class KtoonCustomSerializerTest {
         @Serializable
         data class Event(
             val name: String,
-            @Serializable(with = LocalDateSerializer::class) val date: LocalDate,
+            @Serializable(with = SimpleDateSerializer::class) val date: SimpleDate,
         )
 
         val ktoon = Ktoon()
-        val original = Event("Birthday", LocalDate.of(2024, 12, 25))
+        val original = Event("Birthday", SimpleDate(2024, 12, 25))
 
         val encoded = ktoon.encodeToString(original)
 
@@ -127,7 +133,7 @@ class KtoonCustomSerializerTest {
         @Serializable
         data class Meeting(
             val title: String,
-            @Serializable(with = LocalDateSerializer::class) val date: LocalDate,
+            @Serializable(with = SimpleDateSerializer::class) val date: SimpleDate,
             val location: Coordinate,
             @Serializable(with = MoneySerializer::class) val budgetCents: Int,
         )
@@ -136,7 +142,7 @@ class KtoonCustomSerializerTest {
         val original =
             Meeting(
                 title = "Annual Conference",
-                date = LocalDate.of(2025, 6, 15),
+                date = SimpleDate(2025, 6, 15),
                 location = Coordinate(51.5074, -0.1278),
                 budgetCents = 500000, // $5000.00
             )
@@ -186,7 +192,7 @@ class KtoonCustomSerializerTest {
     fun `round trip with nested custom serializers`() {
         @Serializable
         data class Schedule(
-            val events: List<@Serializable(with = LocalDateSerializer::class) LocalDate>
+            val events: List<@Serializable(with = SimpleDateSerializer::class) SimpleDate>
         )
 
         val ktoon = Ktoon()
@@ -194,9 +200,9 @@ class KtoonCustomSerializerTest {
             Schedule(
                 events =
                     listOf(
-                        LocalDate.of(2025, 1, 1),
-                        LocalDate.of(2025, 6, 15),
-                        LocalDate.of(2025, 12, 31),
+                        SimpleDate(2025, 1, 1),
+                        SimpleDate(2025, 6, 15),
+                        SimpleDate(2025, 12, 31),
                     )
             )
 
