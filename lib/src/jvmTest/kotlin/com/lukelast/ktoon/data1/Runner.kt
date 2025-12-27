@@ -81,7 +81,7 @@ abstract class Runner {
     }
 
     fun buildPath(fileName: String): Path {
-        val basePath = Paths.get("src", "test", "kotlin")
+        val basePath = Paths.get("src", "jvmTest", "kotlin")
         val packagePath = Paths.get(this::class.java.`package`.name.replace('.', '/'))
         val fullPath = basePath.resolve(packagePath).resolve(fileName)
         return fullPath
