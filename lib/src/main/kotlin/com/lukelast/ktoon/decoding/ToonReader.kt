@@ -6,6 +6,7 @@ import com.lukelast.ktoon.KtoonValidationException
 import com.lukelast.ktoon.util.isIdentifierSegment
 import com.lukelast.ktoon.util.isDigit
 import com.lukelast.ktoon.validation.ValidationEngine
+import kotlin.math.floor
 
 /**
  * Parser for TOON tokens that builds a logical value structure.
@@ -121,11 +122,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                         break
                     }
                     val arrayValue = readArray()
-                    if (arrayValue is ToonValue.Array) {
-                        val rawKey = token.key
-                        val key = unquote(rawKey, token.line)
-                        insertProperty(properties, key, rawKey, arrayValue, token.line)
-                    }
+                    val rawKey = token.key
+                    val key = unquote(rawKey, token.line)
+                    insertProperty(properties, key, rawKey, arrayValue, token.line)
                 }
                 else -> {
                     // Unexpected token
@@ -182,24 +181,28 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         val existing = properties[part]
         val nextProperties: MutableMap<String, ToonValue>
 
-        if (existing == null) {
-            nextProperties = mutableMapOf()
-            properties[part] = ToonValue.Object(nextProperties)
-        } else if (existing is ToonValue.Object) {
-            // Copy existing properties to mutable map to allow merging
-            nextProperties = existing.properties.toMutableMap()
-            properties[part] = ToonValue.Object(nextProperties)
-        } else {
-            // Conflict: existing is primitive/array, but we need object
-            if (config.strictMode) {
-                throw KtoonValidationException(
-                    "Path expansion conflict: '$part' is already defined as ${existing::class.simpleName}",
-                    line,
-                )
+        when (existing) {
+            null -> {
+                nextProperties = mutableMapOf()
+                properties[part] = ToonValue.Object(nextProperties)
             }
-            // Non-strict: Overwrite with new object (LWW)
-            nextProperties = mutableMapOf()
-            properties[part] = ToonValue.Object(nextProperties)
+            is ToonValue.Object -> {
+                // Copy existing properties to mutable map to allow merging
+                nextProperties = existing.properties.toMutableMap()
+                properties[part] = ToonValue.Object(nextProperties)
+            }
+            else -> {
+                // Conflict: existing is primitive/array, but we need object
+                if (config.strictMode) {
+                    throw KtoonValidationException(
+                        "Path expansion conflict: '$part' is already defined as ${existing::class.simpleName}",
+                        line,
+                    )
+                }
+                // Non-strict: Overwrite with new object (LWW)
+                nextProperties = mutableMapOf()
+                properties[part] = ToonValue.Object(nextProperties)
+            }
         }
 
         insertExpandedProperty(nextProperties, parts.drop(1), value, line)
@@ -508,7 +511,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         val doubleValue = str.toDoubleOrNull()
         if (doubleValue != null) {
             // If the double has no fractional part and fits in Int/Long, store as integer
-            if (doubleValue.isFinite() && doubleValue == Math.floor(doubleValue)) {
+            if (doubleValue.isFinite() && doubleValue == floor(doubleValue)) {
                 // Check if it fits in Int
                 if (doubleValue >= Int.MIN_VALUE && doubleValue <= Int.MAX_VALUE) {
                     return ToonValue.Number(doubleValue.toInt())
