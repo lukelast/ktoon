@@ -12,6 +12,8 @@ version = "1-SNAPSHOT"
 
 repositories { mavenCentral() }
 
+java { withSourcesJar() }
+
 sourceSets {
     val main: SourceSet by getting
     val benchmark: SourceSet by creating {
@@ -30,8 +32,10 @@ dependencies {
     api(libs.kotlin.serialization)
 
     // Test dependencies
+    testImplementation(libs.kotlin.test)
     testImplementation(kotlin("reflect"))
     testImplementation(libs.junit.jupiter)
+
     testRuntimeOnly(libs.junit.platform)
     testRuntimeOnly(libs.slf4j.simple)
     testImplementation(libs.instancio.junit)
@@ -59,8 +63,6 @@ tasks.test {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
-
-java { withSourcesJar() }
 
 publishing {
     publications {

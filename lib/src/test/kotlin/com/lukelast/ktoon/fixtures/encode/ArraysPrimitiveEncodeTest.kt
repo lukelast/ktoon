@@ -3,8 +3,8 @@ package com.lukelast.ktoon.fixtures.encode
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 /**
  * Tests from arrays-primitive.json fixture - Primitive array encoding: inline arrays of strings,
@@ -29,7 +29,7 @@ class ArraysPrimitiveEncodeTest {
     }
 
     @Test
-    @Disabled
+    @Ignore
     fun `encodes mixed primitive arrays inline`() {
         @Serializable data class Data(val data: List<JsonElement>)
 

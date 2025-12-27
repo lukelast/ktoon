@@ -3,9 +3,9 @@ package com.lukelast.ktoon.rand
 import com.lukelast.ktoon.Ktoon
 import org.instancio.Instancio
 import org.instancio.settings.Keys
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class InstancioRandomTest {
     @Test

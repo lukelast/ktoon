@@ -9,9 +9,9 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 /** Tests for custom serializer support. */
 class KtoonCustomSerializerTest {
@@ -182,7 +182,7 @@ class KtoonCustomSerializerTest {
     }
 
     @Test
-    @Disabled
+    @Ignore
     fun `round trip with nested custom serializers`() {
         @Serializable
         data class Schedule(

@@ -10,6 +10,7 @@ kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-j
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }
 
 # Testing
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }

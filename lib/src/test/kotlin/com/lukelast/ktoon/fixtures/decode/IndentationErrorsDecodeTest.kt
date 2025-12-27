@@ -3,7 +3,7 @@ package com.lukelast.ktoon.fixtures.decode
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 /**
  * Tests from indentation-errors.json fixture - Strict mode indentation validation: non-multiple

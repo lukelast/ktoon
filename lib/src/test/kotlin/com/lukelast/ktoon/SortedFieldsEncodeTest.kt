@@ -1,8 +1,8 @@
 package com.lukelast.ktoon
 
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class SortedFieldsEncodeTest {
 
@@ -24,7 +24,7 @@ class SortedFieldsEncodeTest {
             """
                 .trimIndent()
 
-        Assertions.assertEquals(expected, encoded.trim())
+        assertEquals(expected, encoded.trim())
     }
 
     @Test
@@ -45,7 +45,7 @@ class SortedFieldsEncodeTest {
             """
                 .trimIndent()
 
-        Assertions.assertEquals(expected, encoded.trim())
+        assertEquals(expected, encoded.trim())
     }
 
     @Test
@@ -70,6 +70,6 @@ class SortedFieldsEncodeTest {
             """
                 .trimIndent()
 
-        Assertions.assertEquals(expected, encoded.trim())
+        assertEquals(expected, encoded.trim())
     }
 }

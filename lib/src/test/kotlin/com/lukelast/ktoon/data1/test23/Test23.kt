@@ -2,14 +2,14 @@ package com.lukelast.ktoon.data1.test23
 
 import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Disabled
+import kotlin.test.Ignore
 
 /**
  * Test23: Very large numbers and Int64 limits (§2)
  * Tests canonical decimal form for edge-case integers and longs
  * Expected: No exponent notation, all numbers in decimal form
  */
-@Disabled("TOON CLI doesn't support this yet")
+@Ignore("TOON CLI doesn't support this yet")
 class Test23 : Runner() {
     override fun run() = doTest(data)
 }

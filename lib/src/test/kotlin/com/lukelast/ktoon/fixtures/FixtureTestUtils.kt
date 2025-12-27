@@ -9,8 +9,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Helper function to run a fixture test with a typed data class.
@@ -109,7 +109,7 @@ fun <T> runFixtureDecodeTest(
 
     if (testCase.shouldError) {
         // Test expects an error to be thrown
-        assertThrows<KtoonException> { ktoon.decodeFromString(deserializer, toonInput) }
+        assertFailsWith<KtoonException> { ktoon.decodeFromString(deserializer, toonInput) }
     } else {
         // Decode TOON to typed value
         val actualObject = ktoon.decodeFromString(deserializer, toonInput)

@@ -2,14 +2,14 @@ package com.lukelast.ktoon.data1.test24
 
 import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Disabled
+import kotlin.test.Ignore
 
 /**
  * Test24: Very small floats and precision edge cases (§2)
  * Tests canonical decimal form for small and subnormal values
  * Expected: Trailing zeros stripped (1.5000 → 1.5), canonical form maintained
  */
-@Disabled("TOON CLI doesn't support this yet")
+@Ignore("TOON CLI doesn't support this yet")
 class Test24 : Runner() {
     override fun run() = doTest(data)
 }

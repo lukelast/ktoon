@@ -3,7 +3,7 @@ package com.lukelast.ktoon.fixtures.encode
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 /**
  * Tests from key-folding.json fixture - Key folding with safe mode, depth control, collision

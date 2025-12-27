@@ -1,8 +1,8 @@
 package com.lukelast.ktoon.fixtures
 
 import com.lukelast.ktoon.KeyFoldingMode
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import kotlin.test.*
+import kotlin.test.Test
 
 class ParseTest {
     @Test
