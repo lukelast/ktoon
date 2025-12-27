@@ -5,3 +5,5 @@
 .claude/
 build/
 benchmark.jfr
+AGENTS.md
+CLAUDE.md
