@@ -12,9 +12,9 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 // Sealed class for contextual nested in polymorphic test
 @Serializable
@@ -187,7 +187,7 @@ class KtoonContextualTest {
     }
 
     @Test
-    @Disabled
+    @Ignore
     fun `contextual nested in polymorphic`() {
         @Serializable data class Page(@Contextual val id: UUID, val content: Content)
 

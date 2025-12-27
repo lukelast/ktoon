@@ -1,9 +1,9 @@
 package com.lukelast.ktoon
 
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 /** Round-trip tests to verify that encoding and decoding preserve data integrity. */
 class KtoonRoundTripTest {

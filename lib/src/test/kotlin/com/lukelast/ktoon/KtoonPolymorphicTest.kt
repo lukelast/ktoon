@@ -5,10 +5,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 // Sealed class hierarchies for polymorphic tests
 @Serializable
@@ -76,7 +76,7 @@ sealed class Item {
 }
 
 /** Tests for polymorphic serialization support. */
-@Disabled
+@Ignore
 class KtoonPolymorphicTest {
 
     @Test

@@ -7,10 +7,10 @@ import com.lukelast.ktoon.rand.FarmTestData
 import org.instancio.Instancio
 import org.instancio.Select.field
 import org.instancio.settings.Keys
-import org.junit.jupiter.api.Disabled
+import kotlin.test.Ignore
 
 // TODO bug
-@Disabled("bug")
+@Ignore("bug")
 class Test18 : Runner() {
     override fun run() = doTest(randomData)
 }

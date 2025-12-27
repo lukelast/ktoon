@@ -2,7 +2,7 @@ package com.lukelast.ktoon.fixtures.decode
 
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 /**
  * Tests from root-form.json fixture - Root form detection: empty document, single primitive,

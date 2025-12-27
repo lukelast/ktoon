@@ -3,7 +3,7 @@ package com.lukelast.ktoon.fixtures.decode
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import com.lukelast.ktoon.util.isDigit
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 /**
  * Tests from numbers.json fixture - Number decoding edge cases: trailing zeros, exponent forms,

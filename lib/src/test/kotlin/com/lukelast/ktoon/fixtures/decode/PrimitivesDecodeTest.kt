@@ -1,7 +1,7 @@
 package com.lukelast.ktoon.fixtures.decode
 
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 /**
  * Tests from primitives.json fixture - Primitive value decoding: strings, numbers, booleans, null,

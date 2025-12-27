@@ -3,8 +3,8 @@ package com.lukelast.ktoon.fixtures.decode
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 /**
  * Tests from arrays-nested.json fixture - Nested and mixed array decoding: list format, arrays of
@@ -24,7 +24,7 @@ class ArraysNestedDecodeTest {
     }
 
     @Test
-    @Disabled("JSON list mixes strings with {}")
+    @Ignore("JSON list mixes strings with {}")
     fun `parses list arrays with empty items`() {
         runFixtureDecodeTest<Map<String, List<String?>>>(fixture)
     }
@@ -101,7 +101,7 @@ class ArraysNestedDecodeTest {
     }
 
     @Test
-    @Disabled("List of different primitive types")
+    @Ignore("List of different primitive types")
     fun `parses root-level primitive array inline`() {
         runFixtureDecodeTest<List<JsonElement>>(fixture)
     }
@@ -120,7 +120,7 @@ class ArraysNestedDecodeTest {
     }
 
     @Test
-    @Disabled("List of different types")
+    @Ignore("List of different types")
     fun `parses root-level array mixing primitive, object, and array of objects in list format`() {
         runFixtureDecodeTest<List<String>>(fixture)
     }
@@ -152,13 +152,13 @@ class ArraysNestedDecodeTest {
     }
 
     @Test
-    @Disabled("list of different types")
+    @Ignore("list of different types")
     fun `parses arrays mixing primitives, objects, and strings in list format`() {
         runFixtureDecodeTest<Map<String, List<JsonElement>>>(fixture)
     }
 
     @Test
-    @Disabled("Mixing objects and arrays")
+    @Ignore("Mixing objects and arrays")
     fun `parses arrays mixing objects and arrays`() {
         runFixtureDecodeTest<Map<String, List<JsonElement>>>(fixture)
     }

@@ -3,8 +3,8 @@ package com.lukelast.ktoon.fixtures.encode
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 /**
  * Tests from arrays-nested.json fixture - Nested and mixed array encoding: arrays of arrays, mixed
@@ -42,7 +42,7 @@ class ArraysNestedEncodeTest {
     }
 
     @Test
-    @Disabled
+    @Ignore
     fun `encodes root-level primitive array`() {
         runFixtureEncodeTest<List<JsonElement>>(fixture)
     }
@@ -62,7 +62,7 @@ class ArraysNestedEncodeTest {
     }
 
     @Test
-    @Disabled
+    @Ignore
     fun `encodes root-level array mixing primitive, object, and array of objects in list format`() {
         runFixtureEncodeTest<List<JsonElement>>(fixture)
     }
@@ -94,7 +94,7 @@ class ArraysNestedEncodeTest {
     }
 
     @Test
-    @Disabled
+    @Ignore
     fun `uses list format for arrays mixing primitives and objects`() {
         @Serializable data class Root(val items: List<JsonElement>)
 
@@ -102,7 +102,7 @@ class ArraysNestedEncodeTest {
     }
 
     @Test
-    @Disabled
+    @Ignore
     fun `uses list format for arrays mixing objects and arrays`() {
         @Serializable data class Root(val items: List<JsonElement>)
 

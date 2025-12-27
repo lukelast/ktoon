@@ -11,8 +11,8 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 abstract class Runner {
     @Test
