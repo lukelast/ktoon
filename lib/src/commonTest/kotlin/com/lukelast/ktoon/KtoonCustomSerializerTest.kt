@@ -11,6 +11,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlin.test.assertEquals
 import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 /** Tests for custom serializer support. */
 class KtoonCustomSerializerTest {
@@ -50,7 +51,7 @@ class KtoonCustomSerializerTest {
         val encoded = ktoon.encodeToString(original)
 
         // Should contain ISO date format
-        assert(encoded.contains("2024-12-25"))
+        assertTrue(encoded.contains("2024-12-25"))
 
         val decoded = ktoon.decodeFromString<Event>(encoded)
         assertEquals(original, decoded)
@@ -84,7 +85,7 @@ class KtoonCustomSerializerTest {
         val encoded = ktoon.encodeToString(original)
 
         // Should be encoded as string "x,y"
-        assert(encoded.contains("40.7128,-74.006"))
+        assertTrue(encoded.contains("40.7128,-74.006"))
 
         val decoded = ktoon.decodeFromString<Location>(encoded)
         assertEquals(original, decoded)
@@ -98,7 +99,7 @@ class KtoonCustomSerializerTest {
         override fun serialize(encoder: Encoder, value: Int) {
             val dollars = value / 100
             val cents = value % 100
-            encoder.encodeString("$${dollars}.%02d".format(cents))
+            encoder.encodeString("$${dollars}.${cents.toString().padStart(2, '0')}")
         }
 
         override fun deserialize(decoder: Decoder): Int {
@@ -122,7 +123,7 @@ class KtoonCustomSerializerTest {
         val encoded = ktoon.encodeToString(original)
 
         // Should contain formatted money
-        assert(encoded.contains("$3.50"))
+        assertTrue(encoded.contains("$3.50"))
 
         val decoded = ktoon.decodeFromString<Product>(encoded)
         assertEquals(original, decoded)
@@ -181,7 +182,7 @@ class KtoonCustomSerializerTest {
         val encoded = ktoon.encodeToString(original)
 
         // Should be pipe-delimited string
-        assert(encoded.contains("prod|web|east"))
+        assertTrue(encoded.contains("prod|web|east"))
 
         val decoded = ktoon.decodeFromString<Config>(encoded)
         assertEquals(original, decoded)
