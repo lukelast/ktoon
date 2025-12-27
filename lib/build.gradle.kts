@@ -1,7 +1,6 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm.base)
+    alias(libs.plugins.kotlin.multiplatform.base)
     alias(libs.plugins.kotlin.serialization.base)
-    `java-library`
     `maven-publish`
 }
 
@@ -9,37 +8,54 @@ group = "com.github.lukelast"
 
 version = "1-SNAPSHOT"
 
-java { withSourcesJar() }
+kotlin {
+    applyDefaultHierarchyTemplate()
+    jvm {
+        compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
+        testRuns["test"].executionTask.configure {
+            useJUnitPlatform()
+            testLogging {
+                events("passed", "skipped", "failed")
+                showStandardStreams = true
+                showExceptions = true
+                showCauses = true
+                showStackTraces = true
+                exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            }
+        }
+        withSourcesJar()
+    }
 
-dependencies {
-    api(libs.kotlin.serialization)
+    js {
+        browser { testTask { useKarma { useChromeHeadless() } } }
+        binaries.library()
+    }
 
-    // Test dependencies
-    testImplementation(libs.kotlin.test)
-    testImplementation(kotlin("reflect"))
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.platform)
-    testRuntimeOnly(libs.slf4j.simple)
-    testImplementation(libs.instancio.junit)
-}
-
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-        showStandardStreams = true
-        showExceptions = true
-        showCauses = true
-        showStackTraces = true
-        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    sourceSets {
+        commonMain.dependencies { api(libs.kotlin.serialization) }
+        commonTest.dependencies { implementation(kotlin("test")) }
+        jvmTest.dependencies {
+            implementation(libs.junit.jupiter)
+            runtimeOnly(libs.junit.platform)
+            runtimeOnly(libs.slf4j.simple)
+            implementation(libs.instancio.junit)
+            implementation(kotlin("reflect"))
+        }
     }
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            artifactId = "ktoon"
+    publications.withType<MavenPublication> {
+        artifactId = "ktoon" + artifactId.removePrefix("lib")
+        pom {
+            name.set("ktoon")
+            description.set("TOON format serialization for Kotlin Multiplatform")
+        }
+    }
+    repositories {
+        maven {
+            name = "buildDir"
+            url = uri(layout.buildDirectory.dir("repo"))
         }
     }
 }

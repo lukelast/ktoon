@@ -10,7 +10,6 @@ kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-j
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }
 
 # Testing
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
@@ -21,9 +20,11 @@ kotlinToon = { module = "br.com.vexpera:kotlin-toon", version = "1.0.0"}
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
 # Unversioned plugins for subprojects
 kotlin-jvm-base = { id = "org.jetbrains.kotlin.jvm" }
+kotlin-multiplatform-base = { id = "org.jetbrains.kotlin.multiplatform" }
 kotlin-serialization-base = { id = "org.jetbrains.kotlin.plugin.serialization" }
 kotlinx-benchmark-base = { id = "org.jetbrains.kotlinx.benchmark" }
