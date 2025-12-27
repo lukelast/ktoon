@@ -81,7 +81,10 @@ class KtoonContextualTest {
             PrimitiveSerialDescriptor("Color", PrimitiveKind.STRING)
 
         override fun serialize(encoder: Encoder, value: Color) {
-            encoder.encodeString("#%02x%02x%02x".format(value.r, value.g, value.b))
+            val hex = value.r.toString(16).padStart(2, '0') +
+                value.g.toString(16).padStart(2, '0') +
+                value.b.toString(16).padStart(2, '0')
+            encoder.encodeString("#$hex")
         }
 
         override fun deserialize(decoder: Decoder): Color {
