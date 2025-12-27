@@ -98,7 +98,7 @@ internal class ToonWriter(private val config: KtoonConfiguration) {
         write(':')
     }
 
-    override fun toString(): String = String(array, 0, size)
+    override fun toString(): String = array.concatToString(0, size)
 
     private fun ensureAdditionalCapacity(expected: Int) {
         val newSize = size + expected
