@@ -7,8 +7,8 @@ Use the Gradle wrapper (`./gradlew`) and JDK 17+.
 - `./gradlew clean`
 
 ## Benchmarks
-- `./gradlew :lib:benchmark` — run all kotlinx-benchmark targets (the `bench` target) for the library.
-- Reports: HTML/JSON under `lib/build/reports/benchmarks/`.
+- `./gradlew :benchmark:benchmark` — run all kotlinx-benchmark targets.
+- Reports: HTML/JSON under `benchmark/build/reports/benchmarks/`.
 
 ## Demo app
 - `./gradlew :demo:run` — quick end-to-end check that encoding/decoding works in a runnable app.

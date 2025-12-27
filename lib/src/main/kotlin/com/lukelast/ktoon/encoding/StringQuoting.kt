@@ -5,7 +5,7 @@ import com.lukelast.ktoon.util.isAlpha
 import com.lukelast.ktoon.util.isDigit
 
 /** Utility for quoting and unquoting strings according to TOON format rules. */
-internal object StringQuoting {
+object StringQuoting {
 
     enum class QuotingContext {
         OBJECT_KEY,
