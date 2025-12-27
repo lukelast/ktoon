@@ -1,6 +1,5 @@
 package com.lukelast.ktoon
 
-import com.lukelast.ktoon.encoding.StringQuoting
 import org.openjdk.jmh.annotations.*
 import java.util.concurrent.TimeUnit
 
@@ -21,7 +20,7 @@ open class StringQuotingBenchmark {
     )
     var inputType: String = ""
     private var inputString: String = ""
-    private var context: StringQuoting.QuotingContext = StringQuoting.QuotingContext.OBJECT_VALUE
+    private var isKey: Boolean = false
 
     @Setup
     fun setup() {
@@ -37,16 +36,15 @@ open class StringQuotingBenchmark {
                 else -> "default"
             }
 
-        context =
-            if (inputType.startsWith("key")) {
-                StringQuoting.QuotingContext.OBJECT_KEY
-            } else {
-                StringQuoting.QuotingContext.OBJECT_VALUE
-            }
+        isKey = inputType.startsWith("key")
     }
 
     @Benchmark
     fun needsQuoting(): Boolean {
-        return StringQuoting.needsQuoting(inputString, context)
+        return if (isKey) {
+            BenchmarkAccess.needsQuotingForKey(inputString)
+        } else {
+            BenchmarkAccess.needsQuotingForValue(inputString)
+        }
     }
 }

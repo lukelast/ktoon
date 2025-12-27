@@ -1,7 +1,7 @@
 .kotlin/
 .gradle/
-.idea/
-build/
 .gradle-linux/
+.idea/
+.claude/
+build/
 benchmark.jfr
-.claude/settings.local.json
