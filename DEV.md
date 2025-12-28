@@ -22,7 +22,7 @@ ktoon/src/
 
 ## Testing
 
-- `./gradlew clean`
+- `./gradlew clean check`
 - `./gradlew :ktoon:allTests` — run tests on all targets
 - `./gradlew :ktoon:jvmTest` — run JVM tests (all 425 tests)
 - `./gradlew :ktoon:jsBrowserTest` — run JS browser tests (commonTest only)
