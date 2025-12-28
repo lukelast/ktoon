@@ -15,9 +15,10 @@ lib/src/
 
 ## Building
 
+- `./gradlew :lib:build` — build all targets
 - `./gradlew :lib:compileKotlinJvm` — compile JVM target
 - `./gradlew :lib:compileKotlinJs` — compile JS target
-- `./gradlew :lib:build` — build all targets
+- `./gradlew kotlinUpgradeYarnLock` — update kotlin-js-store/yarn.lock
 
 ## Testing
 
@@ -31,9 +32,11 @@ lib/src/
 - `./gradlew :benchmark:benchmark` — run all kotlinx-benchmark targets
 - Reports: HTML/JSON under `benchmark/build/reports/benchmarks/`
 
-## Demo app
+## Demo apps
 
-- `./gradlew :demo:run` — quick end-to-end check that encoding/decoding works
+- `./gradlew :demo:run` — JVM-only demo
+- `./gradlew :demo-kmp:jvmRun` — KMP demo (JVM)
+- `./gradlew :demo-kmp:jsNodeDevelopmentRun` — KMP demo (Node.js)
 
 ## Publishing
 
@@ -43,3 +46,7 @@ Published artifacts:
 - `ktoon` — Gradle metadata module
 - `ktoon-jvm` — JVM artifact
 - `ktoon-js` — JavaScript artifact
+
+## Maintenance
+
+
