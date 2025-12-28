@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.kotlinx.benchmark) apply false
 }
 
+// Jitpack does not support current node versions.
+plugins.withType<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin> {
+    the<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnvSpec>().version = "18.20.8"
+}
+
 subprojects {
     repositories {
         mavenCentral()
