@@ -13,5 +13,5 @@ kotlin {
         browser()
     }
 
-    sourceSets { commonMain.dependencies { implementation(project(":lib")) } }
+    sourceSets { commonMain.dependencies { implementation(project(":ktoon")) } }
 }

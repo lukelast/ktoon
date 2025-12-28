@@ -13,7 +13,7 @@ dependencies {
     // Normally add the dependency from JitPack like this
     // implementation("com.github.lukelast:ktoon:VERSION")
 
-    implementation(project(":lib"))
+    implementation(project(":ktoon"))
 }
 
 application { mainClass.set("com.lukelast.ktoon.demo.encode.DefaultKt") }

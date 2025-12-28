@@ -7,7 +7,7 @@ Use the Gradle wrapper (`./gradlew`) and JDK 17+.
 This is a Kotlin Multiplatform project with JVM and JavaScript (browser) targets.
 
 ```
-lib/src/
+ktoon/src/
   commonMain/kotlin/    # Main library code (platform-agnostic)
   commonTest/kotlin/    # Cross-platform tests
   jvmTest/kotlin/       # JVM-only tests (fixtures, data1, rand)
@@ -15,17 +15,17 @@ lib/src/
 
 ## Building
 
-- `./gradlew :lib:build` — build all targets
-- `./gradlew :lib:compileKotlinJvm` — compile JVM target
-- `./gradlew :lib:compileKotlinJs` — compile JS target
+- `./gradlew :ktoon:build` — build all targets
+- `./gradlew :ktoon:compileKotlinJvm` — compile JVM target
+- `./gradlew :ktoon:compileKotlinJs` — compile JS target
 - `./gradlew kotlinUpgradeYarnLock` — update kotlin-js-store/yarn.lock
 
 ## Testing
 
 - `./gradlew clean`
-- `./gradlew :lib:allTests` — run tests on all targets
-- `./gradlew :lib:jvmTest` — run JVM tests (all 425 tests)
-- `./gradlew :lib:jsBrowserTest` — run JS browser tests (commonTest only)
+- `./gradlew :ktoon:allTests` — run tests on all targets
+- `./gradlew :ktoon:jvmTest` — run JVM tests (all 425 tests)
+- `./gradlew :ktoon:jsBrowserTest` — run JS browser tests (commonTest only)
 
 ## Benchmarks
 
@@ -40,7 +40,7 @@ lib/src/
 
 ## Publishing
 
-- `./gradlew :lib:publishToMavenLocal` — publish to local Maven repository
+- `./gradlew :ktoon:publishToMavenLocal` — publish to local Maven repository
 
 Published artifacts:
 - `ktoon` — Gradle metadata module

@@ -1,5 +1,3 @@
 rootProject.name = "ktoon"
-include("lib")
-include("demo")
-include("demo-kmp")
-include("benchmark")
+
+include(":ktoon", ":demo", ":demo-kmp", ":benchmark")

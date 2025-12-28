@@ -46,16 +46,8 @@ kotlin {
 
 publishing {
     publications.withType<MavenPublication> {
-        artifactId = "ktoon" + artifactId.removePrefix("lib")
         pom {
-            name.set("ktoon")
             description.set("TOON format serialization for Kotlin Multiplatform")
-        }
-    }
-    repositories {
-        maven {
-            name = "buildDir"
-            url = uri(layout.buildDirectory.dir("repo"))
         }
     }
 }

@@ -7,7 +7,7 @@ plugins {
 benchmark { targets { register("main") } }
 
 dependencies {
-    implementation(project(":lib"))
+    implementation(project(":ktoon"))
     implementation(libs.kotlinx.benchmark.runtime)
     implementation(libs.kotlin.serialization)
     implementation(libs.instancio.junit)
