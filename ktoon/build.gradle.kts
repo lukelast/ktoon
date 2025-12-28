@@ -8,6 +8,8 @@ group = "com.github.lukelast"
 
 version = "1-SNAPSHOT"
 
+val isJitPack = System.getenv("JITPACK") == "true"
+
 kotlin {
     applyDefaultHierarchyTemplate()
     jvm {
@@ -26,9 +28,11 @@ kotlin {
         withSourcesJar()
     }
 
-    js {
-        browser { testTask { useKarma { useChromeHeadless() } } }
-        binaries.library()
+    if (!isJitPack) {
+        js {
+            browser { testTask { useKarma { useChromeHeadless() } } }
+            binaries.library()
+        }
     }
 
     sourceSets {
