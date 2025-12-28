@@ -5,5 +5,5 @@ include(":ktoon", ":demo", ":benchmark")
 val isJitPack = System.getenv("JITPACK") == "true"
 
 if (!isJitPack) {
-    includeBuild(":demo-kmp")
+    include(":demo-kmp")
 }
