@@ -1,5 +1,5 @@
 # ktoon
-[![](https://jitpack.io/v/lukelast/ktoon.svg)](https://jitpack.io/#lukelast/ktoon)
+[![Maven Central](https://img.shields.io/maven-central/v/com.lukelast.ktoon/ktoon)](https://central.sonatype.com/artifact/com.lukelast.ktoon/ktoon)
 [![.github/workflows/gradle.yml](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml/badge.svg)](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml)
 [![SPEC v3.0.1](https://img.shields.io/badge/ToonSpec-v3.0.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
@@ -24,25 +24,25 @@ To learn about the TOON format and why you should use it read the official websi
 - **High Performance** - CharArray-based encoding optimized for minimal allocations and fast string operations.
 - **Flexible Configuration** - Configurable delimiters, indentation, and key folding.
 
-## Add to your project (JitPack)
-
-Check JitPack for versions and more installation instructions:
-https://jitpack.io/#lukelast/ktoon
+## Add to your project (Maven Central)
 
 Using the Gradle Kotlin DSL:
 ```kotlin
-// settings.gradle.kts
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-        maven(url = "https://jitpack.io")
-    }
-}
-```
-```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.lukelast:ktoon:VERSION")
+    implementation("com.lukelast.ktoon:ktoon:VERSION")
+}
+```
+
+For multiplatform projects:
+```kotlin
+// build.gradle.kts
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.lukelast.ktoon:ktoon:VERSION")
+        }
+    }
 }
 ```
 

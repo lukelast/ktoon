@@ -1,12 +1,12 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform.base)
     alias(libs.plugins.kotlin.serialization.base)
-    `maven-publish`
+    alias(libs.plugins.maven.publish)
 }
 
-group = "com.github.lukelast"
+group = "com.lukelast.ktoon"
 
-version = "1-SNAPSHOT"
+version = providers.gradleProperty("version").orElse("0.0.0-SNAPSHOT").get()
 
 val isJitPack = System.getenv("JITPACK") == "true"
 
@@ -48,10 +48,36 @@ kotlin {
     }
 }
 
-publishing {
-    publications.withType<MavenPublication> {
-        pom {
-            description.set("TOON format serialization for Kotlin Multiplatform")
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    pom {
+        name.set("ktoon")
+        description.set("TOON format serialization for Kotlin Multiplatform")
+        url.set("https://github.com/lukelast/ktoon")
+        inceptionYear.set("2025")
+
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+                distribution.set("repo")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/lukelast/ktoon")
+            connection.set("scm:git:https://github.com/lukelast/ktoon.git")
+            developerConnection.set("scm:git:ssh://git@github.com/lukelast/ktoon.git")
+        }
+
+        developers {
+            developer {
+                id.set("lukelast")
+                name.set("Luke Last")
+                url.set("https://github.com/lukelast")
+            }
         }
     }
 }
