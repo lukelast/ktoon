@@ -6,12 +6,11 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-    // Normally add the dependency from JitPack like this
-    // implementation("com.github.lukelast:ktoon:VERSION")
+    // Normally add the dependency from maven central like:
+    // implementation("com.lukelast.ktoon:ktoon:VERSION")
 
     implementation(project(":ktoon"))
 }

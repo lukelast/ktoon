@@ -8,8 +8,6 @@ group = "com.lukelast.ktoon"
 
 version = providers.gradleProperty("version").orElse("0.0.0-SNAPSHOT").get()
 
-val isJitPack = System.getenv("JITPACK") == "true"
-
 kotlin {
     applyDefaultHierarchyTemplate()
     jvm {
@@ -28,11 +26,9 @@ kotlin {
         withSourcesJar()
     }
 
-    if (!isJitPack) {
-        js {
-            browser { testTask { useKarma { useChromeHeadless() } } }
-            binaries.library()
-        }
+    js {
+        browser { testTask { useKarma { useChromeHeadless() } } }
+        binaries.library()
     }
 
     sourceSets {
