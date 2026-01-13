@@ -15,7 +15,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 instancio-junit = { module = "org.instancio:instancio-junit", version = "5.5.1" }
-jtoon = { module = "dev.toonformat:jtoon", version = "1.0.7" }
+jtoon = { module = "dev.toonformat:jtoon", version = "1.0.8" }
 kotlinToon = { module = "br.com.vexpera:kotlin-toon", version = "1.0.0"}
 
 [plugins]
