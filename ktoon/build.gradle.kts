@@ -14,7 +14,7 @@ version = providers.gradleProperty("version").orElse("0.0.0-SNAPSHOT").get()
 kotlin {
     applyDefaultHierarchyTemplate()
     jvm {
-        compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
             testLogging {
