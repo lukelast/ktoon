@@ -93,7 +93,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.lukelast.ktoon"
+    namespace = group.toString()
     compileSdk =
         libs.versions.android.compileSdk
             .get()
