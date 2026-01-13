@@ -1,6 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform.base)
     alias(libs.plugins.kotlin.serialization.base)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.maven.publish)
 }
 
@@ -31,6 +34,51 @@ kotlin {
         binaries.library()
     }
 
+    wasmJs {
+        browser()
+        nodejs()
+        binaries.library()
+    }
+
+    wasmWasi {
+        nodejs()
+        binaries.library()
+    }
+
+    androidTarget {
+        publishLibraryVariants("release")
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
+
+    // native target "tiers" here are taken from https://kotlinlang.org/docs/native-target-support.html
+    // tier 1
+    macosX64()
+    macosArm64()
+    iosSimulatorArm64()
+    iosX64()
+    iosArm64()
+
+    // tier 2
+    linuxX64()
+    linuxArm64()
+    watchosSimulatorArm64()
+    watchosX64()
+    watchosArm32()
+    watchosArm64()
+    tvosSimulatorArm64()
+    tvosX64()
+    tvosArm64()
+
+    // tier 3
+    androidNativeArm32()
+    androidNativeArm64()
+    androidNativeX86()
+    androidNativeX64()
+    mingwX64()
+    watchosDeviceArm64()
+
     sourceSets {
         commonMain.dependencies { api(libs.kotlin.serialization) }
         commonTest.dependencies { implementation(kotlin("test")) }
@@ -41,6 +89,24 @@ kotlin {
             implementation(libs.instancio.junit)
             implementation(kotlin("reflect"))
         }
+    }
+}
+
+android {
+    namespace = "com.lukelast.ktoon"
+    compileSdk =
+        libs.versions.android.compileSdk
+            .get()
+            .toInt()
+    defaultConfig {
+        minSdk =
+            libs.versions.android.minSdk
+                .get()
+                .toInt()
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
