@@ -27,12 +27,6 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
-# Unversioned plugins for subprojects
-kotlin-jvm-base = { id = "org.jetbrains.kotlin.jvm" }
-kotlin-multiplatform-base = { id = "org.jetbrains.kotlin.multiplatform" }
-kotlin-serialization-base = { id = "org.jetbrains.kotlin.plugin.serialization" }
-kotlinx-benchmark-base = { id = "org.jetbrains.kotlinx.benchmark" }
-
 # Maven Central publishing
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 
