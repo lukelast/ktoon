@@ -4,10 +4,6 @@ plugins {
     application
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     // Normally add the dependency from maven central like:
     // implementation("com.lukelast.ktoon:ktoon:VERSION")

@@ -1,5 +1,5 @@
 pluginManagement {
-    repositories{
+    repositories {
         gradlePluginPortal()
         google()
     }
