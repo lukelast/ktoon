@@ -10,7 +10,7 @@ import org.instancio.settings.Keys
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(BenchmarkTimeUnit.MICROSECONDS)
-@Warmup(iterations = 3, time = 2, timeUnit = BenchmarkTimeUnit.SECONDS)
+@Warmup(iterations = 2, time = 2, timeUnit = BenchmarkTimeUnit.SECONDS)
 @Measurement(iterations = 4, time = 2, timeUnit = BenchmarkTimeUnit.SECONDS)
 open class KtoonBenchmark {
     private lateinit var data: BenchmarkData
@@ -31,6 +31,7 @@ open class KtoonBenchmark {
     }
 
     @Benchmark
+    @Warmup(iterations = 4, time = 2, timeUnit = BenchmarkTimeUnit.SECONDS)
     @Measurement(iterations = 10, time = 6, timeUnit = BenchmarkTimeUnit.SECONDS)
 //    @org.openjdk.jmh.annotations.Fork(value = 1, jvmArgsAppend = [JFR_ARGS])
     fun benchmarkKtoon(): String {
