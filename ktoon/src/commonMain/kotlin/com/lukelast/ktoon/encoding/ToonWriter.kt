@@ -11,7 +11,7 @@ import com.lukelast.ktoon.KtoonConfiguration
  * Benefits:
  * - Direct CharArray access skips compact string checks in StringBuilder
  * - Batch copying via toCharArray() is faster than byte-by-byte operations
- * - inlining was shown in increase performance a few percent while benchmarking.
+ * - inlining was shown to increase performance a few percent while benchmarking.
  */
 @Suppress("NOTHING_TO_INLINE")
 internal class ToonWriter(private val config: KtoonConfiguration) {
