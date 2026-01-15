@@ -1,5 +1,5 @@
 pluginManagement {
-    repositories{
+    repositories {
         gradlePluginPortal()
         google()
     }
@@ -7,6 +7,4 @@ pluginManagement {
 
 rootProject.name = "ktoon"
 
-include(":ktoon", ":demo", ":benchmark")
-
-include(":demo-kmp")
+include(":ktoon", ":demo", ":demo-kmp", ":benchmark")

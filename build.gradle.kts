@@ -9,7 +9,7 @@ plugins {
 subprojects {
     repositories {
         mavenCentral()
-        maven { url = uri("https://jitpack.io") }
         google()
+        maven { url = uri("https://jitpack.io") }
     }
 }

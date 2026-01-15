@@ -1,8 +1,9 @@
+@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform.base)
-    alias(libs.plugins.kotlin.serialization.base)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.android.library)
     alias(libs.plugins.maven.publish)
 }
@@ -14,7 +15,7 @@ version = providers.gradleProperty("version").orElse("0.0.0-SNAPSHOT").get()
 kotlin {
     applyDefaultHierarchyTemplate()
     jvm {
-        compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
             testLogging {
@@ -93,7 +94,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.lukelast.ktoon"
+    namespace = group.toString()
     compileSdk =
         libs.versions.android.compileSdk
             .get()

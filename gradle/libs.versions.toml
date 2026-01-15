@@ -5,9 +5,9 @@ junit = "6.0.2"
 slf4j = "2.0.17"
 kotlinx-benchmark = "0.4.15"
 maven-publish = "0.35.0"
+agp = "8.13.2"
 android-compileSdk = "36"
 android-minSdk = "23"
-
 
 [libraries]
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
@@ -27,13 +27,7 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
-# Unversioned plugins for subprojects
-kotlin-jvm-base = { id = "org.jetbrains.kotlin.jvm" }
-kotlin-multiplatform-base = { id = "org.jetbrains.kotlin.multiplatform" }
-kotlin-serialization-base = { id = "org.jetbrains.kotlin.plugin.serialization" }
-kotlinx-benchmark-base = { id = "org.jetbrains.kotlinx.benchmark" }
-
 # Maven Central publishing
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 
-android-library = { id = "com.android.library", version = "8.13.2" }
+android-library = { id = "com.android.library", version.ref = "agp" }
