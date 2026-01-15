@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.kmp)
     alias(libs.plugins.maven.publish)
 }
 
@@ -46,8 +46,16 @@ kotlin {
         binaries.library()
     }
 
-    androidTarget {
-        publishLibraryVariants("release")
+    android {
+        namespace = group.toString()
+        compileSdk =
+            libs.versions.android.compileSdk
+                .get()
+                .toInt()
+        minSdk =
+            libs.versions.android.minSdk
+                .get()
+                .toInt()
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -90,24 +98,6 @@ kotlin {
             implementation(libs.instancio.junit)
             implementation(kotlin("reflect"))
         }
-    }
-}
-
-android {
-    namespace = group.toString()
-    compileSdk =
-        libs.versions.android.compileSdk
-            .get()
-            .toInt()
-    defaultConfig {
-        minSdk =
-            libs.versions.android.minSdk
-                .get()
-                .toInt()
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
