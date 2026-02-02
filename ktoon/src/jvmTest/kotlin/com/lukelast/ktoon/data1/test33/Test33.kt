@@ -17,7 +17,7 @@ class Test33 : Runner() {
 }
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
-data class DefaultsData  constructor(
+data class DefaultsData(
     val title: String = "Default Title",
     val name: String = "Default Name",
     val description: String = "Default Description",
