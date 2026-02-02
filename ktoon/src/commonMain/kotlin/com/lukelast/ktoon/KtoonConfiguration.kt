@@ -104,7 +104,19 @@ class KtoonConfigurationBuilder {
      */
     var sortFields: Boolean = false
 
-    /** Encode properties with default values. */
+    /**
+     * Controls whether properties whose values are equal to their declared default values are
+     * written during serialization.
+     *
+     * When `true` (default), all properties are encoded even if they currently hold the same
+     * value as their default. This makes the serialized output explicit and can simplify
+     * interoperability with consumers that do not know the schema or its default values, at the
+     * cost of a larger payload.
+     *
+     * When `false`, properties whose values match their defaults are omitted from the output.
+     * This reduces the size of the serialized data, but requires decoders to be aware of and
+     * reapply default values during deserialization.
+     */
     var encodeDefaults: Boolean = true
 
     fun build(): KtoonConfiguration =
