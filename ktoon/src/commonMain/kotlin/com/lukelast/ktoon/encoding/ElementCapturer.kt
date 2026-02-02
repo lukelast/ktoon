@@ -38,7 +38,7 @@ internal class ElementCapturer(
             config.delimiter.char,
         )
 
-    override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = false
+    override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = true
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
         currentIndex = index
