@@ -92,4 +92,6 @@ abstract class Runner {
 val jsonPretty = Json {
     prettyPrint = true
     prettyPrintIndent = "  "
+    encodeDefaults = true
+    explicitNulls = true
 }

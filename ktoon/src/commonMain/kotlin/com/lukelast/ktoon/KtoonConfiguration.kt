@@ -12,6 +12,7 @@ package com.lukelast.ktoon
  * @property delimiter Delimiter character for array values and tabular format (default: COMMA)
  * @property indentSize Number of spaces per indentation level (default: 2)
  * @property sortFields Enable alphabetical sorting of object fields (default: false)
+ * @property encodeDefaults Enable encoding of default property values (default: true)
  */
 data class KtoonConfiguration(
     val strictMode: Boolean = true,
@@ -21,6 +22,7 @@ data class KtoonConfiguration(
     val delimiter: Delimiter = Delimiter.COMMA,
     val indentSize: Int = 2,
     val sortFields: Boolean = false,
+    val encodeDefaults: Boolean = true,
 ) {
     init {
         require(indentSize > 0) { "indentSize must be positive, got $indentSize" }
@@ -102,6 +104,21 @@ class KtoonConfigurationBuilder {
      */
     var sortFields: Boolean = false
 
+    /**
+     * Controls whether properties whose values are equal to their declared default values are
+     * written during serialization.
+     *
+     * When `true` (default), all properties are encoded even if they currently hold the same value
+     * as their default. This is usually what you want because the LLM does not know what the
+     * default values are.
+     *
+     * When `false`, properties whose values match their defaults are omitted from the output. This
+     * reduces the size of the serialized data. This allows you to strip out fields you don't want.
+     * Consider using the [kotlinx.serialization.EncodeDefault] annotation on specific properties
+     * instead for more fine-grained control.
+     */
+    var encodeDefaults: Boolean = true
+
     fun build(): KtoonConfiguration =
         KtoonConfiguration(
             strictMode = strictMode,
@@ -111,5 +128,6 @@ class KtoonConfigurationBuilder {
             delimiter = delimiter,
             indentSize = indentSize,
             sortFields = sortFields,
+            encodeDefaults = encodeDefaults,
         )
 }

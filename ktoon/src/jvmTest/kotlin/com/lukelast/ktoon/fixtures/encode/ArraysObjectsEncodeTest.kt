@@ -1,6 +1,9 @@
 package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.EncodeDefault.Mode
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlin.test.Ignore
@@ -14,9 +17,15 @@ class ArraysObjectsEncodeTest {
 
     private val fixture = "arrays-objects"
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Test
     fun `uses list format for objects with different fields`() {
-        @Serializable data class Item(val id: Int, val name: String, val extra: Boolean? = null)
+        @Serializable
+        data class Item(
+            val id: Int,
+            val name: String,
+            @EncodeDefault(Mode.NEVER) val extra: Boolean? = null,
+        )
 
         @Serializable data class Root(val items: List<Item>)
 
@@ -72,9 +81,11 @@ class ArraysObjectsEncodeTest {
         runFixtureEncodeTest<Root>(fixture)
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Test
     fun `uses list format for nested object arrays with mismatched keys`() {
-        @Serializable data class User(val id: Int, val name: String? = null)
+        @Serializable
+        data class User(val id: Int, @EncodeDefault(Mode.NEVER) val name: String? = null)
 
         @Serializable data class Item(val users: List<User>, val status: String)
 
