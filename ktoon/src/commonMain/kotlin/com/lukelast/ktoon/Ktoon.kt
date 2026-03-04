@@ -8,6 +8,7 @@ import com.lukelast.ktoon.encoding.ToonWriter
 import com.lukelast.ktoon.serializers.JsonElementSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -42,9 +43,9 @@ import kotlinx.serialization.modules.SerializersModule
  * @property configuration Configuration for TOON format behavior
  */
 class Ktoon(
-    val serializersModule: SerializersModule = EmptySerializersModule(),
     val configuration: KtoonConfiguration = KtoonConfiguration.Default,
-) {
+    override val serializersModule: SerializersModule = EmptySerializersModule(),
+) : StringFormat {
 
     /**
      * Encodes the given [value] to a TOON format string using the given [serializer].
@@ -54,7 +55,7 @@ class Ktoon(
      * @return The encoded TOON string
      * @throws KtoonEncodingException if encoding fails
      */
-    fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String {
+    override fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String {
         val writer = ToonWriter(configuration)
         val encoder = ToonEncoder(writer, configuration, serializersModule)
 
@@ -78,7 +79,7 @@ class Ktoon(
      * @throws KtoonParsingException if parsing fails
      * @throws KtoonValidationException if validation fails (in strict mode)
      */
-    fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
+    override fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
         try {
             // Tokenize the input
             val lexer = ToonLexer(string, configuration)
@@ -173,7 +174,7 @@ class Ktoon(
             builder: KtoonConfigurationBuilder.() -> Unit,
         ): Ktoon {
             val config = KtoonConfigurationBuilder().apply(builder).build()
-            return Ktoon(serializersModule, config)
+            return Ktoon(config, serializersModule)
         }
     }
 }
