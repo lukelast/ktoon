@@ -15,7 +15,7 @@ To learn about the TOON format and why you should use it read the official websi
 
 ## Features
 
-- **Full TOON 3.0.3 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimiters. 400+ tests.
+- **Full TOON 3.0.3 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimiters. 450+ tests.
 - **Kotlin Multiplatform** - Supports JVM and JavaScript targets. Others can be added on request.
 - **Maven Central** - Published to Maven Central for easy dependency management with Gradle and Maven.
 - **Fully Featured**
