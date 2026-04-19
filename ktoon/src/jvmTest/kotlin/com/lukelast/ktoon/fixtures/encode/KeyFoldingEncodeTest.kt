@@ -3,7 +3,6 @@ package com.lukelast.ktoon.fixtures.encode
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -133,7 +132,6 @@ class KeyFoldingEncodeTest {
         runFixtureEncodeTest<Root>(fixture)
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
     @Test
     fun `encodes folded chain ending with empty object`() {
         @Serializable data class C(@EncodeDefault(Mode.NEVER) val d: Unit? = null)

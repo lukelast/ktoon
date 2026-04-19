@@ -1,5 +1,3 @@
-@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-
 package com.lukelast.ktoon
 
 import kotlinx.serialization.EncodeDefault

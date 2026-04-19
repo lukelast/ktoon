@@ -3,7 +3,6 @@ package com.lukelast.ktoon.fixtures.encode
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlin.test.Ignore
@@ -57,7 +56,6 @@ class ArraysNestedEncodeTest {
         runFixtureEncodeTest<List<Item>>(fixture)
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
     @Test
     fun `encodes root-level array of non-uniform objects in list format`() {
         @Serializable

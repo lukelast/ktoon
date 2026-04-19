@@ -9,7 +9,6 @@ import kotlin.io.path.isReadable
 import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlin.test.assertEquals
 import kotlin.test.Test
@@ -88,7 +87,6 @@ abstract class Runner {
     }
 }
 
-@OptIn(ExperimentalSerializationApi::class)
 val jsonPretty = Json {
     prettyPrint = true
     prettyPrintIndent = "  "

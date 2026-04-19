@@ -3,7 +3,6 @@ package com.lukelast.ktoon.fixtures.encode
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlin.test.Ignore
@@ -17,7 +16,6 @@ class ArraysObjectsEncodeTest {
 
     private val fixture = "arrays-objects"
 
-    @OptIn(ExperimentalSerializationApi::class)
     @Test
     fun `uses list format for objects with different fields`() {
         @Serializable
@@ -81,7 +79,6 @@ class ArraysObjectsEncodeTest {
         runFixtureEncodeTest<Root>(fixture)
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
     @Test
     fun `uses list format for nested object arrays with mismatched keys`() {
         @Serializable
