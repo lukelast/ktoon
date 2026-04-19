@@ -1,7 +1,7 @@
 # ktoon
 [![Maven Central](https://img.shields.io/maven-central/v/com.lukelast.ktoon/ktoon)](https://central.sonatype.com/artifact/com.lukelast.ktoon/ktoon)
 [![.github/workflows/gradle.yml](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml/badge.svg)](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml)
-[![SPEC v3.0.1](https://img.shields.io/badge/ToonSpec-v3.0.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
+[![SPEC v3.0.3](https://img.shields.io/badge/ToonSpec-v3.0.3-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v3.0.3/SPEC.md)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
 ![Kotlin](https://img.shields.io/badge/Java-17+-yellow?logo=java)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -15,7 +15,7 @@ To learn about the TOON format and why you should use it read the official websi
 
 ## Features
 
-- **Full TOON 3.0.1 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimeters. 400+ tests.
+- **Full TOON 3.0.3 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimeters. 400+ tests.
 - **Kotlin Multiplatform** - Supports JVM and JavaScript targets. Others can be added on request.
 - **Maven Central** - Published to Maven Central for easy dependency management with Gradle and Maven.
 - **Fully Featured**

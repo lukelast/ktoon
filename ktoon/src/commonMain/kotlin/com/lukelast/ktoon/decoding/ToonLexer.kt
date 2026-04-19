@@ -184,13 +184,20 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         // Remove delimiter marker if present
         val lengthStr = bracketContent.trimEnd('\t', '|')
 
-        // Parse length
-        val length = lengthStr.toIntOrNull() ?: 0
+        // Parse length - must be a valid non-negative integer or the line is not an array header
+        // (Section 6 + 14.2: fall through to key-value parsing)
+        val length = lengthStr.toIntOrNull() ?: return null
+        if (length < 0) return null
 
-        // Check for tabular format fields
+        // Section 6: only whitespace may appear between ] and { (or end of keyPart).
+        // Find the next non-whitespace after ]; if it's '{', parse fields; otherwise the
+        // remainder must be whitespace, or this is not an array header.
+        var cursor = bracketEnd + 1
+        while (cursor < keyPart.length && keyPart[cursor].isWhitespace()) cursor++
+
         val fields =
-            if (bracketEnd + 1 < keyPart.length && keyPart[bracketEnd + 1] == '{') {
-                val braceStart = bracketEnd + 1
+            if (cursor < keyPart.length && keyPart[cursor] == '{') {
+                val braceStart = cursor
                 val braceEnd = findUnquotedChar(keyPart, '}', braceStart)
                 if (braceEnd == -1) {
                     throw KtoonParsingException.invalidArrayFormat(
@@ -199,7 +206,14 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                     )
                 }
                 val fieldsContent = keyPart.substring(braceStart + 1, braceEnd)
+                // Only whitespace may follow the closing } before the colon
+                for (i in braceEnd + 1 until keyPart.length) {
+                    if (!keyPart[i].isWhitespace()) return null
+                }
                 splitRespectingQuotes(fieldsContent, delimiter.char).map { it.trim() }
+            } else if (cursor < keyPart.length) {
+                // Non-whitespace content between ] and end of keyPart (which precedes :)
+                return null
             } else {
                 null
             }

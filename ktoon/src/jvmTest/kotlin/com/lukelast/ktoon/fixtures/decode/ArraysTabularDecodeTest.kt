@@ -62,6 +62,12 @@ class ArraysTabularDecodeTest {
     }
 
     @Test
+    fun `parses quoted empty string key with tabular array format`() {
+        @Serializable data class EmptyKeyResult(@SerialName("") val empty: List<CustomItem>)
+        runFixtureDecodeTest<EmptyKeyResult>(fixture)
+    }
+
+    @Test
     fun `treats unquoted colon as terminator for tabular rows and start of key-value pair`() {
         @Serializable data class CountResult(val items: List<CustomItem>, val count: Int)
         runFixtureDecodeTest<CountResult>(fixture)

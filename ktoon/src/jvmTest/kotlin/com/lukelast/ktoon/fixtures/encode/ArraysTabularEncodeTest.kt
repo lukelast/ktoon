@@ -61,4 +61,13 @@ class ArraysTabularEncodeTest {
 
         runFixtureEncodeTest<Root>(fixture)
     }
+
+    @Test
+    fun `encodes tabular arrays with empty string keys`() {
+        @Serializable data class Item(val id: Int, val name: String)
+
+        @Serializable data class Root(@SerialName("") val empty: List<Item>)
+
+        runFixtureEncodeTest<Root>(fixture)
+    }
 }
