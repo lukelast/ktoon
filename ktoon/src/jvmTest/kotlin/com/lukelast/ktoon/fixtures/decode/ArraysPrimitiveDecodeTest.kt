@@ -83,8 +83,20 @@ class ArraysPrimitiveDecodeTest {
     }
 
     @Test
+    fun `parses quoted empty string key with inline array`() {
+        @Serializable data class EmptyKey(@SerialName("") val empty: List<Int>)
+        runFixtureDecodeTest<EmptyKey>(fixture)
+    }
+
+    @Test
     fun `parses quoted key with empty array`() {
         @Serializable data class CustomKey(@SerialName("x-custom") val xCustom: List<String>)
         runFixtureDecodeTest<CustomKey>(fixture)
+    }
+
+    @Test
+    fun `parses quoted empty string key with empty array`() {
+        @Serializable data class EmptyKey(@SerialName("") val empty: List<String>)
+        runFixtureDecodeTest<EmptyKey>(fixture)
     }
 }

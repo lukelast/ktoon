@@ -98,6 +98,24 @@ class ObjectsDecodeTest {
     }
 
     @Test
+    fun `treats extra brackets after valid array segment as literal key`() {
+        @Serializable data class WithKey(@SerialName("foo[1][bar]") val v: Int)
+        runFixtureDecodeTest<WithKey>(fixture)
+    }
+
+    @Test
+    fun `treats non-integer bracket content as literal key`() {
+        @Serializable data class WithKey(@SerialName("foo[bar][1]") val v: Int)
+        runFixtureDecodeTest<WithKey>(fixture)
+    }
+
+    @Test
+    fun `treats text between bracket segment and colon as literal key`() {
+        @Serializable data class WithKey(@SerialName("foo[2]extra") val v: String)
+        runFixtureDecodeTest<WithKey>(fixture)
+    }
+
+    @Test
     fun `parses quoted key with braces`() {
         @Serializable data class WithBraceKey(@SerialName("{key}") val key: Int)
         runFixtureDecodeTest<WithBraceKey>(fixture)

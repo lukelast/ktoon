@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlin.test.Ignore
@@ -41,6 +42,20 @@ class ArraysPrimitiveEncodeTest {
         @Serializable data class Items(val items: List<String>)
 
         runFixtureEncodeTest<Items>(fixture)
+    }
+
+    @Test
+    fun `encodes empty string keys for inline arrays`() {
+        @Serializable data class Root(@SerialName("") val empty: List<Int>)
+
+        runFixtureEncodeTest<Root>(fixture)
+    }
+
+    @Test
+    fun `encodes empty string keys for empty arrays`() {
+        @Serializable data class Root(@SerialName("") val empty: List<String>)
+
+        runFixtureEncodeTest<Root>(fixture)
     }
 
     @Test
