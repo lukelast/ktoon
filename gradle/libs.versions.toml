@@ -1,12 +1,12 @@
 [versions]
 kotlin = "2.3.20"
-kotlin-serialization = "1.10.0"
+kotlin-serialization = "1.11.0"
 junit = "6.0.3"
 slf4j = "2.0.17"
 kotlinx-benchmark = "0.4.16"
 maven-publish = "0.36.0"
-agp = "9.0.1"
-android-compileSdk = "36"
+agp = "9.1.1"
+android-compileSdk = "37"
 android-minSdk = "23"
 
 [libraries]
