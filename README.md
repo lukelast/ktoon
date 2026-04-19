@@ -2,7 +2,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.lukelast.ktoon/ktoon)](https://central.sonatype.com/artifact/com.lukelast.ktoon/ktoon)
 [![.github/workflows/gradle.yml](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml/badge.svg)](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml)
 [![SPEC v3.0.1](https://img.shields.io/badge/ToonSpec-v3.0.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.3.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
 ![Kotlin](https://img.shields.io/badge/Java-17+-yellow?logo=java)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

@@ -55,7 +55,9 @@ internal class ToonObjectEncoder(
         if (!isRoot || elementIndex > 0) {
             if (pendingKeys.isEmpty()) rawWriter.writeNewline()
         }
-        if (pendingKeys.isEmpty()) rawWriter.writeIndent(indentLevel)
+        if (pendingKeys.isEmpty()) {
+            rawWriter.writeIndent(indentLevel)
+        }
         return true
     }
 

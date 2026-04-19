@@ -1,6 +1,7 @@
 .kotlin/
 .gradle/
 .gradle-linux/
+.gradle-home/
 .idea/
 .claude/
 build/
