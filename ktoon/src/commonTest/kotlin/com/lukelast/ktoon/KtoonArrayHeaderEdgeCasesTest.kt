@@ -30,6 +30,22 @@ class KtoonArrayHeaderEdgeCasesTest {
     }
 
     @Test
+    fun `positive signed length falls through to literal key`() {
+        @Serializable data class Root(@SerialName("foo[+3]") val v: Int)
+
+        val decoded = ktoon.decodeFromString<Root>("foo[+3]: 42")
+        assertEquals(Root(v = 42), decoded)
+    }
+
+    @Test
+    fun `positive signed length with delimiter marker falls through to literal key`() {
+        @Serializable data class Root(@SerialName("foo[+2|]") val v: String)
+
+        val decoded = ktoon.decodeFromString<Root>("foo[+2|]: hello")
+        assertEquals(Root(v = "hello"), decoded)
+    }
+
+    @Test
     fun `whitespace between closing bracket and opening brace is allowed`() {
         @Serializable data class Item(val a: Int, val b: String)
 

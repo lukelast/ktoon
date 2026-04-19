@@ -2,6 +2,7 @@ package com.lukelast.ktoon.decoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
+import com.lukelast.ktoon.util.isDigit
 
 /**
  * Lexer for tokenizing TOON format text.
@@ -186,8 +187,8 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
 
         // Parse length - must be a valid non-negative integer or the line is not an array header
         // (Section 6 + 14.2: fall through to key-value parsing)
+        if (lengthStr.isEmpty() || !lengthStr.all { it.isDigit() }) return null
         val length = lengthStr.toIntOrNull() ?: return null
-        if (length < 0) return null
 
         // Section 6: only whitespace may appear between ] and { (or end of keyPart).
         // Find the next non-whitespace after ]; if it's '{', parse fields; otherwise the
