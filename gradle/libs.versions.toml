@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.3.21"
 kotlin-serialization = "1.11.0"
-junit = "6.0.3"
+junit = "6.1.0"
 slf4j = "2.0.18"
 kotlinx-benchmark = "0.4.17"
 maven-publish = "0.36.0"
