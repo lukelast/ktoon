@@ -17,24 +17,24 @@ class IndentationErrorsDecodeTest {
     @Serializable data class NestedA(val a: NestedB)
 
     @Test
-    fun `throws on object field with non-multiple indentation (3 spaces with indent=2)`() {
+    fun `throws on object field with non-multiple indentation (3 spaces with indentSize 2)`() {
         runFixtureDecodeTest<NestedA>(fixture)
     }
 
     @Test
-    fun `throws on list item with non-multiple indentation (3 spaces with indent=2)`() {
+    fun `throws on list item with non-multiple indentation (3 spaces with indentSize 2)`() {
         @Serializable data class ListItem(val id: Int)
         @Serializable data class ListResult(val items: List<ListItem>)
         runFixtureDecodeTest<ListResult>(fixture)
     }
 
     @Test
-    fun `throws on non-multiple indentation with custom indent=4 (3 spaces)`() {
+    fun `throws on non-multiple indentation with custom indentSize 4 (3 spaces)`() {
         runFixtureDecodeTest<NestedA>(fixture)
     }
 
     @Test
-    fun `accepts correct indentation with custom indent size (4 spaces with indent=4)`() {
+    fun `accepts correct indentation with custom indentSize (4 spaces with indentSize 4)`() {
         runFixtureDecodeTest<NestedA>(fixture)
     }
 
@@ -81,23 +81,5 @@ class IndentationErrorsDecodeTest {
         @Serializable data class DeepNestedB(val b: DeepNestedC)
         @Serializable data class DeepNestedA(val a: DeepNestedB)
         runFixtureDecodeTest<DeepNestedA>(fixture)
-    }
-
-    @Serializable data class TwoFields(val a: Int, val b: Int)
-
-    @Test
-    fun `parses empty lines without validation errors`() {
-        runFixtureDecodeTest<TwoFields>(fixture)
-    }
-
-    @Test
-    fun `parses root-level content (0 indentation) as always valid`() {
-        @Serializable data class ThreeFields(val a: Int, val b: Int, val c: Int)
-        runFixtureDecodeTest<ThreeFields>(fixture)
-    }
-
-    @Test
-    fun `parses lines with only spaces without validation if empty`() {
-        runFixtureDecodeTest<TwoFields>(fixture)
     }
 }

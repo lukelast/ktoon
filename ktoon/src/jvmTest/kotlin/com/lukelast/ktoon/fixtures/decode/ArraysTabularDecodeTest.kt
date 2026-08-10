@@ -56,19 +56,19 @@ class ArraysTabularDecodeTest {
     @Serializable data class CustomItem(val id: Int, val name: String)
 
     @Test
-    fun `parses quoted key with tabular array format`() {
+    fun `parses quoted key with tabular array`() {
         @Serializable data class CustomItemResult(val `x-items`: List<CustomItem>)
         runFixtureDecodeTest<CustomItemResult>(fixture)
     }
 
     @Test
-    fun `parses quoted empty string key with tabular array format`() {
+    fun `parses quoted empty string key with tabular array`() {
         @Serializable data class EmptyKeyResult(@SerialName("") val empty: List<CustomItem>)
         runFixtureDecodeTest<EmptyKeyResult>(fixture)
     }
 
     @Test
-    fun `treats unquoted colon as terminator for tabular rows and start of key-value pair`() {
+    fun `terminates a tabular scope at a dedented key-value line`() {
         @Serializable data class CountResult(val items: List<CustomItem>, val count: Int)
         runFixtureDecodeTest<CountResult>(fixture)
     }

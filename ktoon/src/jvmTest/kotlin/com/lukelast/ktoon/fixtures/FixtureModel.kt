@@ -7,9 +7,10 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Represents a TOON test fixture file containing multiple test cases.
  *
- * Fixture files follow the schema defined at `C:\code\toon-format-spec\tests\fixtures.schema.json`.
+ * Fixture files follow the schema defined at the spec repo's `tests/fixtures.schema.json`.
  *
- * @property version TOON specification version (e.g., "1.4", "1.5")
+ * @property version Baseline TOON spec version for this file (e.g., "4.0"); per-test
+ *   [FixtureTestCase.minSpecVersion] overrides it for tests exercising newer behavior
  * @property category Test category (encode or decode)
  * @property description Brief description of what this fixture tests
  * @property tests List of individual test cases
@@ -66,31 +67,20 @@ data class FixtureTestCase(
  * All fields have defaults matching the TOON specification's default behavior.
  *
  * @property delimiter Array delimiter character: "," (comma), "\t" (tab), or "|" (pipe)
- * @property indent Number of spaces per indentation level (default: 2)
+ * @property indentSize Number of spaces per indentation level (default: 2)
  * @property strict Enable strict validation (default: true)
- * @property keyFolding Key folding mode: "off" (default) or "safe"
- * @property flattenDepth Maximum depth to fold key chains when keyFolding is "safe"
- * @property expandPaths Path expansion mode: "off" (default) or "safe"
  */
 @Serializable
 data class FixtureOptions(
     val delimiter: String = ",",
-    val indent: Int = 2,
+    val indentSize: Int = 2,
     val strict: Boolean = true,
-    val keyFolding: String = "off",
-    val flattenDepth: Int? = null,
-    val expandPaths: String = "off",
 ) {
     fun toToonConfiguration(): KtoonConfiguration {
         return KtoonConfiguration(
             delimiter = delimiter.toDelimiter(),
-            indentSize = indent,
+            indentSize = indentSize,
             strictMode = strict,
-            keyFolding =
-                if (keyFolding == "safe") com.lukelast.ktoon.KeyFoldingMode.SAFE
-                else com.lukelast.ktoon.KeyFoldingMode.OFF,
-            flattenDepth = flattenDepth,
-            pathExpansion = expandPaths == "safe",
         )
     }
 

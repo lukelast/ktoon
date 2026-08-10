@@ -17,24 +17,13 @@ class ArraysObjectsEncodeTest {
     private val fixture = "arrays-objects"
 
     @Test
-    fun `uses list format for objects with different fields`() {
+    fun `uses list form for objects with different fields`() {
         @Serializable
         data class Item(
             val id: Int,
             val name: String,
             @EncodeDefault(Mode.NEVER) val extra: Boolean? = null,
         )
-
-        @Serializable data class Root(val items: List<Item>)
-
-        runFixtureEncodeTest<Root>(fixture)
-    }
-
-    @Test
-    fun `uses list format for objects with nested values`() {
-        @Serializable data class Nested(val x: Int)
-
-        @Serializable data class Item(val id: Int, val nested: Nested)
 
         @Serializable data class Root(val items: List<Item>)
 
@@ -60,7 +49,7 @@ class ArraysObjectsEncodeTest {
     }
 
     @Test
-    fun `uses list format for objects containing arrays of arrays`() {
+    fun `uses list form for objects containing arrays of arrays`() {
         @Serializable data class Item(val matrix: List<List<Int>>, val name: String)
 
         @Serializable data class Root(val items: List<Item>)
@@ -69,7 +58,7 @@ class ArraysObjectsEncodeTest {
     }
 
     @Test
-    fun `uses tabular format for nested uniform object arrays`() {
+    fun `uses tabular form for nested uniform object arrays`() {
         @Serializable data class User(val id: Int, val name: String)
 
         @Serializable data class Item(val users: List<User>, val status: String)
@@ -80,7 +69,7 @@ class ArraysObjectsEncodeTest {
     }
 
     @Test
-    fun `uses list format for nested object arrays with mismatched keys`() {
+    fun `uses list form for nested object arrays with mismatched keys`() {
         @Serializable
         data class User(val id: Int, @EncodeDefault(Mode.NEVER) val name: String? = null)
 
@@ -92,7 +81,7 @@ class ArraysObjectsEncodeTest {
     }
 
     @Test
-    fun `uses list format for objects with multiple array fields`() {
+    fun `uses list form for objects with multiple array fields`() {
         @Serializable data class Item(val nums: List<Int>, val tags: List<String>, val name: String)
 
         @Serializable data class Root(val items: List<Item>)
@@ -101,7 +90,7 @@ class ArraysObjectsEncodeTest {
     }
 
     @Test
-    fun `uses list format for objects with only array fields`() {
+    fun `uses list form for objects with only array fields`() {
         @Serializable data class Item(val nums: List<Int>, val tags: List<String>)
 
         @Serializable data class Root(val items: List<Item>)
@@ -110,7 +99,7 @@ class ArraysObjectsEncodeTest {
     }
 
     @Test
-    fun `encodes objects with empty arrays in list format`() {
+    fun `encodes objects with empty arrays in list form`() {
         @Serializable data class Item(val name: String, val data: List<String>)
 
         @Serializable data class Root(val items: List<Item>)
@@ -168,7 +157,7 @@ class ArraysObjectsEncodeTest {
 
     @Test
     @Ignore
-    fun `uses list format when one object has nested field`() {
+    fun `uses list form when one object has nested field`() {
         @Serializable data class Root(val items: List<JsonElement>)
 
         runFixtureEncodeTest<Root>(fixture)

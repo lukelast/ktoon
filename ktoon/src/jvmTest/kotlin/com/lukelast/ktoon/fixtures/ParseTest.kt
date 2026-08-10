@@ -1,6 +1,5 @@
 package com.lukelast.ktoon.fixtures
 
-import com.lukelast.ktoon.KeyFoldingMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -12,10 +11,10 @@ class ParseTest {
     fun `loads primitives fixture`() {
         val fixture = loadFixture("fixtures/encode/primitives.json")
 
-        assertEquals("1.4", fixture.version)
+        assertEquals("4.0", fixture.version)
         assertEquals(FixtureCategory.encode, fixture.category)
         assertEquals(
-            "Primitive value encoding - strings, numbers, booleans, null",
+            "Primitive value encoding – strings, numbers, booleans, null",
             fixture.description,
         )
         assertTrue(fixture.tests.isNotEmpty())
@@ -35,11 +34,8 @@ class ParseTest {
         val options =
             FixtureOptions(
                 delimiter = "\t",
-                indent = 4,
+                indentSize = 4,
                 strict = false,
-                keyFolding = "safe",
-                flattenDepth = 6,
-                expandPaths = "safe",
             )
 
         val config = options.toToonConfiguration()
@@ -47,9 +43,6 @@ class ParseTest {
         assertEquals(com.lukelast.ktoon.KtoonConfiguration.Delimiter.TAB, config.delimiter)
         assertEquals(4, config.indentSize)
         assertEquals(false, config.strictMode)
-        assertEquals(KeyFoldingMode.SAFE, config.keyFolding)
-        assertEquals(6, config.flattenDepth)
-        assertEquals(true, config.pathExpansion)
     }
 
     @Test

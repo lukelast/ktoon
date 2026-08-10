@@ -58,6 +58,7 @@ class ObjectsDecodeTest {
 
     @Test
     fun `parses quoted object value with leading and trailing spaces`() {
+        // JVM method names cannot contain '/', so the fixture case name is passed explicitly.
         runFixtureDecodeTest<WithText>(
             fixture,
             "parses quoted object value with leading/trailing spaces",
@@ -98,19 +99,19 @@ class ObjectsDecodeTest {
     }
 
     @Test
-    fun `treats extra brackets after valid array segment as literal key`() {
+    fun `treats extra brackets after valid array segment as literal key (non-strict)`() {
         @Serializable data class WithKey(@SerialName("foo[1][bar]") val v: Int)
         runFixtureDecodeTest<WithKey>(fixture)
     }
 
     @Test
-    fun `treats non-integer bracket content as literal key`() {
+    fun `treats non-integer bracket content as literal key (non-strict)`() {
         @Serializable data class WithKey(@SerialName("foo[bar][1]") val v: Int)
         runFixtureDecodeTest<WithKey>(fixture)
     }
 
     @Test
-    fun `treats text between bracket segment and colon as literal key`() {
+    fun `treats text between bracket segment and colon as literal key (non-strict)`() {
         @Serializable data class WithKey(@SerialName("foo[2]extra") val v: String)
         runFixtureDecodeTest<WithKey>(fixture)
     }
