@@ -1,7 +1,7 @@
 {
-  "version": "1.4",
+  "version": "4.0",
   "category": "encode",
-  "description": "Primitive array encoding - inline arrays of strings, numbers, booleans",
+  "description": "Primitive array encoding – inline arrays of strings, numbers, booleans",
   "tests": [
     {
       "name": "encodes string arrays inline",
@@ -32,7 +32,7 @@
       "input": {
         "items": []
       },
-      "expected": "items[0]:",
+      "expected": "items: []",
       "specSection": "9.1"
     },
     {
@@ -48,7 +48,7 @@
       "input": {
         "": []
       },
-      "expected": "\"\"[0]:",
+      "expected": "\"\": []",
       "specSection": "9.1"
     },
     {
@@ -98,6 +98,14 @@
       },
       "expected": "items[3]: \"[5]\",\"- item\",\"{key}\"",
       "specSection": "9.1"
+    },
+    {
+      "name": "quotes hash-leading string in inline array",
+      "input": {
+        "tags": ["#a", "b"]
+      },
+      "expected": "tags[2]: \"#a\",b",
+      "specSection": "7.2"
     }
   ]
 }
