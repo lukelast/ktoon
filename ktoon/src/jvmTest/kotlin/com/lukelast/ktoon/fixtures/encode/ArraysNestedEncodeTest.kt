@@ -50,14 +50,14 @@ class ArraysNestedEncodeTest {
     }
 
     @Test
-    fun `encodes root-level array of uniform objects in tabular format`() {
+    fun `encodes root-level array of uniform objects in tabular form`() {
         @Serializable data class Item(val id: Int)
 
         runFixtureEncodeTest<List<Item>>(fixture)
     }
 
     @Test
-    fun `encodes root-level array of non-uniform objects in list format`() {
+    fun `encodes root-level array of non-uniform objects in list form`() {
         @Serializable
         data class Item(val id: Int, @EncodeDefault(Mode.NEVER) val name: String? = null)
 
@@ -66,7 +66,7 @@ class ArraysNestedEncodeTest {
 
     @Test
     @Ignore
-    fun `encodes root-level array mixing primitive, object, and array of objects in list format`() {
+    fun `encodes root-level array mixing primitive, object, and array of objects in list form`() {
         runFixtureEncodeTest<List<JsonElement>>(fixture)
     }
 
@@ -98,7 +98,7 @@ class ArraysNestedEncodeTest {
 
     @Test
     @Ignore
-    fun `uses list format for arrays mixing primitives and objects`() {
+    fun `uses list form for arrays mixing primitives and objects`() {
         @Serializable data class Root(val items: List<JsonElement>)
 
         runFixtureEncodeTest<Root>(fixture)
@@ -106,7 +106,7 @@ class ArraysNestedEncodeTest {
 
     @Test
     @Ignore
-    fun `uses list format for arrays mixing objects and arrays`() {
+    fun `uses list form for arrays mixing objects and arrays`() {
         @Serializable data class Root(val items: List<JsonElement>)
 
         runFixtureEncodeTest<Root>(fixture)

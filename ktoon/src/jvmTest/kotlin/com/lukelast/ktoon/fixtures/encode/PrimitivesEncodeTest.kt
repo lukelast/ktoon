@@ -177,12 +177,12 @@ class PrimitivesEncodeTest {
     }
 
     @Test
-    fun `encodes scientific notation as decimal`() {
+    fun `encodes large integer without exponent notation`() {
         runFixtureEncodeTest<Int>(fixture)
     }
 
     @Test
-    fun `encodes small decimal from scientific notation`() {
+    fun `encodes small decimal without exponent notation`() {
         runFixtureEncodeTest<Double>(fixture)
     }
 

@@ -26,7 +26,7 @@ class WhitespaceEncodeTest {
     }
 
     @Test
-    fun `respects custom indent size option`() {
+    fun `respects custom indentSize option`() {
         @Serializable data class User(val name: String, val role: String)
 
         @Serializable data class Root(val user: User)

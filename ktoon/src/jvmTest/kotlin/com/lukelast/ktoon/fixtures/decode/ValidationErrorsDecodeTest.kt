@@ -12,12 +12,12 @@ class ValidationErrorsDecodeTest {
     private val fixture = "validation-errors"
 
     @Test
-    fun `throws on array length mismatch (inline primitives - too many)`() {
+    fun `throws when inline values outnumber the declared length`() {
         runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 
     @Test
-    fun `throws on array length mismatch (list format - too many)`() {
+    fun `throws when list items outnumber the declared length`() {
         runFixtureDecodeTest<Map<String, List<Int>>>(fixture)
     }
 
@@ -60,7 +60,7 @@ class ValidationErrorsDecodeTest {
     }
 
     @Test
-    fun `throws on delimiter mismatch (header declares tab, row uses comma)`() {
+    fun `throws on row width mismatch when rows use a different delimiter than the active delimiter`() {
         runFixtureDecodeTest<Map<String, List<TabularItem>>>(fixture)
     }
 

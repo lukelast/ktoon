@@ -105,12 +105,6 @@ class NumbersDecodeTest {
     }
 
     @Test
-    fun `treats leading-zero in object value as string`() {
-        @Serializable data class A(val a: String)
-        runFixtureDecodeTest<A>(fixture)
-    }
-
-    @Test
     fun `treats leading-zeros in array as strings`() {
         @Serializable data class Nums(val nums: List<String>)
         runFixtureDecodeTest<Nums>(fixture)

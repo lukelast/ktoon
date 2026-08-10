@@ -22,11 +22,6 @@ class DelimitersDecodeTest {
         runFixtureDecodeTest<Map<String, List<String>>>(fixture)
     }
 
-    @Test
-    fun `parses primitive arrays with comma delimiter`() {
-        runFixtureDecodeTest<Map<String, List<String>>>(fixture)
-    }
-
     @Serializable data class TabularItem(val sku: String, val qty: Int, val price: Double)
 
     @Serializable data class TabularResult(val items: List<TabularItem>)
@@ -133,12 +128,12 @@ class DelimitersDecodeTest {
     @Serializable data class ListItemResult(val items: List<ListStatus>)
 
     @Test
-    fun `object values in list items follow document delimiter`() {
+    fun `does not split object values on commas inside a tab-delimited scope`() {
         runFixtureDecodeTest<ListItemResult>(fixture)
     }
 
     @Test
-    fun `object values with comma must be quoted when document delimiter is comma`() {
+    fun `parses quoted comma in object values`() {
         runFixtureDecodeTest<ListItemResult>(fixture)
     }
 

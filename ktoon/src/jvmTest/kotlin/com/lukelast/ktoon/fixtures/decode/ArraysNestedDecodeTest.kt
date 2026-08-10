@@ -63,7 +63,7 @@ class ArraysNestedDecodeTest {
     }
 
     @Test
-    fun `parses objects containing arrays (including empty arrays) in list format`() {
+    fun `parses objects containing arrays (including empty arrays) in list form`() {
         @Serializable data class ItemWithData(val name: String, val data: List<String>)
         @Serializable data class ItemsWithDataResult(val items: List<ItemWithData>)
         runFixtureDecodeTest<ItemsWithDataResult>(fixture)
@@ -107,7 +107,7 @@ class ArraysNestedDecodeTest {
     }
 
     @Test
-    fun `parses root-level array of uniform objects in tabular format`() {
+    fun `parses root-level array of uniform objects in tabular form`() {
         @Serializable data class IdOnly(val id: Int)
         runFixtureDecodeTest<List<IdOnly>>(fixture)
     }
@@ -115,13 +115,13 @@ class ArraysNestedDecodeTest {
     @Serializable data class RootId(val id: Int, val name: String? = null)
 
     @Test
-    fun `parses root-level array of non-uniform objects in list format`() {
+    fun `parses root-level array of non-uniform objects in list form`() {
         runFixtureDecodeTest<List<RootId>>(fixture)
     }
 
     @Test
     @Ignore("List of different types")
-    fun `parses root-level array mixing primitive, object, and array of objects in list format`() {
+    fun `parses root-level array mixing primitive, object, and array of objects in list form`() {
         runFixtureDecodeTest<List<String>>(fixture)
     }
 
@@ -153,7 +153,7 @@ class ArraysNestedDecodeTest {
 
     @Test
     @Ignore("list of different types")
-    fun `parses arrays mixing primitives, objects, and strings in list format`() {
+    fun `parses arrays mixing primitives, objects, and strings in list form`() {
         runFixtureDecodeTest<Map<String, List<JsonElement>>>(fixture)
     }
 
@@ -164,7 +164,7 @@ class ArraysNestedDecodeTest {
     }
 
     @Test
-    fun `parses quoted key with list array format`() {
+    fun `parses quoted key with list-form array`() {
         @Serializable data class CustomItems(val `x-items`: List<RootId>)
         runFixtureDecodeTest<CustomItems>(fixture)
     }

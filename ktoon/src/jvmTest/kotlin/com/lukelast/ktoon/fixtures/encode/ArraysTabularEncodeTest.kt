@@ -14,7 +14,7 @@ class ArraysTabularEncodeTest {
     private val fixture = "arrays-tabular"
 
     @Test
-    fun `encodes arrays of uniform objects in tabular format`() {
+    fun `encodes arrays of uniform objects in tabular form`() {
         @Serializable data class Item(val sku: String, val qty: Int, val price: Double)
 
         @Serializable data class Root(val items: List<Item>)
@@ -23,7 +23,7 @@ class ArraysTabularEncodeTest {
     }
 
     @Test
-    fun `encodes null values in tabular format`() {
+    fun `encodes null values in tabular form`() {
         @Serializable data class Item(val id: Int, val value: String?)
 
         @Serializable data class Root(val items: List<Item>)
