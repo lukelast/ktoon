@@ -1,31 +1,14 @@
 package com.lukelast.ktoon.encoding
 
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.CompositeDecoder
-
+/**
+ * A captured value tree used to select and write the §9 form of a value after all of its content
+ * is known. Primitive values are stored fully encoded (quoted/normalized).
+ */
 internal sealed class EncodedElement {
     class Primitive(val value: String) : EncodedElement()
 
-    data class Structure(
-        val descriptor: SerialDescriptor,
-        val values: List<Pair<String, EncodedElement>>,
-    ) : EncodedElement() {
+    /** An object's fields (or a map's entries) in encounter order; names are raw (unquoted). */
+    class Structure(val values: List<Pair<String, EncodedElement>>) : EncodedElement()
 
-        private val fieldsMask: Long by lazy {
-            var mask = 0L
-            values.forEach { (name, _) ->
-                val index = descriptor.getElementIndex(name)
-                if (index != CompositeDecoder.UNKNOWN_NAME) {
-                    mask = mask or (1L shl index)
-                }
-            }
-            mask
-        }
-
-        fun fieldNamesEqual(other: Structure): Boolean {
-            return fieldsMask == other.fieldsMask
-        }
-    }
-
-    data class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
+    class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
 }

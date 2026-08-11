@@ -1,7 +1,7 @@
 emptyString: ""
-emptyStringArray[0]:
-emptyIntArray[0]:
-emptyObjectArray[0]:
+emptyStringArray: []
+emptyIntArray: []
+emptyObjectArray: []
 singleString[1]: only
 singleInt[1]: 42
 singleObject[1]{id,name}:
@@ -9,8 +9,8 @@ singleObject[1]{id,name}:
 normalString: normal value
 normalArray[3]: a,b,c
 nested:
-  emptyInner[0]:
+  emptyInner: []
   singleInner[1]: 99
   deepNested:
-    emptyList[0]:
-    emptyTabular[0]:
+    emptyList: []
+    emptyTabular: []

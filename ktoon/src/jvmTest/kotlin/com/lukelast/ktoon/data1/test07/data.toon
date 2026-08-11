@@ -53,4 +53,4 @@ inventory[3]:
       Laguna Seca,88.6
       Road Atlanta,86.3
       VIR,158.4
-    modifications[0]:
+    modifications: []

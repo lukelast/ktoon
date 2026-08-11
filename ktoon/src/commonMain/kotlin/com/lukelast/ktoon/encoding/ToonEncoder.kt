@@ -63,25 +63,39 @@ internal class ToonEncoder(
         when (descriptor.kind) {
             StructureKind.CLASS,
             StructureKind.OBJECT -> {
-                val siblingKeys =
-                    (0 until descriptor.elementsCount).map { descriptor.getElementName(it) }.toSet()
-                ToonObjectEncoder(
-                    rawWriter = writer,
-                    config = config,
-                    serializersModule = serializersModule,
-                    indentLevel = 0,
-                    isRoot = true,
-                    siblingKeys = siblingKeys,
-                )
+                if (useCaptureForKeyed(descriptor)) {
+                    ElementCapturer(config, serializersModule, descriptor) { values ->
+                        ElementWriter(writer, config).writeRootObject(values)
+                    }
+                } else {
+                    val siblingKeys =
+                        (0 until descriptor.elementsCount)
+                            .map { descriptor.getElementName(it) }
+                            .toSet()
+                    ToonObjectEncoder(
+                        rawWriter = writer,
+                        config = config,
+                        serializersModule = serializersModule,
+                        indentLevel = 0,
+                        isRoot = true,
+                        siblingKeys = siblingKeys,
+                    )
+                }
             }
             StructureKind.MAP ->
-                ToonMapEncoder(
-                    writer = writer,
-                    config = config,
-                    serializersModule = serializersModule,
-                    indentLevel = 0,
-                    isRoot = true,
-                )
+                if (useCaptureForKeyed(descriptor)) {
+                    MapElementCapturer(config, serializersModule) { values ->
+                        ElementWriter(writer, config).writeRootObject(values)
+                    }
+                } else {
+                    ToonMapEncoder(
+                        writer = writer,
+                        config = config,
+                        serializersModule = serializersModule,
+                        indentLevel = 0,
+                        isRoot = true,
+                    )
+                }
             StructureKind.LIST ->
                 ToonArrayEncoder(
                     writer = writer,
@@ -94,4 +108,9 @@ internal class ToonEncoder(
         }
 
     override fun endStructure(descriptor: SerialDescriptor) {}
+
+    /** See [ElementWriter.couldBeKeyed]; key folding keeps the legacy streaming path. */
+    private fun useCaptureForKeyed(descriptor: SerialDescriptor): Boolean =
+        config.keyFolding == com.lukelast.ktoon.KeyFoldingMode.OFF &&
+            ElementWriter.couldBeKeyed(descriptor)
 }

@@ -101,28 +101,45 @@ internal class ToonMapEncoder(
             }
             StructureKind.CLASS,
             StructureKind.OBJECT -> {
-                writer.writeKey(quoteKey(key))
-                ToonObjectEncoder(
-                    rawWriter = writer,
-                    config = config,
-                    serializersModule = serializersModule,
-                    indentLevel = indentLevel + 1,
-                    isRoot = false,
-                )
+                if (useCaptureForKeyed(descriptor)) {
+                    ElementCapturer(config, serializersModule, descriptor) { values ->
+                        ElementWriter(writer, config).writeObjectField(key, values, indentLevel)
+                    }
+                } else {
+                    writer.writeKey(quoteKey(key))
+                    ToonObjectEncoder(
+                        rawWriter = writer,
+                        config = config,
+                        serializersModule = serializersModule,
+                        indentLevel = indentLevel + 1,
+                        isRoot = false,
+                    )
+                }
             }
             StructureKind.MAP -> {
-                writer.writeKey(quoteKey(key))
-                ToonMapEncoder(
-                    writer = writer,
-                    config = config,
-                    serializersModule = serializersModule,
-                    indentLevel = indentLevel + 1,
-                    isRoot = false,
-                )
+                if (useCaptureForKeyed(descriptor)) {
+                    MapElementCapturer(config, serializersModule) { values ->
+                        ElementWriter(writer, config).writeObjectField(key, values, indentLevel)
+                    }
+                } else {
+                    writer.writeKey(quoteKey(key))
+                    ToonMapEncoder(
+                        writer = writer,
+                        config = config,
+                        serializersModule = serializersModule,
+                        indentLevel = indentLevel + 1,
+                        isRoot = false,
+                    )
+                }
             }
             else -> this
         }
     }
+
+    /** See [ElementWriter.couldBeKeyed]; key folding keeps the legacy streaming path. */
+    private fun useCaptureForKeyed(descriptor: SerialDescriptor): Boolean =
+        config.keyFolding == com.lukelast.ktoon.KeyFoldingMode.OFF &&
+            ElementWriter.couldBeKeyed(descriptor)
 
     override fun endStructure(descriptor: SerialDescriptor) {
         onEnd?.invoke()

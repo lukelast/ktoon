@@ -95,6 +95,13 @@ internal class ToonObjectEncoder(
             key.isIdentifierSegment() &&
             pendingKeys.size + 1 <= (config.flattenDepth ?: Int.MAX_VALUE)
 
+    /**
+     * §9.5: objects that might collapse to keyed tabular form are captured first, so the form can
+     * be selected from the values. Key folding keeps the legacy streaming path.
+     */
+    private fun useCaptureForKeyed(descriptor: SerialDescriptor): Boolean =
+        config.keyFolding == KeyFoldingMode.OFF && ElementWriter.couldBeKeyed(descriptor)
+
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         val key = currentKey ?: error("Current key is null for structure start")
 
@@ -154,28 +161,44 @@ internal class ToonObjectEncoder(
                 when (descriptor.kind) {
                     StructureKind.CLASS,
                     StructureKind.OBJECT -> {
-                        writeKey(key)
-                        ToonObjectEncoder(
-                            rawWriter = writer,
-                            config = config,
-                            serializersModule = serializersModule,
-                            indentLevel = newIndent + 1,
-                            isRoot = false,
-                            pendingKeys = emptyList(),
-                            siblingKeys = newSiblingKeys,
-                            onEnd = { finishField() },
-                        )
+                        if (useCaptureForKeyed(descriptor)) {
+                            ElementCapturer(config, serializersModule, descriptor) { values ->
+                                ElementWriter(writer, config)
+                                    .writeObjectField(key, values, newIndent)
+                                finishField()
+                            }
+                        } else {
+                            writeKey(key)
+                            ToonObjectEncoder(
+                                rawWriter = writer,
+                                config = config,
+                                serializersModule = serializersModule,
+                                indentLevel = newIndent + 1,
+                                isRoot = false,
+                                pendingKeys = emptyList(),
+                                siblingKeys = newSiblingKeys,
+                                onEnd = { finishField() },
+                            )
+                        }
                     }
                     StructureKind.MAP -> {
-                        writeKey(key)
-                        ToonMapEncoder(
-                            writer = writer,
-                            config = config,
-                            serializersModule = serializersModule,
-                            indentLevel = newIndent + 1,
-                            isRoot = false,
-                            onEnd = { finishField() },
-                        )
+                        if (useCaptureForKeyed(descriptor)) {
+                            MapElementCapturer(config, serializersModule) { values ->
+                                ElementWriter(writer, config)
+                                    .writeObjectField(key, values, newIndent)
+                                finishField()
+                            }
+                        } else {
+                            writeKey(key)
+                            ToonMapEncoder(
+                                writer = writer,
+                                config = config,
+                                serializersModule = serializersModule,
+                                indentLevel = newIndent + 1,
+                                isRoot = false,
+                                onEnd = { finishField() },
+                            )
+                        }
                     }
                     StructureKind.LIST ->
                         ToonArrayEncoder(
