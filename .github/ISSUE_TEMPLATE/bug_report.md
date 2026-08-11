@@ -1,8 +1,8 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report incorrect encoding/decoding, a crash, or a spec deviation
 title: ''
-labels: ''
+labels: bug
 assignees: ''
 
 ---
@@ -10,29 +10,48 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+**Minimal reproducer**
+The Kotlin code, and the input data, needed to reproduce the problem.
+
+```kotlin
+@Serializable
+data class Example(val id: Int, val name: String)
+
+val ktoon = Ktoon.Default
+println(ktoon.encodeToString(Example(1, "Alice")))
+```
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
+The TOON output (or decoded value) you expected.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+```toon
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+```
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+**Actual behavior**
+The TOON output (or decoded value) you actually got. If an exception was thrown, paste the full
+stack trace here.
+
+```
+
+```
+
+**Ktoon configuration**
+Anything non-default you passed to `Ktoon { ... }` / `KtoonConfiguration`, e.g. `delimiter`,
+`indentSize`, `keyFolding`, `flattenDepth`, `strictMode`, `pathExpansion`, `sortFields`,
+`encodeDefaults`. Say "defaults" if you used `Ktoon.Default` or `Ktoon.Compact`.
+
+**Spec reference (if applicable)**
+If you believe the output violates the [TOON specification](https://github.com/toon-format/spec),
+link the relevant section or fixture.
+
+**Environment**
+ - ktoon version: [e.g. 1.2.0]
+ - Kotlin version: [e.g. 2.3.20]
+ - kotlinx.serialization version: [e.g. 1.9.0]
+ - Target/platform: [e.g. JVM, JS, WasmJs, WasmWasi, Android, iosArm64, linuxX64, mingwX64]
+ - JDK / runtime version (if relevant): [e.g. Temurin 21]
+ - Build tool: [e.g. Gradle 9.x, Maven]
 
 **Additional context**
 Add any other context about the problem here.
