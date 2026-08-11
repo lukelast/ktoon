@@ -1,6 +1,5 @@
 package com.lukelast.ktoon.data1
 
-import com.lukelast.ktoon.KeyFoldingMode.SAFE
 import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonConfiguration
 import java.nio.file.Path
@@ -61,13 +60,9 @@ abstract class Runner {
     }
 
     fun execToonCli(json: Path, toon: Path) {
-        val cmd = mutableListOf("cmd", "/c", "npx", "@toon-format/cli", json.name, "-o", toon.name)
-
-        // Currently the CLI doesn't actually support this.
-        if (ktoon.configuration.keyFolding == SAFE) {
-            cmd.add("--key-folding")
-            cmd.add("safe")
-        }
+        // Pinned to the spec version ktoon targets, so golden regeneration is deterministic.
+        val cmd =
+            mutableListOf("cmd", "/c", "npx", "@toon-format/cli@4.1.1", json.name, "-o", toon.name)
 
         if (ktoon.configuration.delimiter != KtoonConfiguration.Delimiter.COMMA) {
             cmd.add("--delimiter")

@@ -136,19 +136,12 @@ class Ktoon(
         val Default = Ktoon()
 
         /**
-         * Compact TOON instance optimized for minimal output size. Enables key folding for more
-         * compact representation.
-         */
-        val Compact = Ktoon(configuration = KtoonConfiguration.Compact)
-
-        /**
          * Creates a Ktoon instance with a custom configuration using a DSL-style builder.
          *
          * Example:
          * ```kotlin
          * val ktoon = Ktoon {
          *     strictMode = false
-         *     keyFolding = true
          *     indentSize = 4
          * }
          * ```
@@ -165,7 +158,7 @@ class Ktoon(
          * ```kotlin
          * val ktoon = Ktoon(serializersModule) {
          *     strictMode = true
-         *     keyFolding = false
+         *     indentSize = 4
          * }
          * ```
          */
