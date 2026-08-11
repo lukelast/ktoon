@@ -77,9 +77,12 @@ internal object StringQuoting {
         val last = str[len - 1]
         if (last <= ' ') return true
 
-        // Check for specific keywords
-        if (len == 4 && (str == "true" || str == "null")) return true
-        if (len == 5 && str == "false") return true
+        // Check for specific keywords (§7.2 applies to values only; §7.3 keys quote purely by
+        // the bare-key pattern, so a key spelled "true" stays bare)
+        if (context != QuotingContext.OBJECT_KEY) {
+            if (len == 4 && (str == "true" || str == "null")) return true
+            if (len == 5 && str == "false") return true
+        }
 
         // Single pass loop
         var isNumericLike = true
@@ -124,8 +127,11 @@ internal object StringQuoting {
                 if (c.isDigit()) {
                     seenDigit = true
                 } else if (c == '.') {
-                    if (seenDot || seenExp) isNumericLike = false
+                    // §7.2's regex needs a digit before the dot (".5" stays bare) and at least
+                    // one after it before any exponent ("1.e5" stays bare)
+                    if (seenDot || seenExp || !seenDigit) isNumericLike = false
                     seenDot = true
+                    seenDigit = false
                 } else if (c == 'e' || c == 'E') {
                     if (seenExp || !seenDigit) isNumericLike = false
                     seenExp = true

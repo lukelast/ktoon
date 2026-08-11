@@ -27,8 +27,11 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         // §12: a single U+FEFF at the very start is a byte-order mark, not content.
         val text = input.removePrefix("﻿")
 
-        for ((lineIndex, rawLine) in text.lines().withIndex()) {
+        // §12: lines are separated by LF; a CR at the end of a line belongs to the CRLF
+        // terminator, but a CR anywhere else is content.
+        for ((lineIndex, splitLine) in text.split('\n').withIndex()) {
             currentLine = lineIndex + 1
+            val rawLine = splitLine.removeSuffix("\r")
             // §5.1: a comment line has zero or more leading spaces (only spaces) followed by '#';
             // comment lines are removed before every other rule and never affect scopes.
             if (rawLine.trimStart(' ').startsWith('#')) continue
@@ -57,9 +60,10 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
             tokens.add(Token.Dash(indent, currentLine))
             val value = if (trimmed.length > 1) trimmed.substring(2).trimSpaces() else ""
             if (value.isNotEmpty()) {
-                // Process the content after the dash as if it were a line at deeper indentation
-                // The dash and space add 2 to the indentation
-                processLineContent(value, indent + 2)
+                // §10 depth model: content on the hyphen line sits one level below the marker —
+                // the same column as the item's continuation lines, which is the hyphen column
+                // plus 2 only when indentSize is 2.
+                processLineContent(value, indent + config.indentSize)
             }
             return
         }
@@ -79,9 +83,11 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         val bracketStart = findUnquoted(content, '[')
 
         // §5.2: a line whose first unquoted colon precedes its first unquoted '[' is never a
-        // header. Note the keyed marker `[N:]` puts a colon inside the bracket segment, so header
-        // detection must run on the full line, not on a split-at-first-colon key part.
-        if (bracketStart != -1 && (colonIndex == -1 || bracketStart < colonIndex)) {
+        // header, and a line without any unquoted colon cannot be one either (a header requires
+        // its terminating colon), so e.g. the row line `1,[]` is not a header candidate. Note the
+        // keyed marker `[N:]` puts a colon inside the bracket segment, so header detection must
+        // run on the full line, not on a split-at-first-colon key part.
+        if (bracketStart != -1 && colonIndex != -1 && bracketStart < colonIndex) {
             when (val header = parseHeader(content, bracketStart)) {
                 is HeaderParse.Match -> {
                     tokens.add(
@@ -183,7 +189,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         if (bracketEnd == -1) return HeaderParse.NotAHeader
 
         // §6 (v4.1): whitespace between a key and its bracket segment is a header syntax error.
-        if (bracketStart > 0 && content[bracketStart - 1] == ' ') {
+        if (bracketStart > 0 && (content[bracketStart - 1] == ' ' || content[bracketStart - 1] == '\t')) {
             return HeaderParse.Malformed("whitespace between key and bracket segment")
         }
 
@@ -250,6 +256,12 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         // §6: a keyed header requires a field list.
         if (keyed && fields == null) {
             return HeaderParse.Malformed("keyed header without a field list")
+        }
+
+        // §6: a fields-bearing header — keyed or not — carries no inline content; decoding the
+        // values as an inline array would silently drop the fields.
+        if (fields != null && content.substring(pos + 1).trimSpaces().isNotEmpty()) {
+            return HeaderParse.Malformed("content after a fields-bearing header's colon")
         }
 
         return HeaderParse.Match(key, length, keyed, delimiter, fields, pos)

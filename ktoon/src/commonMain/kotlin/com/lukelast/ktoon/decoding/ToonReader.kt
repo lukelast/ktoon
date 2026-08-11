@@ -62,8 +62,21 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 is Token.Value -> {
                     advance()
                     // §5: the literal token [] at root decodes as an empty array
-                    if (first.content == "[]") ToonValue.Array(emptyList())
-                    else parsePrimitive(first.content, first.line)
+                    if (first.content == "[]") {
+                        ToonValue.Array(emptyList())
+                    } else {
+                        // §5/§14.2: a primitive root requires the document to have exactly one
+                        // non-blank line; anything after a root scalar errors in both modes.
+                        val primitive = parsePrimitive(first.content, first.line)
+                        skipBlankLines()
+                        if (position < tokens.size) {
+                            throw KtoonParsingException(
+                                "Top-level document must start with a key-value or array-header line",
+                                peek().line,
+                            )
+                        }
+                        primitive
+                    }
                 }
                 else -> {
                     throw KtoonParsingException("Unexpected token type at root", 1)
@@ -363,6 +376,28 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                             break
                         }
                     }
+                    is Token.ArrayHeader -> {
+                        // §5.2: within a tabular scope the §9.3 rule is authoritative, so a
+                        // header-shaped line whose first unquoted delimiter precedes its first
+                        // unquoted colon is still a row (e.g. `1,foo[2]: x`).
+                        val atRowDepth =
+                            if (config.strictMode) token.indent == rowDepth
+                            else token.indent > header.indent
+                        if (atRowDepth && isRowLine(token.rawContent, delimiter)) {
+                            advance()
+                            if (position < tokens.size) {
+                                val paired = tokens[position]
+                                if (paired is Token.InlineArrayValue && paired.line == token.line) {
+                                    advance()
+                                }
+                            }
+                            elements.add(
+                                readRowObject(token.rawContent, fields, leafCount, delimiter, token.line)
+                            )
+                        } else {
+                            break
+                        }
+                    }
                     else -> break
                 }
             }
@@ -391,6 +426,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         return when (val token = tokens[p]) {
             is Token.Value -> true
             is Token.Key -> token.indent == rowDepth && isRowLine(token.rawContent, delimiter)
+            is Token.ArrayHeader -> token.indent == rowDepth && isRowLine(token.rawContent, delimiter)
             else -> false
         }
     }
@@ -481,14 +517,6 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 ?: throw KtoonParsingException("Keyed header without a field list", header.line)
         validateFieldNames(fields, header.line)
         val leafCount = leafFieldCount(fields)
-
-        // Inline values on a keyed header line are not valid
-        if (position < tokens.size && peek() is Token.InlineArrayValue) {
-            if (config.strictMode) {
-                throw KtoonParsingException("Unexpected values on keyed header line", header.line)
-            }
-            advance()
-        }
 
         val properties = mutableMapOf<String, ToonValue>()
         var entryCount = 0

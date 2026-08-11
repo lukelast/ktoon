@@ -1,0 +1,10 @@
+summary: a, b | c
+spaced: "left\tright"
+gauges[3:	]{unit	amount}:
+  cpu: pct, avg	40
+  net: up|down	12
+  disk: "read\twrite"	7
+samples[3	]:
+  - [3	]: 1	2	3
+  - [0	]:
+  - [1	]: 4

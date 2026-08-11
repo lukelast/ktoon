@@ -1,0 +1,16 @@
+metrics[3:]{count,label,active}:
+  cpu: 12,CPU load,true
+  mem: 48,"Memory, resident",false
+  disk: 7,Disk io,true
+servers[2:]{region,limits{cpu,mem}}:
+  "web-01": us-east,2,4096
+  "db 2": eu-west,8,16384
+solo:
+  only:
+    count: 1
+    label: single
+    active: true
+counts:
+  alpha: 1
+  beta: 2
+  gamma: 3

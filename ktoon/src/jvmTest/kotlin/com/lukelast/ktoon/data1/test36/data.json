@@ -1,0 +1,31 @@
+{
+  "keys": {
+    "42": 6,
+    "": 1,
+    "2key": 2,
+    "a b": 3,
+    "a:b": 4,
+    "true": 5,
+    "#": 7,
+    "__proto__": 8,
+    "_a.b9": 9,
+    "名前": 10,
+    "a\"b": 11,
+    "a\nb": 12
+  },
+  "my-list": [
+    1,
+    2,
+    3
+  ],
+  "row-data": [
+    {
+      "field name": "alpha",
+      "ok": true
+    },
+    {
+      "field name": "beta",
+      "ok": false
+    }
+  ]
+}

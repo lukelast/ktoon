@@ -1,0 +1,47 @@
+{
+  "metrics": {
+    "cpu": {
+      "count": 12,
+      "label": "CPU load",
+      "active": true
+    },
+    "mem": {
+      "count": 48,
+      "label": "Memory, resident",
+      "active": false
+    },
+    "disk": {
+      "count": 7,
+      "label": "Disk io",
+      "active": true
+    }
+  },
+  "servers": {
+    "web-01": {
+      "region": "us-east",
+      "limits": {
+        "cpu": 2,
+        "mem": 4096
+      }
+    },
+    "db 2": {
+      "region": "eu-west",
+      "limits": {
+        "cpu": 8,
+        "mem": 16384
+      }
+    }
+  },
+  "solo": {
+    "only": {
+      "count": 1,
+      "label": "single",
+      "active": true
+    }
+  },
+  "counts": {
+    "alpha": 1,
+    "beta": 2,
+    "gamma": 3
+  }
+}

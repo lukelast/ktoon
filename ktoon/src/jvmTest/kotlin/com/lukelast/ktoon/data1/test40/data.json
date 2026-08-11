@@ -1,0 +1,44 @@
+{
+  "name": "root",
+  "config": {
+    "mode": "fast",
+    "limits": {
+      "soft": 10,
+      "hard": 20,
+      "window": {
+        "unit": "sec",
+        "size": 5
+      }
+    },
+    "scores": [
+      1,
+      2,
+      3
+    ],
+    "rows": [
+      {
+        "id": 1,
+        "label": "alpha"
+      },
+      {
+        "id": 2,
+        "label": "beta"
+      }
+    ],
+    "jobs": [
+      {
+        "id": 1,
+        "steps": [
+          "a",
+          "b"
+        ]
+      },
+      {
+        "id": 2,
+        "steps": [
+          "c"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+orders[3]{id,customer{name,country},total}:
+  1,Ada,DK,99.5
+  2,Bob,US,12.25
+  3,Cleo,JP,40.75
+wrappers[2]{a{b{c}}}:
+  1
+  2
+measurements[2]{p{x,y},q{z}}:
+  1,2,low
+  3,4,high
+readings[2]{id,sample{value,note}}:
+  1,21.5,ok
+  2,22.75,null
+contacts[2]{id,person{"first name",last}}:
+  1,Ada,Lovelace
+  2,Grace,Hopper
+shipments[2]{id,origin{city,code}}:
+  1,"Austin, TX",AUS
+  2,Copenhagen,CPH
