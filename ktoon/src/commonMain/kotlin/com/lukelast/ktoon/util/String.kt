@@ -1,17 +1,5 @@
 package com.lukelast.ktoon.util
 
-/** Checks if a string is a valid IdentifierSegment per §1.9: matching `^[A-Za-z_][A-Za-z0-9_]*$` */
-fun String.isIdentifierSegment(): Boolean {
-    if (isEmpty()) return false
-    val first = this[0]
-    if (!first.isAlpha() && first != '_') return false
-    for (i in 1 until length) {
-        val c = this[i]
-        if (!c.isAlpha() && !c.isDigit() && c != '_') return false
-    }
-    return true
-}
-
 fun Char.isAlpha(): Boolean {
     // 1. (c.code or 0x20): Force the char to lowercase (e.g., 'A' becomes 'a')
     // 2. Subtract 'a': Align the range to start at 0

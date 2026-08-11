@@ -3,7 +3,6 @@ package com.lukelast.ktoon.decoding
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
 import com.lukelast.ktoon.KtoonValidationException
-import com.lukelast.ktoon.util.isIdentifierSegment
 import com.lukelast.ktoon.util.isDigit
 import com.lukelast.ktoon.validation.ValidationEngine
 import kotlin.math.floor
@@ -135,7 +134,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                     val key = unquote(rawKey, token.line)
                     val value = readValueForKey(token)
 
-                    insertProperty(properties, key, rawKey, value, token.line)
+                    insertProperty(properties, key, value, token.line)
                     readAny = true
                 }
                 is Token.ArrayHeader -> {
@@ -149,7 +148,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                     val arrayValue = if (token.keyed) readKeyedObject() else readArray()
                     val rawKey = token.key
                     val key = unquote(rawKey, token.line)
-                    insertProperty(properties, key, rawKey, arrayValue, token.line)
+                    insertProperty(properties, key, arrayValue, token.line)
                     readAny = true
                 }
                 is Token.Value -> {
@@ -185,20 +184,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     private fun insertProperty(
         properties: MutableMap<String, ToonValue>,
         key: String,
-        rawKey: String,
         value: ToonValue,
         line: Int,
     ) {
-        // Expand paths if enabled and key is not quoted
-        if (config.pathExpansion && !rawKey.startsWith("\"") && key.contains('.')) {
-            val parts = key.split('.')
-            // Only expand if all parts are valid identifiers (Safe Mode)
-            if (parts.all { it.isIdentifierSegment() }) {
-                insertExpandedProperty(properties, parts, value, line)
-                return
-            }
-        }
-
         // §14.3: duplicate sibling keys error in strict mode; last-write-wins in non-strict mode.
         if (config.strictMode && properties.containsKey(key)) {
             throw KtoonValidationException.duplicateKey(key, line)
@@ -208,54 +196,6 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             properties.remove(key)
         }
         properties[key] = value
-    }
-
-    private fun insertExpandedProperty(
-        properties: MutableMap<String, ToonValue>,
-        parts: List<String>,
-        value: ToonValue,
-        line: Int,
-    ) {
-        val part = parts[0]
-
-        if (parts.size == 1) {
-            // Leaf node
-            if (config.strictMode && properties.containsKey(part)) {
-                throw KtoonValidationException.duplicateKey(part, line)
-            }
-            properties[part] = value
-            return
-        }
-
-        // Intermediate node
-        val existing = properties[part]
-        val nextProperties: MutableMap<String, ToonValue>
-
-        when (existing) {
-            null -> {
-                nextProperties = mutableMapOf()
-                properties[part] = ToonValue.Object(nextProperties)
-            }
-            is ToonValue.Object -> {
-                // Copy existing properties to mutable map to allow merging
-                nextProperties = existing.properties.toMutableMap()
-                properties[part] = ToonValue.Object(nextProperties)
-            }
-            else -> {
-                // Conflict: existing is primitive/array, but we need object
-                if (config.strictMode) {
-                    throw KtoonValidationException(
-                        "Path expansion conflict: '$part' is already defined as ${existing::class.simpleName}",
-                        line,
-                    )
-                }
-                // Non-strict: Overwrite with new object (LWW)
-                nextProperties = mutableMapOf()
-                properties[part] = ToonValue.Object(nextProperties)
-            }
-        }
-
-        insertExpandedProperty(nextProperties, parts.drop(1), value, line)
     }
 
     /** Reads the value following an object key token. */
@@ -662,7 +602,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     ) {
         val entryKey = unquote(rawEntryKey, line)
         val value = readRowObject(cellsContent, fields, leafCount, delimiter, line)
-        insertProperty(properties, entryKey, rawEntryKey, value, line)
+        insertProperty(properties, entryKey, value, line)
     }
 
     /** True when the next non-blank token is another entry row of this keyed scope. */

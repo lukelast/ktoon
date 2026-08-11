@@ -38,8 +38,8 @@ stack trace here.
 
 **Ktoon configuration**
 Anything non-default you passed to `Ktoon { ... }` / `KtoonConfiguration`, e.g. `delimiter`,
-`indentSize`, `keyFolding`, `flattenDepth`, `strictMode`, `pathExpansion`, `sortFields`,
-`encodeDefaults`. Say "defaults" if you used `Ktoon.Default` or `Ktoon.Compact`.
+`indentSize`, `strictMode`, `sortFields`, `encodeDefaults`. Say "defaults" if you used
+`Ktoon.Default`.
 
 **Spec reference (if applicable)**
 If you believe the output violates the [TOON specification](https://github.com/toon-format/spec),

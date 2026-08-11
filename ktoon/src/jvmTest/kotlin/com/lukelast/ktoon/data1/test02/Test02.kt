@@ -4,7 +4,7 @@ import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
 
 /** From https://toontools.vercel.app/tools/json-to-toon "E-commerce Data" */
-class Test03 : Runner() {
+class Test02 : Runner() {
     override fun run() = doTest(data)
 }
 

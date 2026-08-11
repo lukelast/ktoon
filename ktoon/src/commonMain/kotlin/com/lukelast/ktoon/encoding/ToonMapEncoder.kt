@@ -101,7 +101,7 @@ internal class ToonMapEncoder(
             }
             StructureKind.CLASS,
             StructureKind.OBJECT -> {
-                if (useCaptureForKeyed(descriptor)) {
+                if (ElementWriter.couldBeKeyed(descriptor)) {
                     ElementCapturer(config, serializersModule, descriptor) { values ->
                         ElementWriter(writer, config).writeObjectField(key, values, indentLevel)
                     }
@@ -117,7 +117,7 @@ internal class ToonMapEncoder(
                 }
             }
             StructureKind.MAP -> {
-                if (useCaptureForKeyed(descriptor)) {
+                if (ElementWriter.couldBeKeyed(descriptor)) {
                     MapElementCapturer(config, serializersModule) { values ->
                         ElementWriter(writer, config).writeObjectField(key, values, indentLevel)
                     }
@@ -135,11 +135,6 @@ internal class ToonMapEncoder(
             else -> this
         }
     }
-
-    /** See [ElementWriter.couldBeKeyed]; key folding keeps the legacy streaming path. */
-    private fun useCaptureForKeyed(descriptor: SerialDescriptor): Boolean =
-        config.keyFolding == com.lukelast.ktoon.KeyFoldingMode.OFF &&
-            ElementWriter.couldBeKeyed(descriptor)
 
     override fun endStructure(descriptor: SerialDescriptor) {
         onEnd?.invoke()
