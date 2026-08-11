@@ -1,7 +1,7 @@
 # ktoon
 [![Maven Central](https://img.shields.io/maven-central/v/com.lukelast.ktoon/ktoon)](https://central.sonatype.com/artifact/com.lukelast.ktoon/ktoon)
 [![.github/workflows/gradle.yml](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml/badge.svg)](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml)
-[![SPEC v3.0.3](https://img.shields.io/badge/ToonSpec-v3.0.3-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v3.0.3/SPEC.md)
+[![SPEC v4.1.1](https://img.shields.io/badge/ToonSpec-v4.1.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v4.1.1/SPEC.md)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
 ![Kotlin](https://img.shields.io/badge/Java-17+-yellow?logo=java)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -15,7 +15,7 @@ To learn about the TOON format and why you should use it read the official websi
 
 ## Features
 
-- **Full TOON 3.0.3 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays, key folding, and delimiters. 450+ tests.
+- **Full TOON 4.1.1 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays with nested field groups, the keyed tabular form, comment-line stripping, and delimiters. Validated against the official spec fixture suite; 950+ tests.
 - **Kotlin Multiplatform** - Supports JVM and JavaScript targets. Others can be added on request.
 - **Maven Central** - Published to Maven Central for easy dependency management with Gradle and Maven.
 - **Fully Featured**
@@ -24,7 +24,7 @@ To learn about the TOON format and why you should use it read the official websi
     - Decode TOON to Kotlin data classes
 - **Minimal Dependencies** - Only depends on kotlinx.serialization, no additional runtime dependencies.
 - **High Performance** - CharArray-based encoding optimized for minimal allocations and fast string operations.
-- **Flexible Configuration** - Configurable delimiters, indentation, and key folding.
+- **Flexible Configuration** - Configurable delimiter, indent size, strict mode, field sorting, and default encoding.
 
 ## Add to your project (Maven Central)
 
@@ -87,6 +87,18 @@ fun main() {
     println(encoded)
 }
 ```
+
+## Spec conformance notes
+
+ktoon targets `toon-spec: 4.1`. Known deviations from the spec:
+
+- **Rows that look like malformed headers (strict mode)**: lines are tokenized before scope
+  context is known, so a tabular row or keyed entry row whose text parses as a malformed array
+  header (e.g. an entry key like `foo[]`) is rejected in strict mode, where the spec classifies
+  it as a row. Conforming encoders never emit such lines, and non-strict mode decodes them as
+  the spec describes.
+- **`sortFields = true`** (opt-in, off by default): emits object fields in sorted order rather
+  than the encounter order the spec requires.
 
 ## Dependencies
 
