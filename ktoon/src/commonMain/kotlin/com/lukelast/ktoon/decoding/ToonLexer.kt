@@ -7,15 +7,16 @@ import com.lukelast.ktoon.util.isDigit
 /**
  * Lexer for tokenizing TOON format text.
  *
- * Performs line-by-line tokenization, tracking:
+ * Performs the lexical pre-pass of §5.1/§12 (BOM removal, comment-line stripping, trailing-space
+ * stripping) and then line-by-line tokenization, tracking:
  * - Indentation levels
- * - Array headers (inline, tabular, expanded)
+ * - Array and keyed headers, including nested field groups
  * - Key-value pairs
- * - Dash markers for expanded arrays
- * - Line and column positions for error reporting
+ * - Dash markers for arrays in list form
+ * - Line positions for error reporting
  *
- * The lexer produces a stream of tokens that the parser (ToonReader) will consume to build the
- * logical structure.
+ * Malformed header candidates (§6, §14.2) throw in strict mode and fall through to key-value
+ * parsing in non-strict mode.
  */
 internal class ToonLexer(private val input: String, private val config: KtoonConfiguration) {
     private var currentLine = 0
@@ -23,11 +24,16 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
 
     /** Tokenizes the entire input and returns the token list. */
     fun tokenize(): List<Token> {
-        val lines = input.lines()
+        // §12: a single U+FEFF at the very start is a byte-order mark, not content.
+        val text = input.removePrefix("﻿")
 
-        for ((lineIndex, line) in lines.withIndex()) {
+        for ((lineIndex, rawLine) in text.lines().withIndex()) {
             currentLine = lineIndex + 1
-            processLine(line)
+            // §5.1: a comment line has zero or more leading spaces (only spaces) followed by '#';
+            // comment lines are removed before every other rule and never affect scopes.
+            if (rawLine.trimStart(' ').startsWith('#')) continue
+            // §12: trailing spaces are not part of the line's content.
+            processLine(rawLine.trimEnd(' '))
         }
 
         return tokens
@@ -35,7 +41,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
 
     /** Processes a single line of TOON input. */
     private fun processLine(line: String) {
-        // Emit blank line token
+        // Emit blank line token (§12: whitespace-only lines are blank)
         if (line.isBlank()) {
             tokens.add(Token.BlankLine(currentLine))
             return
@@ -45,10 +51,11 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         val indent = countLeadingSpaces(line)
         val trimmed = line.trimStart()
 
-        // Check for dash (expanded array element marker)
+        // Check for dash (list-item marker). Trailing spaces are already stripped, so a hyphen
+        // followed only by spaces has become the bare marker "-" (§12).
         if (trimmed.startsWith("- ") || trimmed == "-") {
             tokens.add(Token.Dash(indent, currentLine))
-            val value = if (trimmed.length > 1) trimmed.substring(2).trim() else ""
+            val value = if (trimmed.length > 1) trimmed.substring(2).trimSpaces() else ""
             if (value.isNotEmpty()) {
                 // Process the content after the dash as if it were a line at deeper indentation
                 // The dash and space add 2 to the indentation
@@ -61,57 +68,85 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
     }
 
     private fun processLineContent(content: String, indent: Int) {
-        // Check for array header or key-value pair
-        val colonIndex = findUnquotedChar(content, ':')
-
-        if (colonIndex == -1) {
-            // No colon - this is a continuation value or error
-            tokens.add(Token.Value(content, currentLine))
+        // §4/§9.1: the literal token [] (root, object-field, and list-item positions) is a value,
+        // never a header candidate.
+        if (content == "[]") {
+            tokens.add(Token.Value(content, indent, currentLine))
             return
         }
 
-        // Split at colon
-        val keyPart = content.substring(0, colonIndex).trim()
-        val valuePart = content.substring(colonIndex + 1).trim()
+        val colonIndex = findUnquoted(content, ':')
+        val bracketStart = findUnquoted(content, '[')
 
-        // Check if this is an array header
-        val arrayMatch = parseArrayHeader(keyPart)
-        if (arrayMatch != null) {
-            tokens.add(
-                Token.ArrayHeader(
-                    key = arrayMatch.key,
-                    length = arrayMatch.length,
-                    fields = arrayMatch.fields,
-                    delimiter = arrayMatch.delimiter,
-                    indent = indent,
-                    line = currentLine,
-                )
-            )
-            // If there's a value part (inline array), add it
-            if (valuePart.isNotEmpty()) {
-                tokens.add(Token.InlineArrayValue(valuePart, currentLine))
+        // §5.2: a line whose first unquoted colon precedes its first unquoted '[' is never a
+        // header. Note the keyed marker `[N:]` puts a colon inside the bracket segment, so header
+        // detection must run on the full line, not on a split-at-first-colon key part.
+        if (bracketStart != -1 && (colonIndex == -1 || bracketStart < colonIndex)) {
+            when (val header = parseHeader(content, bracketStart)) {
+                is HeaderParse.Match -> {
+                    tokens.add(
+                        Token.ArrayHeader(
+                            key = header.key,
+                            length = header.length,
+                            fields = header.fields,
+                            delimiter = header.delimiter,
+                            keyed = header.keyed,
+                            rawContent = content,
+                            indent = indent,
+                            line = currentLine,
+                        )
+                    )
+                    val valuePart = content.substring(header.colonIndex + 1).trimSpaces()
+                    if (valuePart.isNotEmpty()) {
+                        tokens.add(Token.InlineArrayValue(valuePart, currentLine))
+                    }
+                    return
+                }
+                is HeaderParse.Malformed -> {
+                    // §6/§14.2: strict mode errors; non-strict mode falls through to key-value.
+                    if (config.strictMode) {
+                        throw KtoonParsingException.invalidArrayFormat(header.reason, currentLine)
+                    }
+                }
+                is HeaderParse.NotAHeader -> {
+                    // Not header-shaped at all (e.g. no closing bracket): key-value in both modes.
+                }
             }
-        } else {
-            // Regular key-value pair
-            tokens.add(Token.Key(keyPart, indent, currentLine))
-            if (valuePart.isNotEmpty()) {
-                tokens.add(Token.Value(valuePart, currentLine))
-            }
+        }
+
+        if (colonIndex == -1) {
+            // No colon - scalar or row line; the reader decides by context (§5.2)
+            tokens.add(Token.Value(content, indent, currentLine))
+            return
+        }
+
+        // Regular key-value pair, split at the first unquoted colon (§7.4)
+        val keyRaw = content.substring(0, colonIndex)
+        val valuePart = content.substring(colonIndex + 1).trimSpaces()
+        tokens.add(Token.Key(keyRaw.trimSpaces(), content, indent, currentLine))
+        if (valuePart.isNotEmpty()) {
+            tokens.add(Token.Value(valuePart, indent, currentLine))
         }
     }
 
-    /** Counts leading spaces in a line. Tabs are not allowed in TOON indentation (strict mode). */
+    /**
+     * Counts leading indentation. Tabs are not allowed in strict mode (§12); in non-strict mode a
+     * leading tab is accepted as indentation and counts as one level (documented choice).
+     */
     private fun countLeadingSpaces(line: String): Int {
         var count = 0
         for (char in line) {
             if (char == ' ') {
                 count++
-            } else if (char == '\t' && config.strictMode) {
-                throw KtoonParsingException(
-                    "Tabs are not allowed in indentation (strict mode)",
-                    currentLine,
-                    count,
-                )
+            } else if (char == '\t') {
+                if (config.strictMode) {
+                    throw KtoonParsingException(
+                        "Tabs are not allowed in indentation (strict mode)",
+                        currentLine,
+                        count,
+                    )
+                }
+                count += config.indentSize
             } else {
                 break
             }
@@ -119,116 +154,235 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         return count
     }
 
-    /** Finds the first unquoted occurrence of a character. Returns -1 if not found. */
-    private fun findUnquotedChar(str: String, target: Char, startIndex: Int = 0): Int {
+    private sealed class HeaderParse {
+        class Match(
+            val key: String,
+            val length: Int,
+            val keyed: Boolean,
+            val delimiter: KtoonConfiguration.Delimiter,
+            val fields: List<FieldNode>?,
+            /** Index of the header's terminating colon within the line content. */
+            val colonIndex: Int,
+        ) : HeaderParse()
+
+        class Malformed(val reason: String) : HeaderParse()
+
+        object NotAHeader : HeaderParse()
+    }
+
+    /**
+     * Parses a header candidate per §6 from the full line [content].
+     *
+     * Grammar: `key? '[' N ':'? delim? ']' fields-seg? ':'` where the colon inside the bracket
+     * marks a keyed header and fields-seg is a brace-enclosed field list allowing nested field
+     * groups. No whitespace or other content may appear between the key, bracket segment, field
+     * list, and terminating colon.
+     */
+    private fun parseHeader(content: String, bracketStart: Int): HeaderParse {
+        val bracketEnd = findUnquoted(content, ']', bracketStart)
+        if (bracketEnd == -1) return HeaderParse.NotAHeader
+
+        // §6 (v4.1): whitespace between a key and its bracket segment is a header syntax error.
+        if (bracketStart > 0 && content[bracketStart - 1] == ' ') {
+            return HeaderParse.Malformed("whitespace between key and bracket segment")
+        }
+
+        val key = content.substring(0, bracketStart)
+        val bracket = content.substring(bracketStart + 1, bracketEnd)
+
+        // Parse the bracket segment: N, optional ':' (keyed), optional delimiter symbol.
+        var i = 0
+        while (i < bracket.length && bracket[i].isDigit()) i++
+        if (i == 0) {
+            return HeaderParse.Malformed(
+                if (bracket.isEmpty()) "bracket segment without a length"
+                else "invalid bracket length"
+            )
+        }
+        val lengthStr = bracket.substring(0, i)
+        if (lengthStr.length > 1 && lengthStr[0] == '0') {
+            return HeaderParse.Malformed("leading zeros in bracket length")
+        }
+        val length =
+            lengthStr.toIntOrNull() ?: return HeaderParse.Malformed("bracket length out of range")
+
+        var keyed = false
+        if (i < bracket.length && bracket[i] == ':') {
+            keyed = true
+            i++
+        }
+        val delimiter =
+            when (val rest = bracket.substring(i)) {
+                "" -> KtoonConfiguration.Delimiter.COMMA // absent always means comma (§6)
+                "\t" -> KtoonConfiguration.Delimiter.TAB
+                "|" -> KtoonConfiguration.Delimiter.PIPE
+                else -> return HeaderParse.Malformed("invalid bracket segment content '$rest'")
+            }
+
+        // After the bracket segment: the terminating colon, or a field list starting immediately
+        // with '{' and followed immediately by the terminating colon.
+        var fields: List<FieldNode>? = null
+        var pos = bracketEnd + 1
+        if (pos < content.length && content[pos] == '{') {
+            val braceEnd = findMatchingBrace(content, pos)
+            if (braceEnd == -1) {
+                return HeaderParse.Malformed("unterminated field list")
+            }
+            val parsed =
+                parseFieldList(content.substring(pos + 1, braceEnd), delimiter.char)
+                    ?: return HeaderParse.Malformed("invalid field list")
+            fields = parsed
+            pos = braceEnd + 1
+        }
+
+        if (pos >= content.length) {
+            // A line with a bracket segment but no colon is not a header; it classifies as a
+            // scalar or row line by context (§5.2).
+            return HeaderParse.NotAHeader
+        }
+        if (content[pos] != ':') {
+            return HeaderParse.Malformed(
+                if (fields == null) "unexpected content after bracket segment"
+                else "unexpected content after field list"
+            )
+        }
+
+        // §6: a keyed header requires a field list.
+        if (keyed && fields == null) {
+            return HeaderParse.Malformed("keyed header without a field list")
+        }
+
+        return HeaderParse.Match(key, length, keyed, delimiter, fields, pos)
+    }
+
+    /** Finds the unquoted '}' matching the unquoted '{' at [openIndex], or -1. */
+    private fun findMatchingBrace(str: String, openIndex: Int): Int {
+        var depth = 0
         var inQuotes = false
         var escapeNext = false
-
-        for (i in startIndex until str.length) {
-            val char = str[i]
+        for (i in openIndex until str.length) {
+            val c = str[i]
             when {
-                escapeNext -> {
-                    escapeNext = false
-                }
-                char == '\\' -> {
-                    escapeNext = true
-                }
-                char == '"' -> {
-                    inQuotes = !inQuotes
-                }
-                char == target && !inQuotes -> {
-                    return i
+                escapeNext -> escapeNext = false
+                c == '\\' -> escapeNext = true
+                c == '"' -> inQuotes = !inQuotes
+                inQuotes -> {}
+                c == '{' -> depth++
+                c == '}' -> {
+                    depth--
+                    if (depth == 0) return i
                 }
             }
         }
-
         return -1
     }
 
     /**
-     * Parses an array header pattern.
-     *
-     * Formats:
-     * - `key[length]` - Inline or expanded array
-     * - `key[length]{field1,field2}` - Tabular array
-     * - `key[length	]` - Tab delimiter
-     * - `key[length|]` - Pipe delimiter
+     * Parses a field list (the content between braces) into field entries, allowing nested field
+     * groups (§6, §9.3). Returns null if the list is malformed: empty, containing empty entries or
+     * empty groups, or using a delimiter other than the active one.
      */
-    private fun parseArrayHeader(keyPart: String): ArrayHeaderMatch? {
-        val bracketStart = findUnquotedChar(keyPart, '[')
-        if (bracketStart == -1) {
-            return null
-        }
+    private fun parseFieldList(content: String, delimiter: Char): List<FieldNode>? {
+        if (content.trimSpaces().isEmpty()) return null
 
-        val bracketEnd = findUnquotedChar(keyPart, ']', bracketStart)
-        if (bracketEnd == -1) {
-            return null
-        }
-
-        val key = keyPart.substring(0, bracketStart).trim()
-        val bracketContent = keyPart.substring(bracketStart + 1, bracketEnd)
-
-        // Check for delimiter marker at end of bracket
-        val delimiter =
-            when {
-                bracketContent.endsWith('\t') -> {
-                    KtoonConfiguration.Delimiter.TAB
-                }
-                bracketContent.endsWith('|') -> {
-                    KtoonConfiguration.Delimiter.PIPE
-                }
-                else -> {
-                    config.delimiter // Use configured default
-                }
-            }
-
-        // Remove delimiter marker if present
-        val lengthStr = bracketContent.trimEnd('\t', '|')
-
-        // Parse length - must be a valid non-negative integer or the line is not an array header
-        // (Section 6 + 14.2: fall through to key-value parsing)
-        if (lengthStr.isEmpty() || !lengthStr.all { it.isDigit() }) return null
-        val length = lengthStr.toIntOrNull() ?: return null
-
-        // Section 6: only whitespace may appear between ] and { (or end of keyPart).
-        // Find the next non-whitespace after ]; if it's '{', parse fields; otherwise the
-        // remainder must be whitespace, or this is not an array header.
-        var cursor = bracketEnd + 1
-        while (cursor < keyPart.length && keyPart[cursor].isWhitespace()) cursor++
-
-        val fields =
-            if (cursor < keyPart.length && keyPart[cursor] == '{') {
-                val braceStart = cursor
-                val braceEnd = findUnquotedChar(keyPart, '}', braceStart)
-                if (braceEnd == -1) {
-                    throw KtoonParsingException.invalidArrayFormat(
-                        "Unterminated field list in tabular array header",
-                        currentLine,
-                    )
-                }
-                val fieldsContent = keyPart.substring(braceStart + 1, braceEnd)
-                // Only whitespace may follow the closing } before the colon
-                for (i in braceEnd + 1 until keyPart.length) {
-                    if (!keyPart[i].isWhitespace()) return null
-                }
-                splitRespectingQuotes(fieldsContent, delimiter.char).map { it.trim() }
-            } else if (cursor < keyPart.length) {
-                // Non-whitespace content between ] and end of keyPart (which precedes :)
-                return null
+        val entries = splitFieldEntries(content, delimiter) ?: return null
+        val nodes = mutableListOf<FieldNode>()
+        for (entryRaw in entries) {
+            val entry = entryRaw.trimSpaces()
+            if (entry.isEmpty()) return null
+            val braceStart = findUnquoted(entry, '{')
+            if (braceStart == -1) {
+                if (containsOtherDelimiter(entry, delimiter)) return null
+                nodes.add(FieldNode(entry, null))
             } else {
-                null
+                val name = entry.substring(0, braceStart)
+                if (name.isEmpty() || containsOtherDelimiter(name, delimiter)) return null
+                val braceEnd = findMatchingBrace(entry, braceStart)
+                if (braceEnd != entry.length - 1) return null
+                val group =
+                    parseFieldList(entry.substring(braceStart + 1, braceEnd), delimiter)
+                        ?: return null
+                nodes.add(FieldNode(name, group))
             }
-
-        return ArrayHeaderMatch(key, length, fields, delimiter)
+        }
+        return nodes
     }
 
-    /** Result of parsing an array header. */
-    private data class ArrayHeaderMatch(
-        val key: String,
-        val length: Int,
-        val fields: List<String>?,
-        val delimiter: KtoonConfiguration.Delimiter,
-    )
+    /**
+     * Splits field-list content on the active delimiter, respecting quotes and brace nesting.
+     * Returns null if quotes and braces are not balanced.
+     */
+    private fun splitFieldEntries(content: String, delimiter: Char): List<String>? {
+        val result = mutableListOf<String>()
+        var current = StringBuilder()
+        var depth = 0
+        var inQuotes = false
+        var escapeNext = false
+        for (c in content) {
+            when {
+                escapeNext -> {
+                    escapeNext = false
+                    current.append(c)
+                }
+                c == '\\' -> {
+                    escapeNext = true
+                    current.append(c)
+                }
+                c == '"' -> {
+                    inQuotes = !inQuotes
+                    current.append(c)
+                }
+                inQuotes -> current.append(c)
+                c == '{' -> {
+                    depth++
+                    current.append(c)
+                }
+                c == '}' -> {
+                    depth--
+                    if (depth < 0) return null
+                    current.append(c)
+                }
+                c == delimiter && depth == 0 -> {
+                    result.add(current.toString())
+                    current = StringBuilder()
+                }
+                else -> current.append(c)
+            }
+        }
+        if (inQuotes || depth != 0) return null
+        result.add(current.toString())
+        return result
+    }
+
+    /**
+     * §14.2: the delimiter declared in the bracket segment must also be the field-list delimiter.
+     * An unquoted occurrence of a different delimiter symbol in a field name means the field list
+     * was written with the wrong delimiter.
+     */
+    private fun containsOtherDelimiter(name: String, delimiter: Char): Boolean {
+        for (d in charArrayOf(',', '|', '\t')) {
+            if (d != delimiter && findUnquoted(name, d) != -1) return true
+        }
+        return false
+    }
+}
+
+/**
+ * One member of a header's field list: a field name (raw, possibly quoted) optionally carrying a
+ * nested field group (§6, §9.3).
+ */
+internal data class FieldNode(val name: String, val group: List<FieldNode>?) {
+    val isLeaf: Boolean
+        get() = group == null
+}
+
+/** Total number of leaf fields under [nodes], via a depth-first walk. */
+internal fun leafFieldCount(nodes: List<FieldNode>): Int {
+    var count = 0
+    for (node in nodes) {
+        count += if (node.group == null) 1 else leafFieldCount(node.group)
+    }
+    return count
 }
 
 /** Token types produced by the lexer. */
@@ -238,41 +392,53 @@ internal sealed class Token {
     /**
      * Object key token.
      *
-     * @property name The key name (may be quoted)
+     * @property name The key name (may be quoted), trimmed of surrounding spaces
+     * @property rawContent The full line content after indentation (for row re-classification)
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
-    data class Key(val name: String, val indent: Int, override val line: Int) : Token()
+    data class Key(
+        val name: String,
+        val rawContent: String,
+        val indent: Int,
+        override val line: Int,
+    ) : Token()
 
     /**
      * Value token (primitive or string).
      *
      * @property content The raw value content
+     * @property indent Indentation of the line this value appeared on
      * @property line Line number (1-based)
      */
-    data class Value(val content: String, override val line: Int) : Token()
+    data class Value(val content: String, val indent: Int, override val line: Int) : Token()
 
     /**
-     * Array header token.
+     * Array or keyed header token.
      *
-     * @property key Array key name
-     * @property length Declared array length
-     * @property fields Field names for tabular format (null for inline/expanded)
-     * @property delimiter Delimiter for this array
+     * @property key Header key name (empty for keyless headers)
+     * @property length Declared array length or entry count
+     * @property fields Field entries for tabular/keyed form (null when absent)
+     * @property delimiter Active delimiter declared by this header
+     * @property keyed True for keyed headers `[N:...]` (§9.5)
+     * @property rawContent The full line content after indentation (for entry-row
+     *   re-classification at entry depth, §9.5)
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
     data class ArrayHeader(
         val key: String,
         val length: Int,
-        val fields: List<String>?,
+        val fields: List<FieldNode>?,
         val delimiter: KtoonConfiguration.Delimiter,
+        val keyed: Boolean,
+        val rawContent: String,
         val indent: Int,
         override val line: Int,
     ) : Token()
 
     /**
-     * Inline array value (comma-separated values after array header).
+     * Inline array value (delimiter-separated values after array header).
      *
      * @property content The raw value content
      * @property line Line number (1-based)
@@ -280,22 +446,12 @@ internal sealed class Token {
     data class InlineArrayValue(val content: String, override val line: Int) : Token()
 
     /**
-     * Dash marker for expanded array element.
+     * Dash marker for a list-form array element.
      *
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
     data class Dash(val indent: Int, override val line: Int) : Token()
-
-    /**
-     * Tabular array row (values separated by delimiter).
-     *
-     * @property values List of raw value strings
-     * @property indent Indentation level in spaces
-     * @property line Line number (1-based)
-     */
-    data class TabularRow(val values: List<String>, val indent: Int, override val line: Int) :
-        Token()
 
     /**
      * Blank line token.
