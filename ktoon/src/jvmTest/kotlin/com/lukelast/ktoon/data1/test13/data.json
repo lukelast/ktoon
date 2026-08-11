@@ -1,0 +1,46 @@
+{
+  "emptyObject": {},
+  "emptyArray": [],
+  "emptyObjectList": [
+    {},
+    {}
+  ],
+  "arrayOfArrays": [
+    [],
+    [
+      1,
+      2
+    ]
+  ],
+  "nonUniformObjects": [
+    {
+      "id": 1
+    },
+    {
+      "id": 2,
+      "extra": 3
+    }
+  ],
+  "emptyFirstField": [
+    {
+      "meta": {},
+      "id": 1
+    },
+    {
+      "meta": {
+        "weight": 7
+      },
+      "id": 2
+    }
+  ],
+  "mapOfMaps": {
+    "alpha": {
+      "x": 1
+    },
+    "beta": {},
+    "gamma": {
+      "y": 2,
+      "z": 3
+    }
+  }
+}

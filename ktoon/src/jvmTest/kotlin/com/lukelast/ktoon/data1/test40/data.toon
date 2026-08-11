@@ -1,0 +1,18 @@
+name: root
+config:
+    mode: fast
+    limits:
+        soft: 10
+        hard: 20
+        window:
+            unit: sec
+            size: 5
+    scores[3]: 1,2,3
+    rows[2]{id,label}:
+        1,alpha
+        2,beta
+    jobs[2]:
+        - id: 1
+            steps[2]: a,b
+        - id: 2
+            steps[1]: c

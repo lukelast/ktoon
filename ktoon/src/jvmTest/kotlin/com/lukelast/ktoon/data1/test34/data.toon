@@ -1,0 +1,3 @@
+[2:]{code,users,active}:
+  north: us-n,120,true
+  south: us-s,45,false

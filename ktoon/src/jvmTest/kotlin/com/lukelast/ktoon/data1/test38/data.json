@@ -1,0 +1,44 @@
+{
+  "note": "alpha, beta",
+  "route": "north|south",
+  "rows": [
+    {
+      "a": "red, green",
+      "b": 1,
+      "c": "up|down"
+    },
+    {
+      "a": "plain",
+      "b": 2,
+      "c": "steady"
+    },
+    {
+      "a": "left|right",
+      "b": 3,
+      "c": "x, y"
+    }
+  ],
+  "scores": {
+    "alpha": {
+      "value": 3,
+      "label": "one, two"
+    },
+    "beta": {
+      "value": 4,
+      "label": "up|down"
+    }
+  },
+  "matrix": [
+    [
+      1,
+      2
+    ],
+    [],
+    [
+      3,
+      4,
+      5
+    ]
+  ],
+  "tags": []
+}

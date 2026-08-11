@@ -68,10 +68,18 @@ abstract class Runner {
             cmd.add("--delimiter")
             cmd.add("\"${ktoon.configuration.delimiter.char}\"")
         }
+        if (ktoon.configuration.indentSize != 2) {
+            cmd.add("--indent")
+            cmd.add(ktoon.configuration.indentSize.toString())
+        }
 
         val process =
             ProcessBuilder().command(cmd).directory(toon.parent.toFile()).inheritIO().start()
         process.waitFor()
+        if (toon.isReadable()) {
+            // The v4 CLI appends a trailing newline; goldens are stored without one.
+            toon.writeText(toon.readText().trimEnd('\n', '\r'))
+        }
     }
 
     fun buildPath(fileName: String): Path {

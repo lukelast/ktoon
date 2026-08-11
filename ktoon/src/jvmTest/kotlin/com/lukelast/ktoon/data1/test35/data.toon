@@ -1,0 +1,25 @@
+leadingHash: "#tag"
+plusNumeric: "+1"
+leadingZeroNumeric: "05"
+expLower: "1e5"
+expUpper: "1E5"
+hyphenAlone: "-"
+leadingSpace: " lead"
+trailingSpace: "trail "
+leadingTab: "\tx"
+openBrace: "a{b"
+closeBrace: "a}b"
+dotFive: .5
+trailingDot: 1.
+underscoreDigits: 1_000
+hexLike: 0x10
+nanWord: NaN
+infinityWord: Infinity
+trueUpper: TRUE
+negInfinityWord: "-Infinity"
+innerHyphen: x-y
+punctuation: a@b.c!?
+plusWord: +abc
+rows[2]{id,note,tag}:
+  1,"line1\nline2",🚀 launch
+  2,plain note,✅

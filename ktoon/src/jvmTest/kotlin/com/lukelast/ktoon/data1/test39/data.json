@@ -1,0 +1,29 @@
+{
+  "summary": "a, b | c",
+  "spaced": "left\tright",
+  "gauges": {
+    "cpu": {
+      "unit": "pct, avg",
+      "amount": 40
+    },
+    "net": {
+      "unit": "up|down",
+      "amount": 12
+    },
+    "disk": {
+      "unit": "read\twrite",
+      "amount": 7
+    }
+  },
+  "samples": [
+    [
+      1,
+      2,
+      3
+    ],
+    [],
+    [
+      4
+    ]
+  ]
+}

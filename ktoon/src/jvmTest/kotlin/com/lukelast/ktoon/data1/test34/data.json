@@ -1,0 +1,12 @@
+{
+  "north": {
+    "code": "us-n",
+    "users": 120,
+    "active": true
+  },
+  "south": {
+    "code": "us-s",
+    "users": 45,
+    "active": false
+  }
+}

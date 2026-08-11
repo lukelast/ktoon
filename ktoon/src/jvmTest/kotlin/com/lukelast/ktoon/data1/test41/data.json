@@ -1,0 +1,52 @@
+{
+  "million": 1000000.0,
+  "millionth": 1.0E-6,
+  "mixedDecimal": 123.456,
+  "negativePi": -3.14,
+  "half": 0.5,
+  "oneAndHalf": 1.5,
+  "oneThird": 0.3333333333333333,
+  "floatArtifact": 0.30000000000000004,
+  "hundred": 100.0,
+  "hugeCanonical": 1.0E20,
+  "answer": 42,
+  "negativeInt": -7,
+  "maxInt": 2147483647,
+  "maxSafeLong": 9007199254740991,
+  "inlineDoubles": [
+    1000000.0,
+    1.0E-6,
+    123.456,
+    -3.14,
+    0.5,
+    1.5,
+    100.0,
+    1.0E20
+  ],
+  "inlineLongs": [
+    42,
+    -7,
+    2147483647,
+    9007199254740991
+  ],
+  "rows": [
+    {
+      "label": "alpha",
+      "value": 1000000.0,
+      "count": 42,
+      "ratio": 0.3333333333333333
+    },
+    {
+      "label": "beta",
+      "value": 1.0E-6,
+      "count": -7,
+      "ratio": 0.30000000000000004
+    },
+    {
+      "label": "gamma",
+      "value": 100.0,
+      "count": 2147483647,
+      "ratio": 1.0E20
+    }
+  ]
+}

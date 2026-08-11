@@ -1,0 +1,38 @@
+{
+  "nulEmbedded": "a\u0000b",
+  "bellEmbedded": "a\u0007b",
+  "unitSepEmbedded": "a\u001fb",
+  "delEmbedded": "ab",
+  "nbspLeading": " x",
+  "nbspTrailing": "x ",
+  "lineSeparator": "a b",
+  "japanese": "日本語テキスト",
+  "arabic": "مرحبا",
+  "hebrew": "שלום",
+  "korean": "안녕하세요",
+  "combiningMark": "café",
+  "zwjFamily": "👨‍👩‍👧",
+  "flag": "🇯🇵",
+  "supplementary": "𝄞",
+  "moods": [
+    "🎉",
+    "🎊",
+    "🎈"
+  ],
+  "rows": [
+    {
+      "label": "日本語",
+      "emoji": "🎉",
+      "count": 1
+    },
+    {
+      "label": "안녕하세요",
+      "emoji": "🎊",
+      "count": 2
+    }
+  ],
+  "counts": {
+    "日本語": 3,
+    "🎉": 7
+  }
+}

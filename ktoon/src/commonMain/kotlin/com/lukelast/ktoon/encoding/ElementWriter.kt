@@ -210,7 +210,7 @@ internal class ElementWriter(
             }
             ArrayPosition.ROOT -> writer.write("[]")
             // §9.2/§9.4: encoders still emit the legacy form in list-item position
-            ArrayPosition.LIST_ITEM -> writer.write("[0]:")
+            ArrayPosition.LIST_ITEM -> writeArrayHeader(null, 0)
         }
     }
 
