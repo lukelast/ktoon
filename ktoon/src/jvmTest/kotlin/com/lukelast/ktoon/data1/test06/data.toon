@@ -33,5 +33,5 @@ inventory[2]:
       horsepower: 819
       torque: 546
     features[2]: Hybrid,Active Aero
-    lapTimes[0]:
-    modifications[0]:
+    lapTimes: []
+    modifications: []

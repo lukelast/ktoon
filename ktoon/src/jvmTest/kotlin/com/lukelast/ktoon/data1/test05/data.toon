@@ -1,4 +1,4 @@
 owner: ""
 location: ""
 capacity: 0
-inventory[0]:
+inventory: []

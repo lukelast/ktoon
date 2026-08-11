@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.KtoonEncodingException
 import com.lukelast.ktoon.util.isAlpha
 import com.lukelast.ktoon.util.isDigit
 
@@ -33,17 +34,40 @@ internal object StringQuoting {
         // Note: Delimiter is checked dynamically
     }
 
+    /**
+     * §3: host strings must be sequences of Unicode scalar values; an unpaired surrogate is not
+     * representable in TOON and MUST error rather than be emitted or replaced.
+     */
+    private fun validateScalarValues(str: String) {
+        for (i in str.indices) {
+            val c = str[i]
+            if (c.isHighSurrogate()) {
+                if (i + 1 >= str.length || !str[i + 1].isLowSurrogate()) unpairedSurrogate(c)
+            } else if (c.isLowSurrogate()) {
+                if (i == 0 || !str[i - 1].isHighSurrogate()) unpairedSurrogate(c)
+            }
+        }
+    }
+
+    private fun unpairedSurrogate(c: Char): Nothing =
+        throw KtoonEncodingException(
+            "Unpaired surrogate U+${c.code.toString(16).uppercase().padStart(4, '0')} " +
+                "cannot be encoded to TOON"
+        )
+
     fun needsQuoting(
         str: String,
         context: QuotingContext = QuotingContext.OBJECT_VALUE,
         delimiter: Char = KtoonConfiguration.Delimiter.COMMA.char,
     ): Boolean {
+        validateScalarValues(str)
         if (str.isEmpty()) return true
         val len = str.length
 
         // Check first character
         val first = str[0]
         if (first == '-') return true // Starts with hyphen
+        if (first == '#') return true // §7.2: would read as a comment line on decode
         if (first.code < 128 && SPECIAL_CHARS[first.code]) return true // Control or special
 
         // Check last character (trailing whitespace)
@@ -107,8 +131,11 @@ internal object StringQuoting {
                     seenExp = true
                     seenDigit = false // Need digits after E
                 } else if (c == '+' || c == '-') {
-                    // Sign only allowed at start (handled) or after E
-                    if (!seenExp || (str[i - 1] != 'e' && str[i - 1] != 'E')) isNumericLike = false
+                    // §7.2: a leading sign keeps the token numeric-like ("+1" must be quoted);
+                    // otherwise a sign is only allowed directly after the exponent marker.
+                    if (i > 0 && (!seenExp || (str[i - 1] != 'e' && str[i - 1] != 'E'))) {
+                        isNumericLike = false
+                    }
                 } else {
                     isNumericLike = false
                 }
@@ -146,7 +173,14 @@ internal object StringQuoting {
                 '\n' -> sb.append("\\n")
                 '\r' -> sb.append("\\r")
                 '\t' -> sb.append("\\t")
-                else -> sb.append(c)
+                else ->
+                    // §7.1: control characters outside \n, \r, \t are emitted as \uXXXX
+                    if (c.code < 0x20) {
+                        sb.append("\\u")
+                        sb.append(c.code.toString(16).padStart(4, '0'))
+                    } else {
+                        sb.append(c)
+                    }
             }
         }
         sb.append('"')

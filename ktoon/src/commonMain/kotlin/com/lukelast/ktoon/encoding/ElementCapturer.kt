@@ -99,10 +99,110 @@ internal class ElementCapturer(
             StructureKind.CLASS,
             StructureKind.OBJECT ->
                 ElementCapturer(config, serializersModule, descriptor) {
-                    add(EncodedElement.Structure(descriptor, it))
+                    add(EncodedElement.Structure(it))
+                }
+            StructureKind.MAP ->
+                MapElementCapturer(config, serializersModule) {
+                    add(EncodedElement.Structure(it))
                 }
             else -> this
         }
+
+    override fun endStructure(descriptor: SerialDescriptor) {
+        onComplete(values)
+    }
+}
+
+/**
+ * Captures map entries during encoding. Keys are captured raw (unquoted) so the writer can apply
+ * key quoting; values are captured like [ElementCapturer] elements.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+internal class MapElementCapturer(
+    private val config: KtoonConfiguration,
+    override val serializersModule: SerializersModule,
+    private val onComplete: (List<Pair<String, EncodedElement>>) -> Unit,
+) : AbstractEncoder() {
+
+    private val values = mutableListOf<Pair<String, EncodedElement>>()
+    private var isKey = true
+    private var currentKey: String? = null
+
+    /** Map entries don't have defaults in the serialization sense; always encode them. */
+    override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = true
+
+    override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+        isKey = (index % 2 == 0)
+        return true
+    }
+
+    private fun quote(value: String) =
+        StringQuoting.quote(
+            value,
+            StringQuoting.QuotingContext.ARRAY_ELEMENT,
+            config.delimiter.char,
+        )
+
+    private fun addPrimitive(raw: String, encoded: String = raw) {
+        if (isKey) {
+            currentKey = raw
+        } else {
+            addValue(EncodedElement.Primitive(encoded))
+        }
+    }
+
+    private fun addValue(value: EncodedElement) {
+        val key = currentKey ?: error("Map value encoded without preceding key")
+        values.add(key to value)
+        currentKey = null
+    }
+
+    override fun encodeNull() = addPrimitive("null")
+
+    override fun encodeBoolean(value: Boolean) = addPrimitive(if (value) "true" else "false")
+
+    override fun encodeByte(value: Byte) = addPrimitive(NumberNormalizer.normalize(value))
+
+    override fun encodeShort(value: Short) = addPrimitive(NumberNormalizer.normalize(value))
+
+    override fun encodeInt(value: Int) = addPrimitive(NumberNormalizer.normalize(value))
+
+    override fun encodeLong(value: Long) = addPrimitive(NumberNormalizer.normalize(value))
+
+    override fun encodeFloat(value: Float) = addPrimitive(NumberNormalizer.normalize(value))
+
+    override fun encodeDouble(value: Double) = addPrimitive(NumberNormalizer.normalize(value))
+
+    override fun encodeChar(value: Char) = addPrimitive(value.toString(), quote(value.toString()))
+
+    override fun encodeString(value: String) = addPrimitive(value, quote(value))
+
+    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
+        val name = enumDescriptor.getElementName(index)
+        addPrimitive(name, quote(name))
+    }
+
+    override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
+        if (isKey) {
+            throw IllegalArgumentException("TOON does not support complex keys in maps")
+        }
+        return when (descriptor.kind) {
+            StructureKind.LIST ->
+                ElementCapturer(config, serializersModule, descriptor) {
+                    addValue(EncodedElement.NestedArray(it.map { (_, v) -> v }))
+                }
+            StructureKind.CLASS,
+            StructureKind.OBJECT ->
+                ElementCapturer(config, serializersModule, descriptor) {
+                    addValue(EncodedElement.Structure(it))
+                }
+            StructureKind.MAP ->
+                MapElementCapturer(config, serializersModule) {
+                    addValue(EncodedElement.Structure(it))
+                }
+            else -> this
+        }
+    }
 
     override fun endStructure(descriptor: SerialDescriptor) {
         onComplete(values)
