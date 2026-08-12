@@ -1,9 +1,9 @@
 package com.lukelast.ktoon
 
-import kotlinx.serialization.Serializable
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.test.Test
+import kotlinx.serialization.Serializable
 
 /** Round-trip tests to verify that encoding and decoding preserve data integrity. */
 class KtoonRoundTripTest {

@@ -1,10 +1,10 @@
 package com.lukelast.ktoon
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode
 import kotlinx.serialization.Serializable
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class KtoonEncodeDefaultsTest {
 

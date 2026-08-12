@@ -5,16 +5,15 @@ import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
 
 /**
- * Test40: Non-default indentSize of 4 spaces (§12)
- * Exercises every indent-sensitive construct at 4-space steps:
+ * Test40: Non-default indentSize of 4 spaces (§12) Exercises every indent-sensitive construct at
+ * 4-space steps:
  * - Nested objects three levels deep (fields at 4/8/12 spaces)
  * - Tabular array inside a nested object: rows one 4-space level under the header
  * - Inline primitive array at depth (§9.1)
- * - Non-tabular array of objects in list form (§9.4): the `steps` column holds arrays, so
- *   tabular form is disqualified; the `- ` items sit one level under the header and the
- *   continuation field sits one level under the hyphen line per the §10 depth model
- *   (12 spaces, not hyphen-aligned at 10)
- * Expected root: `name: root` at column 0, deepest field `size: 5` at column 12
+ * - Non-tabular array of objects in list form (§9.4): the `steps` column holds arrays, so tabular
+ *   form is disqualified; the `- ` items sit one level under the header and the continuation field
+ *   sits one level under the hyphen line per the §10 depth model (12 spaces, not hyphen-aligned
+ *   at 10) Expected root: `name: root` at column 0, deepest field `size: 5` at column 12
  */
 class Test40 : Runner() {
     override val ktoon = Ktoon { indentSize = 4 }

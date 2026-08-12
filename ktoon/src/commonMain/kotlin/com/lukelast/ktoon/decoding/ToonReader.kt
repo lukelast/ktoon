@@ -25,8 +25,8 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     private val validator = ValidationEngine(config)
 
     /**
-     * Number of array/keyed header spans currently being read. Blank lines inside a header span
-     * are strict-mode errors even when they fall between the fields of a list-item object (§12).
+     * Number of array/keyed header spans currently being read. Blank lines inside a header span are
+     * strict-mode errors even when they fall between the fields of a list-item object (§12).
      */
     private var arraySpanDepth = 0
 
@@ -352,7 +352,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                     is Token.Value -> {
                         validateRowIndent(token.indent, rowDepth, header.indent, token.line)
                         advance()
-                        elements.add(readRowObject(token.content, fields, leafCount, delimiter, token.line))
+                        elements.add(
+                            readRowObject(token.content, fields, leafCount, delimiter, token.line)
+                        )
                     }
                     is Token.Key -> {
                         // §9.3 disambiguation: at row depth, delimiter before colon → row;
@@ -369,7 +371,13 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                                 if (paired is Token.Value && paired.line == token.line) advance()
                             }
                             elements.add(
-                                readRowObject(token.rawContent, fields, leafCount, delimiter, token.line)
+                                readRowObject(
+                                    token.rawContent,
+                                    fields,
+                                    leafCount,
+                                    delimiter,
+                                    token.line,
+                                )
                             )
                         } else {
                             break
@@ -391,7 +399,13 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                                 }
                             }
                             elements.add(
-                                readRowObject(token.rawContent, fields, leafCount, delimiter, token.line)
+                                readRowObject(
+                                    token.rawContent,
+                                    fields,
+                                    leafCount,
+                                    delimiter,
+                                    token.line,
+                                )
                             )
                         } else {
                             break
@@ -409,7 +423,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         return ToonValue.Array(elements)
     }
 
-    /** §9.3: a line is a row when its first unquoted delimiter precedes its first unquoted colon. */
+    /**
+     * §9.3: a line is a row when its first unquoted delimiter precedes its first unquoted colon.
+     */
     private fun isRowLine(rawContent: String, delimiter: Char): Boolean {
         val delimPos = findUnquoted(rawContent, delimiter)
         if (delimPos == -1) return false
@@ -425,7 +441,8 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         return when (val token = tokens[p]) {
             is Token.Value -> true
             is Token.Key -> token.indent == rowDepth && isRowLine(token.rawContent, delimiter)
-            is Token.ArrayHeader -> token.indent == rowDepth && isRowLine(token.rawContent, delimiter)
+            is Token.ArrayHeader ->
+                token.indent == rowDepth && isRowLine(token.rawContent, delimiter)
             else -> false
         }
     }

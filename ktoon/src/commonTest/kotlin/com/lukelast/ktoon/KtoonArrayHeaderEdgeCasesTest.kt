@@ -1,10 +1,10 @@
 package com.lukelast.ktoon
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Array-header edge cases from Section 6. Since spec 4.x, malformed bracket segments and stray

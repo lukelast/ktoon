@@ -1,8 +1,8 @@
 package com.lukelast.ktoon.fixtures.decode
 
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
+import kotlinx.serialization.Serializable
 
 /**
  * Tests from validation-errors.json fixture - Validation errors: length mismatches, invalid

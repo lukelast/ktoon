@@ -1,9 +1,9 @@
 package com.lukelast.ktoon
 
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.serialization.Serializable
 
 class KtoonEncodingTest {
 

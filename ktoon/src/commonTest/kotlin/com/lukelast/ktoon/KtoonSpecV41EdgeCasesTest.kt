@@ -1,10 +1,10 @@
 package com.lukelast.ktoon
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Spec 4.1 edge cases verified directly against the normative text and the reference

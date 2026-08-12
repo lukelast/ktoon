@@ -1,5 +1,10 @@
 package com.lukelast.ktoon
 
+import kotlin.random.Random
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -11,12 +16,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
-import kotlin.random.Random
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 // Sealed class for contextual nested in polymorphic test
 @Serializable
@@ -67,7 +66,10 @@ class KtoonContextualTest {
 
         // Verify the contextual serializer's output is in the encoded string
         assertTrue(encoded.contains("id:"), "Should contain 'id:' key")
-        assertTrue(encoded.contains("550e8400-e29b-41d4-a716-446655440000"), "Should contain ID value")
+        assertTrue(
+            encoded.contains("550e8400-e29b-41d4-a716-446655440000"),
+            "Should contain ID value",
+        )
 
         val decoded = ktoon.decodeFromString<User>(encoded)
         assertEquals(original, decoded)
@@ -81,9 +83,10 @@ class KtoonContextualTest {
             PrimitiveSerialDescriptor("Color", PrimitiveKind.STRING)
 
         override fun serialize(encoder: Encoder, value: Color) {
-            val hex = value.r.toString(16).padStart(2, '0') +
-                value.g.toString(16).padStart(2, '0') +
-                value.b.toString(16).padStart(2, '0')
+            val hex =
+                value.r.toString(16).padStart(2, '0') +
+                    value.g.toString(16).padStart(2, '0') +
+                    value.b.toString(16).padStart(2, '0')
             encoder.encodeString("#$hex")
         }
 
@@ -245,20 +248,17 @@ class KtoonContextualTest {
         @Serializable data class User(@Contextual val id: Id, val name: String)
 
         // Module without IdSerializer registered
-        val module = SerializersModule { }
+        val module = SerializersModule {}
         val ktoon = Ktoon(serializersModule = module)
 
         val user = User(Id("test-id"), "Alice")
 
-        assertFailsWith<kotlinx.serialization.SerializationException> {
-            ktoon.encodeToString(user)
-        }
+        assertFailsWith<kotlinx.serialization.SerializationException> { ktoon.encodeToString(user) }
     }
 
     @Test
     fun `malformed contextual value throws during deserialization`() {
-        @Serializable
-        data class Theme(@Contextual val color: Color)
+        @Serializable data class Theme(@Contextual val color: Color)
 
         val module = SerializersModule { contextual(ColorSerializer) }
         val ktoon = Ktoon(serializersModule = module)
@@ -266,8 +266,6 @@ class KtoonContextualTest {
         // Malformed hex color (too short)
         val malformed = "color #12"
 
-        assertFailsWith<Exception> {
-            ktoon.decodeFromString<Theme>(malformed)
-        }
+        assertFailsWith<Exception> { ktoon.decodeFromString<Theme>(malformed) }
     }
 }

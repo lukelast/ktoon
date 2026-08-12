@@ -1,12 +1,12 @@
 package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
+import kotlin.test.Ignore
+import kotlin.test.Test
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlin.test.Ignore
-import kotlin.test.Test
 
 /**
  * Tests from arrays-objects.json fixture - Arrays of objects encoding: list format for non-uniform

@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
 class Test33 : Runner() {
     override fun run() = doTest(data)
 }
+
 @Serializable
 data class DefaultsData(
     val title: String = "Default Title",
@@ -23,22 +24,14 @@ data class DefaultsData(
     val defaultNullSetToOne: Int? = null,
     val defaultOneSetToNull: Int? = 1,
     val defaultOneSetToOne: Int? = 1,
-    @EncodeDefault(Mode.NEVER)
-    val defaultNullSetToNullModeNever: Int? = null,
-    @EncodeDefault(Mode.NEVER)
-    val defaultNullSetToOneModeNever: Int? = null,
-    @EncodeDefault(Mode.NEVER)
-    val defaultOneSetToNullModeNever: Int? = 1,
-    @EncodeDefault(Mode.NEVER)
-    val defaultOneSetToOneModeNever: Int? = 1,
-    @EncodeDefault(Mode.ALWAYS)
-    val defaultNullSetToNullModeAlways: Int? = null,
-    @EncodeDefault(Mode.ALWAYS)
-    val defaultNullSetToOneModeAlways: Int? = null,
-    @EncodeDefault(Mode.ALWAYS)
-    val defaultOneSetToNullModeAlways: Int? = 1,
-    @EncodeDefault(Mode.ALWAYS)
-    val defaultOneSetToOneModeAlways: Int? = 1,
+    @EncodeDefault(Mode.NEVER) val defaultNullSetToNullModeNever: Int? = null,
+    @EncodeDefault(Mode.NEVER) val defaultNullSetToOneModeNever: Int? = null,
+    @EncodeDefault(Mode.NEVER) val defaultOneSetToNullModeNever: Int? = 1,
+    @EncodeDefault(Mode.NEVER) val defaultOneSetToOneModeNever: Int? = 1,
+    @EncodeDefault(Mode.ALWAYS) val defaultNullSetToNullModeAlways: Int? = null,
+    @EncodeDefault(Mode.ALWAYS) val defaultNullSetToOneModeAlways: Int? = null,
+    @EncodeDefault(Mode.ALWAYS) val defaultOneSetToNullModeAlways: Int? = 1,
+    @EncodeDefault(Mode.ALWAYS) val defaultOneSetToOneModeAlways: Int? = 1,
     val owner: Owner = Owner(),
     val members: List<Member> = emptyList(),
 )

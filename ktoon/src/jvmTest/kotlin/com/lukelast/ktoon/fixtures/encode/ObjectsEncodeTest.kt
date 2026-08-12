@@ -1,9 +1,9 @@
 package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
+import kotlin.test.Test
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.test.Test
 
 /**
  * Tests from objects.json fixture - Object encoding: simple objects, nested objects, key encoding.

@@ -33,7 +33,7 @@ open class KtoonBenchmark {
     @Benchmark
     @Warmup(iterations = 4, time = 2, timeUnit = BenchmarkTimeUnit.SECONDS)
     @Measurement(iterations = 10, time = 6, timeUnit = BenchmarkTimeUnit.SECONDS)
-//    @org.openjdk.jmh.annotations.Fork(value = 1, jvmArgsAppend = [JFR_ARGS])
+    //    @org.openjdk.jmh.annotations.Fork(value = 1, jvmArgsAppend = [JFR_ARGS])
     fun benchmarkKtoon(): String {
         return ktoon.encodeToString(data)
     }
@@ -44,7 +44,7 @@ open class KtoonBenchmark {
     }
 
     @Benchmark
-    fun benchmarkToonKotlin(): String{
+    fun benchmarkToonKotlin(): String {
         return Toon.encode(data)
     }
 }

@@ -1,10 +1,10 @@
 package com.lukelast.ktoon
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode
 import kotlinx.serialization.Serializable
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class KtoonEncodeDefaultsNullTest {
 
@@ -24,8 +24,7 @@ class KtoonEncodeDefaultsNullTest {
     fun `encodeDefaults=false + ALWAYS + non-default`() =
         assertCase(false, AlwaysDefaultNull(CUSTOM_VALUE), line(CUSTOM_VALUE))
 
-    @Test
-    fun `encodeDefaults=true + NEVER + default`() = assertCase(true, NeverDefaultNull(), omit)
+    @Test fun `encodeDefaults=true + NEVER + default`() = assertCase(true, NeverDefaultNull(), omit)
 
     @Test
     fun `encodeDefaults=true + NEVER + non-default`() =
@@ -39,7 +38,8 @@ class KtoonEncodeDefaultsNullTest {
         assertCase(false, NeverDefaultNull(CUSTOM_VALUE), line(CUSTOM_VALUE))
 
     @Test
-    fun `encodeDefaults=true + PLAIN + default`() = assertCase(true, PlainDefaultNull(), line(NULL_LITERAL))
+    fun `encodeDefaults=true + PLAIN + default`() =
+        assertCase(true, PlainDefaultNull(), line(NULL_LITERAL))
 
     @Test
     fun `encodeDefaults=true + PLAIN + non-default`() =
@@ -84,13 +84,9 @@ private fun line(value: String) = Expected.Line(value)
 private val omit = Expected.Omit
 
 @Serializable
-private data class AlwaysDefaultNull(
-    @EncodeDefault(Mode.ALWAYS) val value: String? = null,
-)
+private data class AlwaysDefaultNull(@EncodeDefault(Mode.ALWAYS) val value: String? = null)
 
 @Serializable
-private data class NeverDefaultNull(
-    @EncodeDefault(Mode.NEVER) val value: String? = null,
-)
+private data class NeverDefaultNull(@EncodeDefault(Mode.NEVER) val value: String? = null)
 
 @Serializable private data class PlainDefaultNull(val value: String? = null)

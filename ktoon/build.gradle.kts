@@ -1,4 +1,5 @@
 @file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -51,20 +52,13 @@ kotlin {
 
     android {
         namespace = group.toString()
-        compileSdk =
-            libs.versions.android.compileSdk
-                .get()
-                .toInt()
-        minSdk =
-            libs.versions.android.minSdk
-                .get()
-                .toInt()
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-        }
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
     }
 
-    // native target "tiers" here are taken from https://kotlinlang.org/docs/native-target-support.html
+    // native target "tiers" here are taken from
+    // https://kotlinlang.org/docs/native-target-support.html
     // tier 1
     macosX64()
     macosArm64()

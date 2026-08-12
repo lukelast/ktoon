@@ -192,7 +192,10 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         if (bracketEnd == -1) return HeaderParse.NotAHeader
 
         // §6 (v4.1): whitespace between a key and its bracket segment is a header syntax error.
-        if (bracketStart > 0 && (content[bracketStart - 1] == ' ' || content[bracketStart - 1] == '\t')) {
+        if (
+            bracketStart > 0 &&
+                (content[bracketStart - 1] == ' ' || content[bracketStart - 1] == '\t')
+        ) {
             return HeaderParse.Malformed("whitespace between key and bracket segment")
         }
 
@@ -436,8 +439,8 @@ internal sealed class Token {
      * @property fields Field entries for tabular/keyed form (null when absent)
      * @property delimiter Active delimiter declared by this header
      * @property keyed True for keyed headers `[N:...]` (§9.5)
-     * @property rawContent The full line content after indentation (for entry-row
-     *   re-classification at entry depth, §9.5)
+     * @property rawContent The full line content after indentation (for entry-row re-classification
+     *   at entry depth, §9.5)
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */

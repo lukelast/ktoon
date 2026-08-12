@@ -1,9 +1,9 @@
 package com.lukelast.ktoon.fixtures.decode
 
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
+import kotlin.test.Test
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.test.Test
 
 /**
  * Tests from arrays-tabular.json fixture - Tabular array decoding: parsing arrays of uniform

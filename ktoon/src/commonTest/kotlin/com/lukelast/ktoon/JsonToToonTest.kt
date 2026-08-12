@@ -1,13 +1,14 @@
 package com.lukelast.ktoon
 
-import kotlin.test.assertEquals
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class JsonToToonTest {
 
     @Test
     fun `test json to toon encoding`() {
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "name": "Alice",
                 "age": 30,
@@ -18,11 +19,13 @@ class JsonToToonTest {
                 },
                 "hobbies": ["reading", "chess"]
             }
-        """.trimIndent()
+            """
+                .trimIndent()
 
         val toonString = Ktoon.Default.encodeJsonToToon(jsonString)
 
-        val expectedToon = """
+        val expectedToon =
+            """
             name: Alice
             age: 30
             isStudent: false
@@ -30,9 +33,9 @@ class JsonToToonTest {
               city: Wonderland
               zip: "12345"
             hobbies[2]: reading,chess
-        """.trimIndent()
+            """
+                .trimIndent()
 
         assertEquals(expectedToon, toonString.trim())
     }
 }
-

@@ -1,11 +1,11 @@
 package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
+import kotlin.test.Ignore
+import kotlin.test.Test
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlin.test.Ignore
-import kotlin.test.Test
 
 /**
  * Tests from arrays-primitive.json fixture - Primitive array encoding: inline arrays of strings,

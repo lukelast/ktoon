@@ -1,7 +1,7 @@
 package com.lukelast.ktoon.fixtures
 
-import kotlinx.serialization.json.Json
 import java.io.File
+import kotlinx.serialization.json.Json
 
 private val fixtureJson = Json {
     ignoreUnknownKeys = false // Strict: catch schema mismatches

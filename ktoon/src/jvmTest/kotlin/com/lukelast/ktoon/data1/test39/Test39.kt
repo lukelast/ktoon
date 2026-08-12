@@ -15,8 +15,8 @@ import kotlinx.serialization.Serializable
  * - §9.2 – nested arrays where every inner header carries the marker, including the empty inner
  *   array `- [0<TAB>]:`.
  * - §7.2/§11.1 – the quoting flip under tab: commas and pipes are ordinary data and stay unquoted
- *   in both object field values and entry-row cells, while a literal HTAB is quoted regardless -
- *   it is both the active delimiter and a U+0000-U+001F control - and is escaped as `\t` per §7.1,
+ *   in both object field values and entry-row cells, while a literal HTAB is quoted regardless - it
+ *   is both the active delimiter and a U+0000-U+001F control - and is escaped as `\t` per §7.1,
  *   never emitted raw inside the quotes.
  */
 class Test39 : Runner() {

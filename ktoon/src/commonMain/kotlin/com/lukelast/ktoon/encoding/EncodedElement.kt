@@ -1,8 +1,8 @@
 package com.lukelast.ktoon.encoding
 
 /**
- * A captured value tree used to select and write the §9 form of a value after all of its content
- * is known. Primitive values are stored fully encoded (quoted/normalized).
+ * A captured value tree used to select and write the §9 form of a value after all of its content is
+ * known. Primitive values are stored fully encoded (quoted/normalized).
  */
 internal sealed class EncodedElement {
     class Primitive(val value: String) : EncodedElement()

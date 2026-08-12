@@ -102,9 +102,7 @@ internal class ElementCapturer(
                     add(EncodedElement.Structure(it))
                 }
             StructureKind.MAP ->
-                MapElementCapturer(config, serializersModule) {
-                    add(EncodedElement.Structure(it))
-                }
+                MapElementCapturer(config, serializersModule) { add(EncodedElement.Structure(it)) }
             else -> this
         }
 
