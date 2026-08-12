@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 /**
  * Test12: Nested field groups in tabular headers (§9.3)
  *
- * A nested-uniform column is emitted as a field group `name{...}` in the header, and its leaf values
- * are spliced into the flat row in depth-first, pre-order. Covers:
+ * A nested-uniform column is emitted as a field group `name{...}` in the header, and its leaf
+ * values are spliced into the flat row in depth-first, pre-order. Covers:
  * - A group beside plain columns: `orders[3]{id,customer{name,country},total}:`
  * - An unbounded single-key chain collapsing to one cell per row: `wrappers[2]{a{b{c}}}:`
  * - Sibling groups: `measurements[2]{p{x,y},q{z}}:`

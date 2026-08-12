@@ -10,8 +10,8 @@ import kotlinx.serialization.descriptors.StructureKind
 internal class FieldTreeNode(val name: String, val children: List<FieldTreeNode>?)
 
 /**
- * Writes captured [EncodedElement] trees, selecting the form each value MUST take under §9:
- * inline, tabular (with nested field groups), list, or keyed tabular.
+ * Writes captured [EncodedElement] trees, selecting the form each value MUST take under §9: inline,
+ * tabular (with nested field groups), list, or keyed tabular.
  */
 internal class ElementWriter(
     private val writer: ToonWriter,
@@ -34,8 +34,7 @@ internal class ElementWriter(
          */
         fun tabularTree(elements: List<EncodedElement>): List<FieldTreeNode>? {
             if (elements.isEmpty()) return null
-            val objects =
-                elements.map { (it as? EncodedElement.Structure)?.values ?: return null }
+            val objects = elements.map { (it as? EncodedElement.Structure)?.values ?: return null }
             return fieldTree(objects)
         }
 
@@ -45,8 +44,9 @@ internal class ElementWriter(
          */
         fun keyedTree(values: List<Pair<String, EncodedElement>>): List<FieldTreeNode>? {
             if (values.size < 2) return null
-            val objects =
-                values.map { (_, v) -> (v as? EncodedElement.Structure)?.values ?: return null }
+            val objects = values.map { (_, v) ->
+                (v as? EncodedElement.Structure)?.values ?: return null
+            }
             return fieldTree(objects)
         }
 
@@ -69,9 +69,7 @@ internal class ElementWriter(
                 when {
                     column.all { it is EncodedElement.Primitive } ->
                         nodes.add(FieldTreeNode(name, null))
-                    column.all {
-                        it is EncodedElement.Structure && it.values.isNotEmpty()
-                    } -> {
+                    column.all { it is EncodedElement.Structure && it.values.isNotEmpty() } -> {
                         val sub =
                             fieldTree(column.map { (it as EncodedElement.Structure).values })
                                 ?: return null
@@ -92,7 +90,8 @@ internal class ElementWriter(
         fun couldBeKeyed(descriptor: SerialDescriptor): Boolean =
             when (descriptor.kind) {
                 StructureKind.MAP ->
-                    descriptor.elementsCount >= 2 && isObjectLike(descriptor.getElementDescriptor(1))
+                    descriptor.elementsCount >= 2 &&
+                        isObjectLike(descriptor.getElementDescriptor(1))
                 StructureKind.CLASS,
                 StructureKind.OBJECT ->
                     descriptor.elementsCount >= 2 &&
@@ -118,7 +117,9 @@ internal class ElementWriter(
 
     // ----- objects -----
 
-    /** Writes a captured root object: keyed tabular when eligible (§9.5), plain fields otherwise. */
+    /**
+     * Writes a captured root object: keyed tabular when eligible (§9.5), plain fields otherwise.
+     */
     fun writeRootObject(values: List<Pair<String, EncodedElement>>) {
         val tree = keyedTree(values)
         if (tree != null) {
@@ -133,8 +134,8 @@ internal class ElementWriter(
     }
 
     /**
-     * Writes a captured object in field position, starting at the key: a keyed table, a bare
-     * `key:` for an empty object (§8), or `key:` with nested fields at depth +1.
+     * Writes a captured object in field position, starting at the key: a keyed table, a bare `key:`
+     * for an empty object (§8), or `key:` with nested fields at depth +1.
      */
     fun writeObjectField(name: String, values: List<Pair<String, EncodedElement>>, indent: Int) {
         val tree = keyedTree(values)

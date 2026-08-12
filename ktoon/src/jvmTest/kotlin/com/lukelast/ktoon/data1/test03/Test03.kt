@@ -6,8 +6,8 @@ import kotlinx.serialization.Serializable
 /**
  * Test03: Keyed tabular form in field position (§9.5) with the negative controls that keep an
  * object in nested form (§8).
- * - `metrics`: three uniform entries collapse to `metrics[3:]{count,label,active}:` with
- *   `entrykey: cell,cell,cell` rows.
+ * - `metrics`: three uniform entries collapse to `metrics[3:]{count,label,active}:` with `entrykey:
+ *   cell,cell,cell` rows.
  * - `metrics.mem.label` holds a comma, so that cell is quoted inside its entry row (§7.2).
  * - `servers`: a nested-uniform column becomes a nested field group,
  *   `servers[2:]{region,limits{cpu,mem}}:`; its entry keys `web-01` and `db 2` fail the unquoted

@@ -4,22 +4,22 @@ import com.lukelast.ktoon.data1.Runner
 import kotlinx.serialization.Serializable
 
 /**
- * Test37: Control characters and Unicode (§7.1 escaping, §7.2 value quoting, §7.3 key encoding,
- * §16 internationalization).
+ * Test37: Control characters and Unicode (§7.1 escaping, §7.2 value quoting, §7.3 key encoding, §16
+ * internationalization).
  *
  * The five short escapes (backslash, double quote, LF, CR, HTAB) are already covered by Test31;
  * this test covers everything else about control characters and non-ASCII text.
  *
  * Behaviour verified byte-for-byte against `npx @toon-format/cli@4.1.1`:
  * - §7.1 row 6: C0 controls other than LF/CR/HTAB are emitted as `\uXXXX` with **lowercase** hex
- *   and always four digits. Containing one also trips §7.2 ("contains control characters in
- *   U+0000 through U+001F"), so those values are quoted.
+ *   and always four digits. Containing one also trips §7.2 ("contains control characters in U+0000
+ *   through U+001F"), so those values are quoted.
  * - §7.2: DEL (U+007F) is *not* in U+0000-U+001F, so it is neither escaped nor a reason to quote:
  *   the golden holds a bare 0x7F byte inside an unquoted value.
  * - §7.2: only U+0020 and U+0009 count as whitespace, so a leading or trailing NBSP (U+00A0) does
  *   not force quoting. The golden holds a bare C2 A0 at the edge of an unquoted value.
- * - §7.1 row 7: U+2028 LINE SEPARATOR is an ordinary BMP codepoint. It is emitted literally
- *   (E2 80 A8), not escaped, and it does not terminate a line (§12 splits lines on LF only).
+ * - §7.1 row 7: U+2028 LINE SEPARATOR is an ordinary BMP codepoint. It is emitted literally (E2 80
+ *   A8), not escaped, and it does not terminate a line (§12 splits lines on LF only).
  * - §7.1 row 8 / §16: supplementary codepoints are emitted as literal UTF-8, never as surrogate
  *   escapes; combining marks, ZWJ sequences and regional-indicator pairs pass through unchanged.
  * - §7.3 / §16: the bare-key pattern is ASCII-only, so non-ASCII map keys are always quoted even

@@ -1,11 +1,11 @@
 package com.lukelast.ktoon.rand
 
 import com.lukelast.ktoon.Ktoon
-import org.instancio.Instancio
-import org.instancio.settings.Keys
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.test.Test
+import org.instancio.Instancio
+import org.instancio.settings.Keys
 
 class InstancioRandomTest {
     @Test

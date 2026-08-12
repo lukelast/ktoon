@@ -1,7 +1,7 @@
 package com.lukelast.ktoon
 
-import org.openjdk.jmh.annotations.*
 import java.util.concurrent.TimeUnit
+import org.openjdk.jmh.annotations.*
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)

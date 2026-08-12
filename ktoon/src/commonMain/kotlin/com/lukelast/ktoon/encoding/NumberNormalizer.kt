@@ -34,9 +34,7 @@ internal object NumberNormalizer {
         return normalizeDecimalString(value.toString())
     }
 
-    /**
-     * Normalizes a numeric string: expands scientific notation and strips trailing zeros.
-     */
+    /** Normalizes a numeric string: expands scientific notation and strips trailing zeros. */
     private fun normalizeDecimalString(s: String): String {
         val eIndex = s.indexOfFirst { it == 'E' || it == 'e' }
 
@@ -50,8 +48,8 @@ internal object NumberNormalizer {
     }
 
     /**
-     * Expands scientific notation to plain decimal form.
-     * E.g., "1.5", 10 → "15000000000"; "1", -6 → "0.000001"
+     * Expands scientific notation to plain decimal form. E.g., "1.5", 10 → "15000000000"; "1", -6 →
+     * "0.000001"
      */
     private fun expandScientificNotation(mantissa: String, exponent: Int): String {
         val negative = mantissa.startsWith('-')
@@ -74,20 +72,21 @@ internal object NumberNormalizer {
         val currentDecimalPos = intPart.length
         val newDecimalPos = currentDecimalPos + exponent
 
-        val result = when {
-            newDecimalPos <= 0 -> {
-                // Need leading zeros: 0.000...digits
-                "0." + "0".repeat(-newDecimalPos) + allDigits
+        val result =
+            when {
+                newDecimalPos <= 0 -> {
+                    // Need leading zeros: 0.000...digits
+                    "0." + "0".repeat(-newDecimalPos) + allDigits
+                }
+                newDecimalPos >= allDigits.length -> {
+                    // Whole number, possibly with trailing zeros
+                    allDigits + "0".repeat(newDecimalPos - allDigits.length)
+                }
+                else -> {
+                    // Decimal point in the middle
+                    allDigits.substring(0, newDecimalPos) + "." + allDigits.substring(newDecimalPos)
+                }
             }
-            newDecimalPos >= allDigits.length -> {
-                // Whole number, possibly with trailing zeros
-                allDigits + "0".repeat(newDecimalPos - allDigits.length)
-            }
-            else -> {
-                // Decimal point in the middle
-                allDigits.substring(0, newDecimalPos) + "." + allDigits.substring(newDecimalPos)
-            }
-        }
 
         return if (negative) "-$result" else result
     }

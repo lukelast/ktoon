@@ -1,9 +1,9 @@
 package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
+import kotlin.test.Test
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.test.Test
 
 /**
  * Tests from arrays-tabular.json fixture - Tabular array encoding: arrays of uniform objects with

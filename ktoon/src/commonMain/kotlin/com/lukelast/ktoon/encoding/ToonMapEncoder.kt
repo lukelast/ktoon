@@ -25,7 +25,8 @@ internal class ToonMapEncoder(
     /**
      * Maps always encode all entries — unlike class properties, map entries don't have "default
      * values" in the serialization sense. An entry either exists or it doesn't. The
-     * [KtoonConfiguration.encodeDefaults] config applies to class properties with declared defaults.
+     * [KtoonConfiguration.encodeDefaults] config applies to class properties with declared
+     * defaults.
      */
     override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = true
 

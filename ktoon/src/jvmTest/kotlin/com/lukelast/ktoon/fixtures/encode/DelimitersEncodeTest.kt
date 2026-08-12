@@ -1,8 +1,8 @@
 package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
+import kotlinx.serialization.Serializable
 
 /**
  * Tests from delimiters.json fixture - Delimiter options: tab and pipe delimiters, delimiter-aware

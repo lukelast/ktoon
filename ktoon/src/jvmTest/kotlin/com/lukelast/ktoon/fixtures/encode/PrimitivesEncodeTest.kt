@@ -1,8 +1,8 @@
 package com.lukelast.ktoon.fixtures.encode
 
 import com.lukelast.ktoon.fixtures.runFixtureEncodeTest
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
+import kotlinx.serialization.Serializable
 
 /**
  * Tests from primitives.json fixture - Primitive value encoding: strings, numbers, booleans, null.

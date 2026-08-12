@@ -14,9 +14,9 @@ import kotlinx.serialization.Serializable
  *   containing `{}`).
  * - §9.2 – an empty *inner* array in an array of arrays is `- [0]:`; this is the only place a `[0`
  *   header is emitted.
- * - §9.4/§10 – objects with differing key sets stay in list form with the first field carried on the
- *   hyphen line; when that first field is an empty object the remaining fields sit at +1 under a
- *   bare `- key:`.
+ * - §9.4/§10 – objects with differing key sets stay in list form with the first field carried on
+ *   the hyphen line; when that first field is an empty object the remaining fields sit at +1 under
+ *   a bare `- key:`.
  * - §9.5 (negative) – an object of non-uniform / empty objects MUST NOT collapse into a keyed
  *   tabular `[N:]` header; it stays plainly nested.
  */

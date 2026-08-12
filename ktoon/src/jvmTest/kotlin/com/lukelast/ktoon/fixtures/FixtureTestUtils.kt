@@ -3,14 +3,14 @@ package com.lukelast.ktoon.fixtures
 import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonException
 import com.lukelast.ktoon.data1.jsonPretty
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 /**
  * Helper function to run a fixture test with a typed data class.

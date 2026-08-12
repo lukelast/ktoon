@@ -13,8 +13,8 @@ import kotlinx.serialization.Serializable
  * - numeric-like per `/^[+-]?[0-9]+(?:\.[0-9]+)?(?:e[+-]?[0-9]+)?$/i`: "+1", "05", "1e5", "1E5"
  * - leading/trailing whitespace, including a leading HTAB that also escapes to `\t` (§7.1)
  * - braces `{` and `}`
- * - near-misses that MUST stay bare: ".5", "1.", "1_000", "0x10", "NaN", "Infinity", "TRUE",
- *   "x-y", "a@b.c!?", "+abc"
+ * - near-misses that MUST stay bare: ".5", "1.", "1_000", "0x10", "NaN", "Infinity", "TRUE", "x-y",
+ *   "a@b.c!?", "+abc"
  * - tabular row cells carrying an escaped multi-line string next to a bare emoji cell
  *
  * Expected: exactly the "quote-required" group is quoted; the "stays bare" group is emitted

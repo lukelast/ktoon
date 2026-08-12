@@ -1,8 +1,8 @@
 package com.lukelast.ktoon.fixtures.decode
 
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
+import kotlinx.serialization.Serializable
 
 /**
  * Tests from whitespace.json fixture - Whitespace tolerance in decoding: surrounding spaces around

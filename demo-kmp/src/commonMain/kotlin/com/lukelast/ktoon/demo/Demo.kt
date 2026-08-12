@@ -4,16 +4,18 @@ import com.lukelast.ktoon.Ktoon
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-val sampleData = Company(
-    name = "Tech Corp",
-    employees = listOf(
-        User(1, "Alice", "admin"),
-        User(2, "Bob", "user"),
-        User(3, "Charlie", "user"),
-        User(4, "Dana", "user"),
-        User(5, "Eve", "guest"),
-    ),
-)
+val sampleData =
+    Company(
+        name = "Tech Corp",
+        employees =
+            listOf(
+                User(1, "Alice", "admin"),
+                User(2, "Bob", "user"),
+                User(3, "Charlie", "user"),
+                User(4, "Dana", "user"),
+                User(5, "Eve", "guest"),
+            ),
+    )
 
 private val json = Json { prettyPrint = true }
 

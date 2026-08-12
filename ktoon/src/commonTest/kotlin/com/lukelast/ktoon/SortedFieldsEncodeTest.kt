@@ -1,8 +1,8 @@
 package com.lukelast.ktoon
 
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.serialization.Serializable
 
 class SortedFieldsEncodeTest {
 

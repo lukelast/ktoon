@@ -1,10 +1,10 @@
 package com.lukelast.ktoon.fixtures.decode
 
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Tests from arrays-nested.json fixture - Nested and mixed array decoding: list format, arrays of

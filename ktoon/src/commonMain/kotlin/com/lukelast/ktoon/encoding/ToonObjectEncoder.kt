@@ -2,7 +2,6 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractEncoder

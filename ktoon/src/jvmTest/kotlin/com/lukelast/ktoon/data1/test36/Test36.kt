@@ -13,11 +13,10 @@ import kotlinx.serialization.Serializable
  * still quoted when it moves into an array header ("MUST be quoted in all contexts").
  *
  * Expected:
- * - bare: `true` (the boolean/null value rule of §7.2 does not apply to keys), `__proto__`,
- *   `_a.b9`
- * - quoted: "" (empty), "42" (leading digit), "2key" (leading digit), "a b" (space), "a:b"
- *   (colon), "#" (not in the pattern), "名前" (non-ASCII), plus "a\"b" / "a\nb" which are quoted
- *   and escaped per §7.1
+ * - bare: `true` (the boolean/null value rule of §7.2 does not apply to keys), `__proto__`, `_a.b9`
+ * - quoted: "" (empty), "42" (leading digit), "2key" (leading digit), "a b" (space), "a:b" (colon),
+ *   "#" (not in the pattern), "名前" (non-ASCII), plus "a\"b" / "a\nb" which are quoted and escaped
+ *   per §7.1
  * - array headers carry the quotes: `"my-list"[3]:` and `"row-data"[2]{"field name",ok}:`
  */
 class Test36 : Runner() {

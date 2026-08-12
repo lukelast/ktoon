@@ -1,10 +1,10 @@
 package com.lukelast.ktoon
 
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlinx.serialization.Serializable
 
 /** Direct checks of normative SPEC.md requirements beyond the fixture suite. */
 class KtoonSpecConformanceTest {
@@ -42,7 +42,8 @@ class KtoonSpecConformanceTest {
             nanFloat: null
             positiveFloat: null
             negativeFloat: null
-            """.trimIndent(),
+            """
+                .trimIndent(),
             strict.encodeToString(value),
         )
     }
@@ -105,9 +106,7 @@ class KtoonSpecConformanceTest {
         )
         assertEquals(
             listOf(mapOf("a" to "", "b" to "middle", "c" to "")),
-            strict.decodeFromString<List<Map<String, String>>>(
-                "[1]{a,b,c}:\n  ,middle,"
-            ),
+            strict.decodeFromString<List<Map<String, String>>>("[1]{a,b,c}:\n  ,middle,"),
         )
         assertEquals(
             mapOf("row" to mapOf("a" to "", "b" to "middle", "c" to "")),
@@ -120,17 +119,13 @@ class KtoonSpecConformanceTest {
     @Test
     fun `all surrogate escapes are rejected including an encoded surrogate pair`() {
         assertFailsWith<KtoonException> { strict.decodeFromString<String>("\"\\uDC00\"") }
-        assertFailsWith<KtoonException> {
-            strict.decodeFromString<String>("\"\\uD83D\\uDE80\"")
-        }
+        assertFailsWith<KtoonException> { strict.decodeFromString<String>("\"\\uD83D\\uDE80\"") }
     }
 
     @Test
     fun `literal control characters in quoted strings are rejected in every mode`() {
         for (ktoon in listOf(strict, lenient)) {
-            assertFailsWith<KtoonException> {
-                ktoon.decodeFromString<String>("\"a\u0004b\"")
-            }
+            assertFailsWith<KtoonException> { ktoon.decodeFromString<String>("\"a\u0004b\"") }
         }
     }
 
@@ -215,9 +210,7 @@ class KtoonSpecConformanceTest {
     fun `nested field groups reject a delimiter different from the header delimiter`() {
         val input = "[1|]{a|nested{x,y}}:\n  1|2|3"
 
-        assertFailsWith<KtoonException> {
-            strict.decodeFromString<List<Map<String, Int>>>(input)
-        }
+        assertFailsWith<KtoonException> { strict.decodeFromString<List<Map<String, Int>>>(input) }
     }
 
     @Test
@@ -236,10 +229,7 @@ class KtoonSpecConformanceTest {
 
         // §14.3 last-write-wins picks the value; §2's equality rule makes key order observable,
         // and the reference implementation keeps the key's first document position.
-        val decoded =
-            lenient.decodeFromString<Map<String, Int>>(
-                "a: 1\nb: 2\n\"\\u0061\": 3"
-            )
+        val decoded = lenient.decodeFromString<Map<String, Int>>("a: 1\nb: 2\n\"\\u0061\": 3")
 
         assertEquals(listOf("a", "b"), decoded.keys.toList())
         assertEquals(mapOf("a" to 3, "b" to 2), decoded)
