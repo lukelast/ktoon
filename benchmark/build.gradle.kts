@@ -2,7 +2,10 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlinx.benchmark)
+    alias(libs.plugins.ktfmt)
 }
+
+ktfmt { kotlinLangStyle() }
 
 benchmark { targets { register("main") } }
 

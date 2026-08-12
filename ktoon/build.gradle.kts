@@ -6,7 +6,10 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.android.kmp)
     alias(libs.plugins.maven.publish)
+    alias(libs.plugins.ktfmt)
 }
+
+ktfmt { kotlinLangStyle() }
 
 group = "com.lukelast.ktoon"
 
