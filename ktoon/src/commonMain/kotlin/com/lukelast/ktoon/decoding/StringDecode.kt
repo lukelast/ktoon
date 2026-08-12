@@ -33,13 +33,16 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                                 column + i,
                             )
                         val hex = str.substring(i + 2, i + 6)
-                        val code =
-                            hex.toIntOrNull(16)
-                                ?: throw KtoonParsingException.invalidEscapeSequence(
-                                    "\\u$hex",
-                                    line,
-                                    column + i,
-                                )
+                        // §7.1: exactly 4HEXDIG. toIntOrNull(16) would also accept a leading
+                        // sign, so validate the characters directly.
+                        if (!hex.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) {
+                            throw KtoonParsingException.invalidEscapeSequence(
+                                "\\u$hex",
+                                line,
+                                column + i,
+                            )
+                        }
+                        val code = hex.toInt(16)
                         // §7.1: escapes must denote Unicode scalar values; surrogate code points
                         // are never valid (supplementary characters appear as literal UTF-8).
                         if (code in 0xD800..0xDFFF) {
@@ -68,6 +71,16 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                 return sb.toString()
             }
             else -> {
+                // §7.1 quoted-char excludes literal C0 controls other than HTAB. Those values
+                // must use one of the short escapes or a \uXXXX escape.
+                if (c.code < 0x20 && c != '\t') {
+                    val codePoint = c.code.toString(16).uppercase().padStart(4, '0')
+                    throw KtoonParsingException(
+                        "Unescaped control character U+$codePoint",
+                        line,
+                        column + i,
+                    )
+                }
                 sb.append(c)
                 i++
             }

@@ -1,11 +1,14 @@
 package com.lukelast.ktoon.fixtures
 
 import com.lukelast.ktoon.Ktoon
+import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonException
 import com.lukelast.ktoon.decoding.ToonLexer
 import com.lukelast.ktoon.decoding.ToonReader
 import com.lukelast.ktoon.decoding.ToonValue
 import java.math.BigDecimal
+import kotlin.test.assertEquals
+import kotlin.test.fail
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -14,16 +17,14 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.assertEquals
-import kotlin.test.fail
 
 /**
  * Runs every case in every fixture file, so fixture coverage never depends on a hand-written test
  * existing for each case.
  *
  * Encode cases go through [Ktoon.encodeJsonToToon]. Decode cases go through the internal
- * lexer/reader (there is no public generic TOON→JSON API yet) and compare against the expected
- * JSON using the spec's JSON-model equality: ordered object keys, mathematical number equality.
+ * lexer/reader (there is no public generic TOON→JSON API yet) and compare against the expected JSON
+ * using the spec's JSON-model equality: ordered object keys, mathematical number equality.
  */
 class FixtureSweepTest {
 
@@ -71,7 +72,7 @@ class FixtureSweepTest {
 
     private fun decodeToJson(
         toon: String,
-        config: com.lukelast.ktoon.KtoonConfiguration,
+        config: KtoonConfiguration,
     ): JsonElement {
         val root =
             try {
@@ -90,8 +91,7 @@ class FixtureSweepTest {
             is ToonValue.Boolean -> JsonPrimitive(value)
             is ToonValue.Number -> JsonPrimitive(value)
             is ToonValue.String -> JsonPrimitive(value)
-            is ToonValue.Object ->
-                JsonObject(properties.mapValues { (_, v) -> v.toJsonElement() })
+            is ToonValue.Object -> JsonObject(properties.mapValues { (_, v) -> v.toJsonElement() })
             is ToonValue.Array -> JsonArray(elements.map { it.toJsonElement() })
         }
 

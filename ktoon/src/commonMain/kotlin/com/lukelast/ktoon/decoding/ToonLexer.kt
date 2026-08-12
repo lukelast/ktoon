@@ -44,19 +44,22 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
 
     /** Processes a single line of TOON input. */
     private fun processLine(line: String) {
-        // Emit blank line token (§12: whitespace-only lines are blank)
-        if (line.isBlank()) {
+        // Emit blank line token. Only indentation characters are blank here; other Unicode
+        // whitespace such as NBSP remains token content (§12).
+        if (line.all { it == ' ' || it == '\t' }) {
             tokens.add(Token.BlankLine(currentLine))
             return
         }
 
         // Count leading spaces for indentation
         val indent = countLeadingSpaces(line)
-        val trimmed = line.trimStart()
+        // §12: only spaces and, in non-strict mode, leading indentation tabs are indentation.
+        // Other Unicode whitespace (for example NBSP) is token content and must be preserved.
+        val trimmed = line.trimStart(' ', '\t')
 
         // Check for dash (list-item marker). Trailing spaces are already stripped, so a hyphen
         // followed only by spaces has become the bare marker "-" (§12).
-        if (trimmed.startsWith("- ") || trimmed == "-") {
+        if (indent > 0 && (trimmed.startsWith("- ") || trimmed == "-")) {
             tokens.add(Token.Dash(indent, currentLine))
             val value = if (trimmed.length > 1) trimmed.substring(2).trimSpaces() else ""
             if (value.isNotEmpty()) {

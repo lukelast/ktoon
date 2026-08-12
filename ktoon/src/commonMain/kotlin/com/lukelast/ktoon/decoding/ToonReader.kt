@@ -201,12 +201,11 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         line: Int,
     ) {
         // §14.3: duplicate sibling keys error in strict mode; last-write-wins in non-strict mode.
+        // The surviving entry keeps the key's first document position (plain put on an
+        // insertion-ordered map), matching the reference implementation — §2's equality rule
+        // makes key order observable, so the position is part of conformance.
         if (config.strictMode && properties.containsKey(key)) {
             throw KtoonValidationException.duplicateKey(key, line)
-        }
-        if (!config.strictMode && properties.containsKey(key)) {
-            // Remove first so the surviving entry takes the later document position.
-            properties.remove(key)
         }
         properties[key] = value
     }
@@ -489,8 +488,8 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                     buildRowObject(field.group, cells, cursor, line)
                 }
             // Duplicate field names apply last-write-wins in non-strict mode (§9.3); strict mode
-            // already rejected them from the header line alone.
-            properties.remove(name)
+            // already rejected them from the header line alone. A plain put keeps the first
+            // document position, matching the reference implementation.
             properties[name] = value
         }
         return ToonValue.Object(properties)
@@ -498,11 +497,10 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
 
     /** §9.3/§14.2: repeated field names within one field list are a strict-mode header defect. */
     private fun validateFieldNames(fields: List<FieldNode>, line: Int) {
-        if (!config.strictMode) return
         val seen = mutableSetOf<String>()
         for (field in fields) {
             val name = unquote(field.name, line)
-            if (!seen.add(name)) {
+            if (config.strictMode && !seen.add(name)) {
                 throw KtoonValidationException("Duplicate field name: '$name'", line)
             }
             if (field.group != null) validateFieldNames(field.group, line)
