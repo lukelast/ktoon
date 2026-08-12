@@ -19,6 +19,7 @@ ktoon/src/
 - `./gradlew :ktoon:compileKotlinJvm` — compile JVM target
 - `./gradlew :ktoon:compileKotlinJs` — compile JS target
 - `./gradlew kotlinUpgradeYarnLock` — update kotlin-js-store/yarn.lock
+- `./gradlew ktfmtFormat` — format all Kotlin sources
 
 ## Testing
 
@@ -46,7 +47,3 @@ Published artifacts:
 - `ktoon` — Gradle metadata module
 - `ktoon-jvm` — JVM artifact
 - `ktoon-js` — JavaScript artifact
-
-## Maintenance
-
-

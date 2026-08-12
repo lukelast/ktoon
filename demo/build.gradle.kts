@@ -1,8 +1,11 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ktfmt)
     application
 }
+
+ktfmt { kotlinLangStyle() }
 
 dependencies {
     // Normally add the dependency from maven central like:
