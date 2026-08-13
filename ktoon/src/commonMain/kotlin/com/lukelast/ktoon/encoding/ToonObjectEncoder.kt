@@ -25,8 +25,15 @@ internal class ToonObjectEncoder(
     override fun encodeNumberLiteral(literal: String) =
         writePrimitiveField(NumberNormalizer.normalizeLiteral(literal))
 
-    private var elementIndex = 0
     private var currentKey: String? = null
+
+    /**
+     * Whether a field has been written yet. A separating newline goes before every field but the
+     * first *written* one — the descriptor index is not the same thing, because a field can be
+     * skipped (a default, or `@EncodeDefault(NEVER)`) and would then leave the document starting
+     * with a blank line.
+     */
+    private var wroteAnyField = false
 
     // Sorting support: buffer fields when sortFields is enabled
     private val bufferedFields: MutableList<Pair<String, String>>? =
@@ -40,7 +47,6 @@ internal class ToonObjectEncoder(
         config.encodeDefaults
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
-        elementIndex = index
         currentKey = descriptor.getElementName(index)
 
         // Start capturing to field buffer if sorting
@@ -52,10 +58,11 @@ internal class ToonObjectEncoder(
             return true
         }
 
-        if (!isRoot || elementIndex > 0) {
+        if (!isRoot || wroteAnyField) {
             rawWriter.writeNewline()
         }
         rawWriter.writeIndent(indentLevel)
+        wroteAnyField = true
         return true
     }
 
