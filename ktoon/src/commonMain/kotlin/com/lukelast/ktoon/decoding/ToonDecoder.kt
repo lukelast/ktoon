@@ -2,6 +2,7 @@ package com.lukelast.ktoon.decoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonDecodingException
+import com.lukelast.ktoon.util.isObjectKind
 import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -224,8 +225,7 @@ internal class ToonPrimitiveDecoder(
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         // A root value reaches this decoder directly, so the shape check that nested values get
         // from createDecoderForStructure has to happen here too.
-        val kind = descriptor.kind
-        if (kind is StructureKind) requireShape(kind, value)
+        requireShape(descriptor, value)
         return this
     }
 }
@@ -565,17 +565,17 @@ internal class ToonMapDecoder(
  * empty map that the document never contained. Nullable types never reach here — kotlinx asks
  * `decodeNotNullMark` first.
  */
-private fun requireShape(kind: StructureKind, value: ToonValue): ToonValue {
+private fun requireShape(descriptor: SerialDescriptor, value: ToonValue): ToonValue {
     val expected =
-        when (kind) {
-            StructureKind.CLASS,
-            StructureKind.OBJECT -> "Object"
-            StructureKind.MAP -> "Map"
-            StructureKind.LIST -> "Array"
+        when {
+            descriptor.isObjectKind() -> "Object"
+            descriptor.kind == StructureKind.MAP -> "Map"
+            descriptor.kind == StructureKind.LIST -> "Array"
             else -> return value
         }
     val matches =
-        if (kind == StructureKind.LIST) value is ToonValue.Array else value is ToonValue.Object
+        if (descriptor.kind == StructureKind.LIST) value is ToonValue.Array
+        else value is ToonValue.Object
     if (!matches) {
         throw KtoonDecodingException.typeMismatch(expected, value::class.simpleName ?: "unknown")
     }
@@ -590,15 +590,14 @@ internal fun createDecoderForStructure(
     config: KtoonConfiguration,
     fallback: CompositeDecoder,
 ): CompositeDecoder {
-    val kind = descriptor.kind
-    if (kind !is StructureKind) return fallback
-    val target = requireShape(kind, value)
-    return when (kind) {
-        StructureKind.CLASS,
-        StructureKind.OBJECT ->
+    val target = requireShape(descriptor, value)
+    return when {
+        descriptor.isObjectKind() ->
             ToonObjectDecoder(target as ToonValue.Object, serializersModule, config)
-        StructureKind.LIST -> ToonArrayDecoder(target as ToonValue.Array, serializersModule, config)
-        StructureKind.MAP -> ToonMapDecoder(target as ToonValue.Object, serializersModule, config)
+        descriptor.kind == StructureKind.LIST ->
+            ToonArrayDecoder(target as ToonValue.Array, serializersModule, config)
+        descriptor.kind == StructureKind.MAP ->
+            ToonMapDecoder(target as ToonValue.Object, serializersModule, config)
         else -> fallback
     }
 }

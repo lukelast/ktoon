@@ -2,6 +2,7 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonEncodingException
+import com.lukelast.ktoon.util.isObjectKind
 import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -109,8 +110,8 @@ internal class ToonMapEncoder(
     }
 
     private fun delegateStructure(descriptor: SerialDescriptor, key: String): CompositeEncoder {
-        return when (descriptor.kind) {
-            StructureKind.LIST -> {
+        return when {
+            descriptor.kind == StructureKind.LIST -> {
                 ToonArrayEncoder(
                     writer = writer,
                     config = config,
@@ -119,8 +120,7 @@ internal class ToonMapEncoder(
                     key = key,
                 )
             }
-            StructureKind.CLASS,
-            StructureKind.OBJECT -> {
+            descriptor.isObjectKind() -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     ElementCapturer(config, serializersModule, descriptor) { entries ->
                         ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
@@ -136,7 +136,7 @@ internal class ToonMapEncoder(
                     )
                 }
             }
-            StructureKind.MAP -> {
+            descriptor.kind == StructureKind.MAP -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     MapElementCapturer(config, serializersModule) { entries ->
                         ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)

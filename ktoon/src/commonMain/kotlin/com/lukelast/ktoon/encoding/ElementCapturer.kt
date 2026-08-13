@@ -2,6 +2,7 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonEncodingException
+import com.lukelast.ktoon.util.isObjectKind
 import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -105,17 +106,16 @@ internal class ElementCapturer(
         }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
-        when (descriptor.kind) {
-            StructureKind.LIST ->
+        when {
+            descriptor.kind == StructureKind.LIST ->
                 ElementCapturer(config, serializersModule, descriptor) {
                     add(EncodedElement.NestedArray(it.map { (_, v) -> v }))
                 }
-            StructureKind.CLASS,
-            StructureKind.OBJECT ->
+            descriptor.isObjectKind() ->
                 ElementCapturer(config, serializersModule, descriptor) {
                     add(EncodedElement.Structure(it))
                 }
-            StructureKind.MAP ->
+            descriptor.kind == StructureKind.MAP ->
                 MapElementCapturer(config, serializersModule) { add(EncodedElement.Structure(it)) }
             else -> this
         }
@@ -220,17 +220,16 @@ internal class MapElementCapturer(
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         require(!isKey) { "TOON does not support complex keys in maps" }
-        return when (descriptor.kind) {
-            StructureKind.LIST ->
+        return when {
+            descriptor.kind == StructureKind.LIST ->
                 ElementCapturer(config, serializersModule, descriptor) {
                     addValue(EncodedElement.NestedArray(it.map { (_, v) -> v }))
                 }
-            StructureKind.CLASS,
-            StructureKind.OBJECT ->
+            descriptor.isObjectKind() ->
                 ElementCapturer(config, serializersModule, descriptor) {
                     addValue(EncodedElement.Structure(it))
                 }
-            StructureKind.MAP ->
+            descriptor.kind == StructureKind.MAP ->
                 MapElementCapturer(config, serializersModule) {
                     addValue(EncodedElement.Structure(it))
                 }
