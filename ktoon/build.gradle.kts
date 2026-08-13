@@ -8,9 +8,14 @@ plugins {
     alias(libs.plugins.android.kmp)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.ktfmt)
+    alias(libs.plugins.detekt)
 }
 
 ktfmt { kotlinLangStyle() }
+
+// `detekt` is an empty lifecycle task in KMP; the two JVM compilation tasks cover every source
+// file once with type resolution. Non-JVM source sets need their detekt<Name>SourceSet added.
+tasks.named("detekt") { dependsOn(tasks.named("detektMainJvm"), tasks.named("detektTestJvm")) }
 
 group = "com.lukelast.ktoon"
 
