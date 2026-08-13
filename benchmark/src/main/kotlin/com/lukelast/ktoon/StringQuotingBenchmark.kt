@@ -12,6 +12,9 @@ import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 
+/** Length of the "long_string" input case. */
+private const val LONG_STRING_LENGTH = 1000
+
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -39,7 +42,7 @@ open class StringQuotingBenchmark {
                 "numeric_like_123" -> "12345"
                 "numeric_like_05" -> "05"
                 "special_chars" -> "string:with[special]chars"
-                "long_string" -> "a".repeat(1000)
+                "long_string" -> "a".repeat(LONG_STRING_LENGTH)
                 "key_valid" -> "valid.key_name"
                 "key_invalid" -> "invalid key name"
                 else -> "default"

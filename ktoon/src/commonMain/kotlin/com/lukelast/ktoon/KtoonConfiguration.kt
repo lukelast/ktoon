@@ -1,5 +1,8 @@
 package com.lukelast.ktoon
 
+/** Upper bound for [KtoonConfiguration.indentSize]; deeper is almost certainly a mistake. */
+private const val MAX_INDENT_SIZE = 16
+
 /**
  * Configuration for TOON format encoding and decoding.
  *
@@ -18,7 +21,9 @@ data class KtoonConfiguration(
 ) {
     init {
         require(indentSize > 0) { "indentSize must be positive, got $indentSize" }
-        require(indentSize <= 16) { "indentSize must be <= 16, got $indentSize" }
+        require(indentSize <= MAX_INDENT_SIZE) {
+            "indentSize must be <= $MAX_INDENT_SIZE, got $indentSize"
+        }
     }
 
     /** Delimiter character for separating values in inline arrays and tabular format. */

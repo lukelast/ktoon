@@ -5,6 +5,22 @@ import com.lukelast.ktoon.KtoonEncodingException
 import com.lukelast.ktoon.util.isAlpha
 import com.lukelast.ktoon.util.isDigit
 
+/** Number of hex digits in a `\uXXXX` escape (§7.1). */
+private const val UNICODE_ESCAPE_DIGITS = 4
+
+private const val HEX_RADIX = 16
+
+/** First character allowed to appear literally; C0 controls below it always require quoting. */
+private const val FIRST_LITERAL_CHAR = 0x20
+
+/** Size of the ASCII table, the range covered by the SPECIAL_CHARS lookup. */
+private const val ASCII_TABLE_SIZE = 128
+
+/** §7.2: values spelled as one of these must be quoted so they do not decode as non-strings. */
+private const val LITERAL_TRUE = "true"
+private const val LITERAL_NULL = "null"
+private const val LITERAL_FALSE = "false"
+
 /** Utility for quoting and unquoting strings according to TOON format rules. */
 internal object StringQuoting {
 
@@ -16,11 +32,11 @@ internal object StringQuoting {
 
     // Lookup table for characters that ALWAYS require quoting (except delimiter which is dynamic)
     // Indices correspond to ASCII values.
-    private val SPECIAL_CHARS = BooleanArray(128)
+    private val SPECIAL_CHARS = BooleanArray(ASCII_TABLE_SIZE)
 
     init {
-        // Control characters (0-31)
-        for (i in 0..31) {
+        // Control characters, everything below the first character that may appear literally
+        for (i in 0 until FIRST_LITERAL_CHAR) {
             SPECIAL_CHARS[i] = true
         }
         // Specific special characters
@@ -51,7 +67,8 @@ internal object StringQuoting {
 
     private fun unpairedSurrogate(c: Char): Nothing =
         throw KtoonEncodingException(
-            "Unpaired surrogate U+${c.code.toString(16).uppercase().padStart(4, '0')} " +
+            "Unpaired surrogate " +
+                "U+${c.code.toString(HEX_RADIX).uppercase().padStart(UNICODE_ESCAPE_DIGITS, '0')} " +
                 "cannot be encoded to TOON"
         )
 
@@ -68,7 +85,8 @@ internal object StringQuoting {
         val first = str[0]
         if (first == '-') return true // Starts with hyphen
         if (first == '#') return true // §7.2: would read as a comment line on decode
-        if (first.code < 128 && SPECIAL_CHARS[first.code]) return true // Control or special
+        if (first.code < ASCII_TABLE_SIZE && SPECIAL_CHARS[first.code])
+            return true // Control or special
 
         // Check last character (trailing whitespace)
         // Leading whitespace is covered by control check (0-31 includes space? No, space is 32)
@@ -80,8 +98,9 @@ internal object StringQuoting {
         // Check for specific keywords (§7.2 applies to values only; §7.3 keys quote purely by
         // the bare-key pattern, so a key spelled "true" stays bare)
         if (context != QuotingContext.OBJECT_KEY) {
-            if (len == 4 && (str == "true" || str == "null")) return true
-            if (len == 5 && str == "false") return true
+            if (len == LITERAL_TRUE.length && (str == LITERAL_TRUE || str == LITERAL_NULL))
+                return true
+            if (len == LITERAL_FALSE.length && str == LITERAL_FALSE) return true
         }
 
         // Single pass loop
@@ -99,7 +118,7 @@ internal object StringQuoting {
             val code = c.code
 
             // 1. Check special chars and delimiter
-            if (code < 128) {
+            if (code < ASCII_TABLE_SIZE) {
                 if (SPECIAL_CHARS[code]) return true
             }
             if (c == delimiter) {
@@ -181,9 +200,9 @@ internal object StringQuoting {
                 '\t' -> sb.append("\\t")
                 else ->
                     // §7.1: control characters outside \n, \r, \t are emitted as \uXXXX
-                    if (c.code < 0x20) {
+                    if (c.code < FIRST_LITERAL_CHAR) {
                         sb.append("\\u")
-                        sb.append(c.code.toString(16).padStart(4, '0'))
+                        sb.append(c.code.toString(HEX_RADIX).padStart(UNICODE_ESCAPE_DIGITS, '0'))
                     } else {
                         sb.append(c)
                     }

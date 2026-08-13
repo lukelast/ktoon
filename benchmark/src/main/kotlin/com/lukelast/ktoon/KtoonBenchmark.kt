@@ -16,6 +16,12 @@ import kotlinx.serialization.Serializable
 import org.instancio.Instancio
 import org.instancio.settings.Keys
 
+// Shape of the generated benchmark payload: fixed so runs are comparable.
+private const val COLLECTION_SIZE = 200
+private const val MIN_STRING_LENGTH = 25
+private const val MAX_STRING_LENGTH = 50
+private const val MIN_LONG_VALUE = 100L
+
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(BenchmarkTimeUnit.MICROSECONDS)
@@ -30,11 +36,11 @@ open class KtoonBenchmark {
         data =
             Instancio.of(BenchmarkData::class.java)
                 .withSeed(0)
-                .withSetting(Keys.COLLECTION_MIN_SIZE, 200)
-                .withSetting(Keys.COLLECTION_MAX_SIZE, 200)
-                .withSetting(Keys.STRING_MIN_LENGTH, 25)
-                .withSetting(Keys.STRING_MAX_LENGTH, 50)
-                .withSetting(Keys.LONG_MIN, 100)
+                .withSetting(Keys.COLLECTION_MIN_SIZE, COLLECTION_SIZE)
+                .withSetting(Keys.COLLECTION_MAX_SIZE, COLLECTION_SIZE)
+                .withSetting(Keys.STRING_MIN_LENGTH, MIN_STRING_LENGTH)
+                .withSetting(Keys.STRING_MAX_LENGTH, MAX_STRING_LENGTH)
+                .withSetting(Keys.LONG_MIN, MIN_LONG_VALUE)
                 .withSetting(Keys.LONG_MAX, Int.MAX_VALUE.toLong())
                 .create()
     }
