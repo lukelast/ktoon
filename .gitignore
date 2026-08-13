@@ -9,3 +9,4 @@ benchmark.jfr
 AGENTS.md
 CLAUDE.md
 local.properties
+.workflow/
