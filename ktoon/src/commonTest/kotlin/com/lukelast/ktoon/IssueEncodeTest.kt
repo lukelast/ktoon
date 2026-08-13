@@ -3,6 +3,7 @@ package com.lukelast.ktoon
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -65,6 +66,18 @@ class IssueEncodeTest {
     fun `float map keys that share a normalized value stay distinct`() {
         val floats = linkedMapOf(Float.POSITIVE_INFINITY to 1, Float.NEGATIVE_INFINITY to 2)
         assertEquals("Infinity: 1\n\"-Infinity\": 2", Ktoon().encodeToString(floats))
+    }
+
+    @Serializable
+    data class SkippedFirst(
+        @EncodeDefault(EncodeDefault.Mode.NEVER) val a: String = "d",
+        val b: Int = 5,
+    )
+
+    @Test
+    fun `omitting the first field does not start the document with a blank line`() {
+        assertEquals("b: 5", Ktoon().encodeToString(SkippedFirst()))
+        assertEquals("a: x\nb: 5", Ktoon().encodeToString(SkippedFirst(a = "x")))
     }
 
     @Serializable data class OneString(val value: String)
