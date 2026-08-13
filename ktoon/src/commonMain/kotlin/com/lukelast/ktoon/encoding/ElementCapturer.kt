@@ -108,7 +108,12 @@ internal class ElementCapturer(
         }
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        onComplete(entries)
+        // The sortFields option orders an object's declared fields alphabetically. Array elements
+        // and map entries keep their encounter order, so only class/object captures are sorted.
+        val sortable =
+            config.sortFields &&
+                (descriptor.kind == StructureKind.CLASS || descriptor.kind == StructureKind.OBJECT)
+        onComplete(if (sortable) entries.sortedBy { it.first } else entries)
     }
 }
 
