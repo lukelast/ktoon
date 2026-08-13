@@ -80,6 +80,21 @@ class IssueEncodeTest {
         assertEquals("a: x\nb: 5", Ktoon().encodeToString(SkippedFirst(a = "x")))
     }
 
+    @Serializable data class MixedKeyed(val alpha: Point, val beta: Point, val note: String = "n")
+
+    @Test
+    fun `an object whose non-object field is omitted still uses keyed tabular form`() {
+        // §9.5: the form follows the value's shape, and the omitted field is not part of it.
+        val value = MixedKeyed(Point(y = 2, x = 1), Point(y = 4, x = 3))
+        val omitted = Ktoon { encodeDefaults = false }
+        assertEquals("[2:]{y,x}:\n  alpha: 2,1\n  beta: 4,3", omitted.encodeToString(value))
+        // With the field present the object is not uniform, so it stays in ordinary form.
+        assertEquals(
+            "alpha:\n  y: 2\n  x: 1\nbeta:\n  y: 4\n  x: 3\nnote: n",
+            Ktoon().encodeToString(value),
+        )
+    }
+
     @Serializable data class OneString(val value: String)
 
     @Test
