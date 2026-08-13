@@ -31,8 +31,8 @@ fun loadAllFixtures(directoryPath: String): Map<String, ToonFixture> {
 
     return directory
         .listFiles { file -> file.extension == "json" }
-        ?.associate { file -> file.name to loadFixture("$directoryPath/${file.name}") }
-        ?: emptyMap()
+        .orEmpty()
+        .associate { file -> file.name to loadFixture("$directoryPath/${file.name}") }
 }
 
 fun loadEncodeFixtures(): Map<String, ToonFixture> {

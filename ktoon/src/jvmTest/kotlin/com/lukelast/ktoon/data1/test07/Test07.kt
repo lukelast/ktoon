@@ -1,6 +1,11 @@
 package com.lukelast.ktoon.data1.test07
 
-import com.lukelast.ktoon.data1.*
+import com.lukelast.ktoon.data1.EngineSpec
+import com.lukelast.ktoon.data1.Garage
+import com.lukelast.ktoon.data1.LapTime
+import com.lukelast.ktoon.data1.Modification
+import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.SportsCar
 
 /**
  * Heavy testing with 3 sports cars. Tests large tabular arrays, mixed nulls, long primitive lists,

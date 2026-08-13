@@ -2,7 +2,11 @@ package com.lukelast.ktoon.demo.encode
 
 import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonConfiguration
-import com.lukelast.ktoon.demo.*
+import com.lukelast.ktoon.demo.Ceo
+import com.lukelast.ktoon.demo.Company
+import com.lukelast.ktoon.demo.ParentCompany
+import com.lukelast.ktoon.demo.User
+import com.lukelast.ktoon.demo.json
 
 fun main() {
     val data =

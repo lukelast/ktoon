@@ -589,7 +589,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                         // A header-shaped line at entry depth is still an entry row (§9.5)
                         if (token.indent <= header.indent) break
                         advance()
-                        var raw = token.rawContent
+                        val raw = token.rawContent
                         if (position < tokens.size) {
                             val paired = tokens[position]
                             if (paired is Token.InlineArrayValue && paired.line == token.line) {

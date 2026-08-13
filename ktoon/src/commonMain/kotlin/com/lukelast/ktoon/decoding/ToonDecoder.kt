@@ -381,7 +381,7 @@ internal class ToonMapDecoder(
             return ToonPrimitiveDecoder(ToonValue.String(key), serializersModule)
         }
 
-        val element = value.properties[key]!!
+        val element = value.properties.getValue(key)
         return createDecoderForStructure(
             descriptor,
             element,
@@ -440,7 +440,7 @@ internal class ToonMapDecoder(
             if (isKey) {
                 ToonPrimitiveDecoder(ToonValue.String(key), serializersModule)
             } else {
-                val element = value.properties[key]!!
+                val element = value.properties.getValue(key)
                 ToonPrimitiveDecoder(element, serializersModule)
             }
         return decode(decoder)

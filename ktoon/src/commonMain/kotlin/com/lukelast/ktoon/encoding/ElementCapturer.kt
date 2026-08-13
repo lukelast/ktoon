@@ -19,7 +19,7 @@ internal class ElementCapturer(
 
     private val values = mutableListOf<Pair<String, EncodedElement>>()
     private var currentIndex = -1
-    private var isArray = descriptor.kind == StructureKind.LIST
+    private val isArray = descriptor.kind == StructureKind.LIST
 
     private fun add(value: EncodedElement) {
         val name =
@@ -181,9 +181,7 @@ internal class MapElementCapturer(
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-        if (isKey) {
-            throw IllegalArgumentException("TOON does not support complex keys in maps")
-        }
+        require(!isKey) { "TOON does not support complex keys in maps" }
         return when (descriptor.kind) {
             StructureKind.LIST ->
                 ElementCapturer(config, serializersModule, descriptor) {

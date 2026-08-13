@@ -59,7 +59,7 @@ data class FixtureTestCase(
     val specSection: String? = null,
     val note: String? = null,
     val minSpecVersion: String? = null,
-) {}
+)
 
 /**
  * Configuration options for encoding/decoding tests.

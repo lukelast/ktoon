@@ -63,7 +63,7 @@ class KtoonEncodeDefaultsTest {
         assertEquals(value, decoded)
     }
 
-    private fun expected(value: String?): String = value?.let { "value: $it" } ?: ""
+    private fun expected(value: String?): String = value?.let { "value: $it" }.orEmpty()
 }
 
 private const val DEFAULT_VALUE = "default"

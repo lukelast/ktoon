@@ -80,13 +80,10 @@ internal class ToonMapEncoder(
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-        if (isKey) {
-            throw IllegalArgumentException("TOON does not support complex keys in maps")
-        } else {
-            val key = currentKey ?: error("Map value structure started without preceding key")
-            currentKey = null
-            return delegateStructure(descriptor, key)
-        }
+        require(!isKey) { "TOON does not support complex keys in maps" }
+        val key = currentKey ?: error("Map value structure started without preceding key")
+        currentKey = null
+        return delegateStructure(descriptor, key)
     }
 
     private fun delegateStructure(descriptor: SerialDescriptor, key: String): CompositeEncoder {

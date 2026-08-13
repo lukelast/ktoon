@@ -2,7 +2,16 @@ package com.lukelast.ktoon
 
 import br.com.vexpera.ktoon.Toon
 import dev.toonformat.jtoon.JToon
-import kotlinx.benchmark.*
+import kotlinx.benchmark.Benchmark
+import kotlinx.benchmark.BenchmarkMode
+import kotlinx.benchmark.BenchmarkTimeUnit
+import kotlinx.benchmark.Measurement
+import kotlinx.benchmark.Mode
+import kotlinx.benchmark.OutputTimeUnit
+import kotlinx.benchmark.Scope
+import kotlinx.benchmark.Setup
+import kotlinx.benchmark.State
+import kotlinx.benchmark.Warmup
 import kotlinx.serialization.Serializable
 import org.instancio.Instancio
 import org.instancio.settings.Keys

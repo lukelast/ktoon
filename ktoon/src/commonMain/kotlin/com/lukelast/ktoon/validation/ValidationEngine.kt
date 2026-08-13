@@ -113,14 +113,13 @@ internal class ValidationEngine(private val config: KtoonConfiguration) {
      * - No leading zeros (except "0")
      *
      * @param numberStr The number string to validate
-     * @param line Line number for error reporting
      * @return true if valid, false otherwise
      */
-    fun validateNumberFormat(numberStr: String, line: Int): Boolean {
+    fun validateNumberFormat(numberStr: String): Boolean {
         if (!config.strictMode) return true
 
         // Try to parse as a number
-        val parsed = numberStr.toDoubleOrNull() ?: return false
+        if (numberStr.toDoubleOrNull() == null) return false
 
         // Check for scientific notation (should not be present in TOON)
         if (numberStr.contains('e', ignoreCase = true)) {
@@ -154,11 +153,9 @@ internal class ValidationEngine(private val config: KtoonConfiguration) {
      * - \t (tab)
      *
      * @param escapeChar The character after the backslash
-     * @param line Line number for error reporting
-     * @param column Column number for error reporting
      * @return true if valid, false otherwise
      */
-    fun validateEscapeSequence(escapeChar: Char, line: Int, column: Int): Boolean {
+    fun validateEscapeSequence(escapeChar: Char): Boolean {
         if (!config.strictMode) return true
 
         return when (escapeChar) {
