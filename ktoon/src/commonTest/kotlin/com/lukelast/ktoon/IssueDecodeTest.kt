@@ -175,6 +175,19 @@ class IssueDecodeTest {
         }
     }
 
+    @Test
+    fun `a number or boolean does not decode as a string`() {
+        // §7.4: a string that looks like a literal is quoted, so an unquoted one is a real
+        // number or boolean and the document is mistyped.
+        for (ktoon in listOf(strict, lenient)) {
+            assertFailsWith<KtoonException> { ktoon.decodeFromString<OneString>("key: 42") }
+            assertFailsWith<KtoonException> { ktoon.decodeFromString<OneString>("key: false") }
+            assertFailsWith<KtoonException> { ktoon.decodeFromString<OneString>("key: null") }
+            assertEquals(OneString("42"), ktoon.decodeFromString<OneString>("key: \"42\""))
+            assertEquals(OneString("plain"), ktoon.decodeFromString<OneString>("key: plain"))
+        }
+    }
+
     @Serializable data class OneLong(val value: Long)
 
     @Test
