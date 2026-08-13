@@ -175,6 +175,45 @@ class IssueDecodeTest {
         }
     }
 
+    @Serializable data class OneLong(val value: Long)
+
+    @Test
+    fun `a number outside the requested type's range is rejected`() {
+        assertFailsWith<KtoonException> { strict.decodeFromString<OneInt>("value: 2147483648") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<OneInt>("value: -2147483649") }
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<OneLong>("value: 9223372036854775808")
+        }
+        assertEquals(OneInt(2147483647), strict.decodeFromString("value: 2147483647"))
+        assertEquals(
+            OneLong(9223372036854775807),
+            strict.decodeFromString("value: 9223372036854775807"),
+        )
+    }
+
+    @Test
+    fun `a fractional number is not truncated into an integer field`() {
+        assertFailsWith<KtoonException> { strict.decodeFromString<OneInt>("value: 1.5") }
+        assertEquals(OneInt(15), strict.decodeFromString("value: 1.5e1"))
+    }
+
+    @Test
+    fun `the two to the sixty-third literal does not become Long MAX_VALUE`() {
+        assertEquals(
+            Json.parseToJsonElement("""{"value":9223372036854775808}"""),
+            strict.decodeToonToJson("value: 9223372036854775808"),
+        )
+    }
+
+    @Test
+    fun `large integer map keys keep every digit`() {
+        val input = "\"9007199254740992\": a\n\"9007199254740993\": b"
+        assertEquals(
+            mapOf(9007199254740992L to "a", 9007199254740993L to "b"),
+            strict.decodeFromString<Map<Long, String>>(input),
+        )
+    }
+
     @Serializable data class OneBoolean(val value: Boolean)
 
     @Test

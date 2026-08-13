@@ -3,8 +3,6 @@ package com.lukelast.ktoon.decoding
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
 import com.lukelast.ktoon.KtoonValidationException
-import com.lukelast.ktoon.util.isAsciiDigit
-import kotlin.math.floor
 
 /**
  * Parser for TOON tokens that builds a logical value structure.
@@ -983,71 +981,24 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         return ToonValue.String(unquoted)
     }
 
-    /**
-     * §4 number grammar: an unquoted token decodes as a number iff it matches
-     * `/^-?[0-9]+(?:\.[0-9]+)?(?:e[+-]?[0-9]+)?$/i` (ASCII digits only) without forbidden leading
-     * zeros. Anything else — `.5`, `1.`, `+5`, `Infinity`, `NaN`, `0x10`, `1_000` — is a string,
-     * and this decision MUST NOT be delegated to a wider host parser.
-     */
-    @Suppress("CyclomaticComplexMethod", "ReturnCount")
-    private fun matchesNumberGrammar(str: String): Boolean {
-        var i = 0
-        if (i < str.length && str[i] == '-') i++
-
-        val intStart = i
-        while (i < str.length && str[i].isAsciiDigit()) i++
-        val intLen = i - intStart
-        if (intLen == 0) return false
-        // Forbidden leading zeros in the integer part (e.g. "05", "-0001")
-        if (intLen > 1 && str[intStart] == '0') return false
-
-        if (i < str.length && str[i] == '.') {
-            i++
-            val fracStart = i
-            while (i < str.length && str[i].isAsciiDigit()) i++
-            if (i == fracStart) return false
-        }
-
-        if (i < str.length && (str[i] == 'e' || str[i] == 'E')) {
-            i++
-            if (i < str.length && (str[i] == '+' || str[i] == '-')) i++
-            val expStart = i
-            while (i < str.length && str[i].isAsciiDigit()) i++
-            if (i == expStart) return false
-        }
-
-        return i == str.length
-    }
-
     /** Tries to parse a string as a number. Returns null if not a valid number token. */
     @Suppress("ReturnCount")
     private fun tryParseNumber(str: String): ToonValue? {
         if (!matchesNumberGrammar(str)) return null
 
-        // Try integer first (for simple cases without exponents)
-        val intValue = str.toIntOrNull()
-        if (intValue != null) {
-            return ToonValue.Number(intValue, str)
+        // Whole numbers are classified from the digits, so a literal is only an Int or a Long when
+        // it is exactly one; 9223372036854775808 must not become Long.MAX_VALUE (§4).
+        val integral = exactIntegralValue(str)
+        if (integral != null) {
+            return if (integral in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()) {
+                ToonValue.Number(integral.toInt(), str)
+            } else {
+                ToonValue.Number(integral, str)
+            }
         }
 
-        // Try long
-        val longValue = str.toLongOrNull()
-        if (longValue != null) {
-            return ToonValue.Number(longValue, str)
-        }
-
-        // Try double (handles fractional and exponent forms)
         val doubleValue = str.toDoubleOrNull()
         if (doubleValue != null && doubleValue.isFinite()) {
-            // If the double has no fractional part and fits in Int/Long, store as integer
-            if (doubleValue == floor(doubleValue)) {
-                if (doubleValue >= Int.MIN_VALUE && doubleValue <= Int.MAX_VALUE) {
-                    return ToonValue.Number(doubleValue.toInt(), str)
-                }
-                if (doubleValue >= Long.MIN_VALUE && doubleValue <= Long.MAX_VALUE) {
-                    return ToonValue.Number(doubleValue.toLong(), str)
-                }
-            }
             return ToonValue.Number(doubleValue, str)
         }
 
