@@ -40,9 +40,10 @@ internal class ToonObjectEncoder(
 
         // Start capturing to field buffer if sorting
         if (bufferedFields != null) {
-            fieldWriter = ToonWriter(config)
+            val buffer = ToonWriter(config)
+            fieldWriter = buffer
             // When sorting, only write indent to buffer (newlines added during sorted write)
-            fieldWriter!!.writeIndent(indentLevel)
+            buffer.writeIndent(indentLevel)
             return true
         }
 
