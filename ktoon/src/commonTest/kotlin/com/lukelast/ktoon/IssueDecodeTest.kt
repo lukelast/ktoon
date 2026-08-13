@@ -175,6 +175,28 @@ class IssueDecodeTest {
         }
     }
 
+    @Serializable data class OneBoolean(val value: Boolean)
+
+    @Test
+    fun `a string that is not a boolean literal does not decode as false`() {
+        for (ktoon in listOf(strict, lenient)) {
+            for (token in listOf("yes", "no", "TRUE", "\"maybe\"")) {
+                assertFailsWith<KtoonException> {
+                    ktoon.decodeFromString<OneBoolean>("value: $token")
+                }
+            }
+            assertEquals(OneBoolean(false), ktoon.decodeFromString<OneBoolean>("value: false"))
+        }
+    }
+
+    @Test
+    fun `boolean map keys still decode`() {
+        assertEquals(
+            mapOf(true to 1, false to 2),
+            strict.decodeFromString<Map<Boolean, Int>>("true: 1\nfalse: 2"),
+        )
+    }
+
     @Test
     fun `numeric map keys still decode`() {
         assertEquals(

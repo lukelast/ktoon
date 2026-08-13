@@ -101,7 +101,11 @@ internal class ToonPrimitiveDecoder(
     override fun decodeBoolean(): Boolean {
         return when (value) {
             is ToonValue.Boolean -> value.value
-            is ToonValue.String -> value.value.toBoolean()
+            // §2/§4: only the lowercase literals are booleans. `toBoolean` would turn every other
+            // token into false, inventing a value the document never carried.
+            is ToonValue.String ->
+                value.value.toBooleanStrictOrNull()
+                    ?: throw KtoonDecodingException("Cannot parse '${value.value}' as Boolean")
             else ->
                 throw KtoonDecodingException.typeMismatch(
                     "Boolean",
