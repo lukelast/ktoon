@@ -70,9 +70,12 @@ internal class ElementWriter(
                 if (other.mapTo(mutableSetOf()) { it.first } != nameSet) return null
             }
 
+            // Index each object once: looking a name up by scanning its entry list would make
+            // detection quadratic in the field count.
+            val indexed = objects.map { obj -> obj.toMap() }
             val nodes = ArrayList<FieldNode>(names.size)
             for (name in names) {
-                val column = objects.map { obj -> obj.first { it.first == name }.second }
+                val column = indexed.map { obj -> obj.getValue(name) }
                 when {
                     column.all { it is EncodedElement.Primitive } ->
                         nodes.add(FieldNode(name, null))
@@ -345,9 +348,11 @@ internal class ElementWriter(
         tree: List<FieldNode>,
         first: Boolean,
     ): Boolean {
+        // Index once per object for the same reason detection does (see fieldTree).
+        val byName = entries.toMap()
         var isFirst = first
         for (node in tree) {
-            val value = entries.first { it.first == node.name }.second
+            val value = byName.getValue(node.name)
             if (node.group == null) {
                 if (!isFirst) writer.writeDelimiter()
                 isFirst = false

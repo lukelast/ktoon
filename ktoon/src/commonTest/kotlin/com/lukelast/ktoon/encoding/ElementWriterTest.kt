@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.encoding
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -36,5 +37,19 @@ class ElementWriterTest {
     @Test
     fun `the same field names in another order stay tabular`() {
         assertNotNull(ElementWriter.tabularTree(listOf(structure("a", "b"), structure("b", "a"))))
+    }
+
+    @Test
+    fun `a wide table is detected without rescanning each object per field`() {
+        // Scanning an object's entries per field made detection quadratic in the field count,
+        // which a table this wide turns into hundreds of millions of comparisons.
+        val width = 5_000
+        val names = List(width) { "f$it" }
+        val first = EncodedElement.Structure(names.map { it to EncodedElement.Primitive("1") })
+        val second =
+            EncodedElement.Structure(names.reversed().map { it to EncodedElement.Primitive("2") })
+        val tree = assertNotNull(ElementWriter.tabularTree(listOf(first, second)))
+        assertEquals(width, tree.size)
+        assertEquals(names, tree.map { it.name })
     }
 }
