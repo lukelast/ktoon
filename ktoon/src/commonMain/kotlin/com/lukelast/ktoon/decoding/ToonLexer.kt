@@ -243,7 +243,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                 return HeaderParse.Malformed("unterminated field list")
             }
             val parsed =
-                parseFieldList(content.substring(pos + 1, braceEnd), delimiter.char)
+                parseFieldList(content.substring(pos + 1, braceEnd), delimiter.char, depth = 1)
                     ?: return HeaderParse.Malformed("invalid field list")
             fields = parsed
             pos = braceEnd + 1
@@ -303,7 +303,16 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
      * empty groups, or using a delimiter other than the active one.
      */
     @Suppress("ReturnCount")
-    private fun parseFieldList(content: String, delimiter: Char): List<FieldNode>? {
+    private fun parseFieldList(content: String, delimiter: Char, depth: Int): List<FieldNode>? {
+        // SPEC §15: report a documented nesting limit instead of recursing until the host stack is
+        // gone. Thrown rather than reported as a malformed list so that non-strict mode's
+        // key-value fallback cannot bypass the limit.
+        if (depth > config.maxNestingDepth) {
+            throw KtoonParsingException(
+                "Maximum nesting depth of ${config.maxNestingDepth} exceeded",
+                currentLine,
+            )
+        }
         if (content.trimSpaces().isEmpty()) return null
 
         val entries = splitFieldEntries(content, delimiter) ?: return null
@@ -323,7 +332,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                 val braceEnd = findMatchingBrace(entry, braceStart)
                 if (braceEnd != entry.length - 1) return null
                 val group =
-                    parseFieldList(entry.substring(braceStart + 1, braceEnd), delimiter)
+                    parseFieldList(entry.substring(braceStart + 1, braceEnd), delimiter, depth + 1)
                         ?: return null
                 nodes.add(FieldNode(name, group))
             }
