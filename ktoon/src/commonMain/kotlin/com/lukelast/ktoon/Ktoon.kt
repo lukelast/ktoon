@@ -6,6 +6,7 @@ import com.lukelast.ktoon.decoding.ToonParser
 import com.lukelast.ktoon.encoding.ToonEncoder
 import com.lukelast.ktoon.encoding.ToonWriter
 import com.lukelast.ktoon.serializers.KtoonJsonElementSerializer
+import com.lukelast.ktoon.serializers.checkJsonNestingDepth
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.StringFormat
@@ -121,6 +122,9 @@ class Ktoon(
         encodeToString(KtoonJsonElementSerializer, jsonElement)
 
     fun encodeJsonToToon(json: String): String {
+        // The JSON tree reader recurses per container, so the depth budget has to be applied
+        // before parsing rather than while serializing the parsed tree.
+        checkJsonNestingDepth(json)
         val jsonElement = Json.parseToJsonElement(json)
         return encodeJsonToToon(jsonElement)
     }
