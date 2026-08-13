@@ -28,4 +28,21 @@ class IssueDecodeTest {
     fun `a well-formed surrogate pair still decodes`() {
         assertEquals(OneString("a😀b"), strict.decodeFromString("key: a😀b"))
     }
+
+    @Serializable data class OneValue(val value: String)
+
+    @Test
+    fun `a dash-prefixed tabular row is a row and not a list item`() {
+        // §5.2: outside a list scope a leading hyphen has no structural meaning.
+        val rows = listOf(OneValue("- x"), OneValue("- y"))
+        assertEquals(rows, strict.decodeFromString("[2]{value}:\n  - x\n  - y"))
+    }
+
+    @Serializable data class OneInt(val value: Int)
+
+    @Test
+    fun `a dash-prefixed keyed entry row keeps the hyphen in its entry key`() {
+        val expected = mapOf("- key" to OneInt(1), "other" to OneInt(2))
+        assertEquals(expected, strict.decodeFromString("[2:]{value}:\n  - key: 1\n  other: 2"))
+    }
 }

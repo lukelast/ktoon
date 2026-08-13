@@ -401,6 +401,24 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                             break
                         }
                     }
+                    is Token.Dash -> {
+                        // §5.2: a leading hyphen has no structural meaning outside a list scope,
+                        // so at row depth `- x` is a row whose first cell starts with a hyphen.
+                        if (token.indent != rowIndent || !isRowLine(token.rawContent, delimiter)) {
+                            break
+                        }
+                        advance()
+                        skipTokensOnLine(token.line)
+                        elements.add(
+                            parseRowObject(
+                                token.rawContent,
+                                fields,
+                                leafCount,
+                                delimiter,
+                                token.line,
+                            )
+                        )
+                    }
                     is Token.Header -> {
                         // §5.2: within a tabular scope the §9.3 rule is authoritative, so a
                         // header-shaped line whose first unquoted delimiter precedes its first
@@ -442,13 +460,14 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /**
-     * §9.3: a line is a row when its first unquoted delimiter precedes its first unquoted colon.
+     * §9.3: a line at row depth with no unquoted colon is a row; when it has one, it is a row only
+     * if the first unquoted delimiter precedes that colon.
      */
     private fun isRowLine(rawContent: String, delimiter: Char): Boolean {
-        val delimPos = findUnquoted(rawContent, delimiter)
-        if (delimPos == -1) return false
         val colonPos = findUnquoted(rawContent, ':')
-        return colonPos == -1 || delimPos < colonPos
+        if (colonPos == -1) return true
+        val delimPos = findUnquoted(rawContent, delimiter)
+        return delimPos != -1 && delimPos < colonPos
     }
 
     /** True when the next non-blank token is another row of this tabular scope. */
@@ -461,8 +480,14 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 is Token.Key -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
                 is Token.Header ->
                     token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
+                is Token.Dash -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
                 else -> false
             }
+    }
+
+    /** Consumes every remaining token produced from source line [line]. */
+    private fun skipTokensOnLine(line: Int) {
+        while (position < tokens.size && tokens[position].line == line) position++
     }
 
     private fun validateRowIndent(indent: Int, rowIndent: Int, headerIndent: Int, line: Int) {
@@ -635,6 +660,40 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                         )
                         entryCount++
                     }
+                    is Token.Dash -> {
+                        // §5.2/§9.5: a leading hyphen has no structural meaning at entry depth, so
+                        // `- key: 1` is an entry row whose key is `- key`.
+                        if (token.indent <= header.indent) break
+                        if (config.strictMode && token.indent != entryIndent) {
+                            throw KtoonValidationException(
+                                "Invalid entry row indentation: expected $entryIndent, " +
+                                    "got ${token.indent}",
+                                token.line,
+                            )
+                        }
+                        val colon = findUnquoted(token.rawContent, ':')
+                        if (colon == -1 && config.strictMode) {
+                            throw KtoonParsingException(
+                                "Entry row without a colon in keyed scope",
+                                token.line,
+                            )
+                        }
+                        advance()
+                        skipTokensOnLine(token.line)
+                        if (colon != -1) {
+                            val cells = token.rawContent.substring(colon + 1).trimSpaces()
+                            insertKeyedEntry(
+                                properties,
+                                token.rawContent.substring(0, colon).trimSpaces(),
+                                cells.ifEmpty { null },
+                                fields,
+                                leafCount,
+                                delimiter,
+                                token.line,
+                            )
+                            entryCount++
+                        }
+                    }
                     is Token.Value -> {
                         // §9.5: a line at entry depth without an unquoted colon errors in strict
                         // mode; non-strict decoders MAY skip it.
@@ -683,6 +742,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 is Token.Key -> token.indent >= entryIndent
                 is Token.Header -> token.indent >= entryIndent
                 is Token.Value -> token.indent >= entryIndent
+                is Token.Dash -> token.indent >= entryIndent
                 else -> false
             }
     }

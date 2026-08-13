@@ -60,7 +60,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         // Check for dash (list-item marker). Trailing spaces are already stripped, so a hyphen
         // followed only by spaces has become the bare marker "-" (§12).
         if (indent > 0 && (trimmed.startsWith("- ") || trimmed == "-")) {
-            tokens.add(Token.Dash(indent, currentLine))
+            tokens.add(Token.Dash(trimmed, indent, currentLine))
             val value = if (trimmed.length > 1) trimmed.substring(2).trimSpaces() else ""
             if (value.isNotEmpty()) {
                 // §10 depth model: content on the hyphen line sits one level below the marker —
@@ -469,10 +469,12 @@ internal sealed interface Token {
     /**
      * Dash marker for a list-form array element.
      *
+     * @property rawContent The full line content after indentation, marker included (§5.2: outside
+     *   a list scope a leading hyphen is ordinary row or entry-row content)
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
-    data class Dash(val indent: Int, override val line: Int) : Token
+    data class Dash(val rawContent: String, val indent: Int, override val line: Int) : Token
 
     /**
      * Blank line token.
