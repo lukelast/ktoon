@@ -18,6 +18,9 @@ private const val FIRST_LITERAL_CHAR = 0x20
 /** Size of the ASCII table, the range covered by the SPECIAL_CHARS lookup. */
 private const val ASCII_TABLE_SIZE = 128
 
+/** A leading U+FEFF is a document's byte-order mark, never content (§12). */
+private const val BYTE_ORDER_MARK = '﻿'
+
 /** First character of the §7.3 bare-key pattern `^[A-Za-z_][A-Za-z0-9_.]*$`. */
 private fun Char.isBareKeyStart() = isAsciiLetter() || this == '_'
 
@@ -36,6 +39,9 @@ internal object StringQuoting {
         OBJECT_KEY,
         OBJECT_VALUE,
         ARRAY_ELEMENT,
+
+        /** A primitive that is the whole document, where the first character starts the file. */
+        ROOT_VALUE,
     }
 
     // Lookup table for characters that ALWAYS require quoting (except delimiter which is dynamic)
@@ -85,6 +91,9 @@ internal object StringQuoting {
         val first = str[0]
         if (first == '-') return true // Starts with hyphen
         if (first == '#') return true // §7.2: would read as a comment line on decode
+        // §12: a U+FEFF at the very start of a document is its byte-order mark, which encoders
+        // must not emit; quoting keeps a value that begins with one out of that position.
+        if (context == QuotingContext.ROOT_VALUE && first == BYTE_ORDER_MARK) return true
         if (first.code < ASCII_TABLE_SIZE && SPECIAL_CHARS[first.code])
             return true // Control or special
 
@@ -121,14 +130,8 @@ internal object StringQuoting {
             if (code < ASCII_TABLE_SIZE) {
                 if (SPECIAL_CHARS[code]) return true
             }
-            if (c == delimiter) {
-                if (
-                    context == QuotingContext.ARRAY_ELEMENT ||
-                        context == QuotingContext.OBJECT_VALUE
-                ) {
-                    return true
-                }
-            }
+            // §11.1: the delimiter matters for every value position, not for keys.
+            if (c == delimiter && context != QuotingContext.OBJECT_KEY) return true
 
             // 2. Check Key Validity (if needed)
             if (checkKey && !hasInvalidKeyChar) {
