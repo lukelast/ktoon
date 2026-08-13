@@ -19,6 +19,7 @@ import kotlin.math.floor
  * - Primitive values under the normative number grammar (§4)
  * - Validation in strict mode
  */
+@Suppress("TooManyFunctions")
 internal class ToonParser(private val tokens: List<Token>, private val config: KtoonConfiguration) {
     private var position = 0
 
@@ -36,6 +37,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads the root value from the token stream. */
+    @Suppress("ReturnCount", "ThrowsCount")
     fun readRoot(): ToonValue {
         if (tokens.isEmpty()) {
             return ToonValue.Object(emptyMap())
@@ -100,6 +102,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads an object (collection of key-value pairs). */
+    @Suppress("CyclomaticComplexMethod", "LongMethod", "ThrowsCount")
     private fun readObject(baseIndent: Int): ToonValue.Object {
         val properties = mutableMapOf<String, ToonValue>()
         var readAny = false
@@ -216,6 +219,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads the value following an object key token. */
+    @Suppress("ReturnCount")
     private fun readValueForKey(keyToken: Token.Key): ToonValue {
         // Inline value on the same line?
         if (position < tokens.size) {
@@ -327,6 +331,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads a tabular array: `key[2]{id,name}:\n 1,Ada\n 2,Bob` */
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun readTabularArray(header: Token.Header): ToonValue.Array {
         val fields = header.fields ?: throw KtoonParsingException("Missing field list", header.line)
         validateFieldNames(fields, header.line)
@@ -530,6 +535,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads a keyed tabular object: `key[2:]{host,port}:\n alpha: a,1\n beta: b,2` (§9.5). */
+    @Suppress("CyclomaticComplexMethod", "LongMethod", "ThrowsCount")
     private fun readKeyedObject(): ToonValue.Object {
         val header = consume<Token.Header>()
         val fields =
@@ -673,6 +679,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads list items at [itemIndent]; validates the count when [declaredLength] is present. */
+    @Suppress("CyclomaticComplexMethod")
     private fun readListItems(
         itemIndent: Int,
         declaredLength: Int?,
@@ -736,6 +743,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads the value of one list item, after its dash marker has been consumed. */
+    @Suppress("ReturnCount")
     private fun readListItemValue(dash: Token.Dash): ToonValue {
         if (position >= tokens.size) {
             // §10: a bare "-" is an empty-object list item
@@ -780,6 +788,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Parses a primitive value from a string. */
+    @Suppress("ReturnCount")
     private fun parsePrimitive(content: String, line: Int): ToonValue {
         // Check if value is quoted (§7.4 - quoting disambiguates type)
         val isQuoted = content.startsWith('"')
@@ -821,6 +830,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
      * zeros. Anything else — `.5`, `1.`, `+5`, `Infinity`, `NaN`, `0x10`, `1_000` — is a string,
      * and this decision MUST NOT be delegated to a wider host parser.
      */
+    @Suppress("CyclomaticComplexMethod", "ReturnCount")
     private fun matchesNumberGrammar(str: String): Boolean {
         var i = 0
         if (i < str.length && str[i] == '-') i++
@@ -851,6 +861,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Tries to parse a string as a number. Returns null if not a valid number token. */
+    @Suppress("ReturnCount")
     private fun tryParseNumber(str: String): ToonValue? {
         if (!matchesNumberGrammar(str)) return null
 

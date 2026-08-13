@@ -10,6 +10,7 @@ import kotlinx.serialization.modules.SerializersModule
 
 /** Encoder for TOON objects (structures with named fields). */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ToonObjectEncoder(
     private val rawWriter: ToonWriter,
     private val config: KtoonConfiguration,

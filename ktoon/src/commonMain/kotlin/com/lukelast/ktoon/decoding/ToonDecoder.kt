@@ -66,6 +66,7 @@ internal class ToonDecoder(
 
 /** Decoder for primitive TOON values. */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ToonPrimitiveDecoder(
     private val value: ToonValue,
     override val serializersModule: SerializersModule,
@@ -177,6 +178,7 @@ internal class ToonPrimitiveDecoder(
 
 /** Decoder for TOON objects (structures with named fields). */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ToonObjectDecoder(
     private val value: ToonValue.Object,
     override val serializersModule: SerializersModule,
@@ -266,6 +268,7 @@ internal class ToonObjectDecoder(
 
 /** Decoder for TOON arrays. */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ToonArrayDecoder(
     private val value: ToonValue.Array,
     override val serializersModule: SerializersModule,
@@ -347,6 +350,7 @@ internal class ToonArrayDecoder(
 
 /** Decoder for TOON maps. */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ToonMapDecoder(
     private val value: ToonValue.Object,
     override val serializersModule: SerializersModule,
@@ -367,6 +371,7 @@ internal class ToonMapDecoder(
         return value.properties.size
     }
 
+    @Suppress("ReturnCount")
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         if (position == 0) {
             return this
@@ -391,6 +396,7 @@ internal class ToonMapDecoder(
         )
     }
 
+    @Suppress("ReturnCount")
     override fun decodeNotNullMark(): Boolean {
         // If we haven't started decoding entries yet, we are checking the map itself
         if (position == 0) return true
@@ -447,6 +453,7 @@ internal class ToonMapDecoder(
     }
 }
 
+@Suppress("ThrowsCount")
 internal fun createDecoderForStructure(
     descriptor: SerialDescriptor,
     value: ToonValue,

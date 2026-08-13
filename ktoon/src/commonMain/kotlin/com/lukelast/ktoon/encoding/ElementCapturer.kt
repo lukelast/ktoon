@@ -10,6 +10,7 @@ import kotlinx.serialization.modules.SerializersModule
 
 /** Captures field values or array elements during encoding. */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ElementCapturer(
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
@@ -116,6 +117,7 @@ internal class ElementCapturer(
  * key quoting; values are captured like [ElementCapturer] elements.
  */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class MapElementCapturer(
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,

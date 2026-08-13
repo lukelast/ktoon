@@ -10,6 +10,7 @@ import kotlinx.serialization.modules.SerializersModule
 
 /** Root encoder for TOON format. */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ToonEncoder(
     private val writer: ToonWriter,
     private val config: KtoonConfiguration,

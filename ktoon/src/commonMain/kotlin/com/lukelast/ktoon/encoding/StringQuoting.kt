@@ -72,6 +72,7 @@ internal object StringQuoting {
                 "cannot be encoded to TOON"
         )
 
+    @Suppress("CyclomaticComplexMethod", "LongMethod", "ReturnCount")
     fun needsQuoting(
         str: String,
         context: QuotingContext = QuotingContext.OBJECT_VALUE,

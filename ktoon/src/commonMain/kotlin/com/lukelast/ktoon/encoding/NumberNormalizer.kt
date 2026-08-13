@@ -10,6 +10,7 @@ package com.lukelast.ktoon.encoding
  */
 internal object NumberNormalizer {
 
+    @Suppress("ReturnCount")
     fun normalize(value: Double): String {
         if (value.isNaN() || value.isInfinite()) return "null"
         if (value == 0.0) return "0" // Handles both 0.0 and -0.0
@@ -22,6 +23,7 @@ internal object NumberNormalizer {
         return normalizeDecimalString(value.toString())
     }
 
+    @Suppress("ReturnCount")
     fun normalize(value: Float): String {
         if (value.isNaN() || value.isInfinite()) return "null"
         if (value == 0.0f) return "0" // Handles both 0.0f and -0.0f
