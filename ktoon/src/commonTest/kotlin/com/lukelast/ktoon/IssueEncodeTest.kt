@@ -67,6 +67,25 @@ class IssueEncodeTest {
         assertEquals("Infinity: 1\n\"-Infinity\": 2", Ktoon().encodeToString(floats))
     }
 
+    @Test
+    fun `a null map key is reported instead of written as the text null`() {
+        val message = "TOON does not support null keys in maps"
+        val root =
+            assertFailsWith<KtoonEncodingException> { Ktoon().encodeToString(mapOf(null to 1)) }
+        assertEquals(message, root.message)
+        val nested =
+            assertFailsWith<KtoonEncodingException> {
+                Ktoon().encodeToString(listOf(mapOf(null to 1), mapOf("a" to 2)))
+            }
+        assertEquals(message, nested.message)
+    }
+
+    @Test
+    fun `the string key null and null values still encode`() {
+        assertEquals("null: 1", Ktoon().encodeToString(mapOf<String?, Int>("null" to 1)))
+        assertEquals("a: null", Ktoon().encodeToString(mapOf<String, Int?>("a" to null)))
+    }
+
     @Serializable(with = SameNameSerializer::class) data class Tag(val id: Int)
 
     object SameNameSerializer : KSerializer<Tag> {
