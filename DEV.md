@@ -4,13 +4,13 @@ Use the Gradle wrapper (`./gradlew`) and JDK 17+.
 
 ## Project Structure
 
-This is a Kotlin Multiplatform project with JVM and JavaScript (browser) targets.
+This is a Kotlin Multiplatform project.
 
 ```
 ktoon/src/
   commonMain/kotlin/    # Main library code (platform-agnostic)
   commonTest/kotlin/    # Cross-platform tests
-  jvmTest/kotlin/       # JVM-only tests (fixtures, data1, rand)
+  jvmTest/kotlin/       # JVM-only tests that use json test files
 ```
 
 ## Building
@@ -20,13 +20,14 @@ ktoon/src/
 - `./gradlew :ktoon:compileKotlinJs` — compile JS target
 - `./gradlew kotlinUpgradeYarnLock` — update kotlin-js-store/yarn.lock
 - `./gradlew ktfmtFormat` — format all Kotlin sources
+- `./gradlew detekt` — static analysis
 
 ## Testing
 
 - `./gradlew clean check`
 - `./gradlew :ktoon:allTests` — run tests on all targets
-- `./gradlew :ktoon:jvmTest` — run JVM tests (all 425 tests)
-- `./gradlew :ktoon:jsBrowserTest` — run JS browser tests (commonTest only)
+- `./gradlew :ktoon:jvmTest` — run JVM tests
+- `./gradlew :ktoon:jsBrowserTest` — run JS browser tests
 
 ## Benchmarks
 

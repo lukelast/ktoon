@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlinx.benchmark)
     alias(libs.plugins.ktfmt)
+    alias(libs.plugins.detekt)
 }
 
 ktfmt { kotlinLangStyle() }
