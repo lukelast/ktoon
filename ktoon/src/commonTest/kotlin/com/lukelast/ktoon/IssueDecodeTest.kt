@@ -119,6 +119,19 @@ class IssueDecodeTest {
         assertFailsWith<KtoonException> { lenient.decodeToonToJson(nestedFieldGroups(1000)) }
     }
 
+    @Test
+    fun `an indented root line is rejected in strict mode`() {
+        // §5: root-form discovery works on depth-0 lines.
+        assertFailsWith<KtoonException> { strict.decodeFromString<Int>("  42") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<List<Int>>("  []") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<List<Int>>("  [1]: 7") }
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<Map<String, OneValueInt>>("  [1:]{v}:\n    row: 7")
+        }
+        assertEquals(42, lenient.decodeFromString<Int>("  42"))
+        assertEquals(listOf(7), lenient.decodeFromString<List<Int>>("  [1]: 7"))
+    }
+
     @Serializable data class OneValueInt(val v: Int)
 
     @Test
