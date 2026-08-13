@@ -164,6 +164,25 @@ class IssueDecodeTest {
         assertEquals(listOf("a,b", "c"), strict.decodeFromString<List<String>>("[2]: \"a,b\",c"))
     }
 
+    @Test
+    fun `a string value is not converted to a number`() {
+        // §4: quoted tokens stay strings, and `05` fails the number grammar; neither is a number.
+        for (ktoon in listOf(strict, lenient)) {
+            assertFailsWith<KtoonException> { ktoon.decodeFromString<Int>("\"42\"") }
+            assertFailsWith<KtoonException> { ktoon.decodeFromString<OneInt>("value: 05") }
+            assertFailsWith<KtoonException> { ktoon.decodeFromString<List<Int>>("[1]: 05") }
+            assertEquals(OneInt(5), ktoon.decodeFromString<OneInt>("value: 5"))
+        }
+    }
+
+    @Test
+    fun `numeric map keys still decode`() {
+        assertEquals(
+            mapOf(1 to "one", 2 to "two"),
+            strict.decodeFromString<Map<Int, String>>("\"1\": one\n\"2\": two"),
+        )
+    }
+
     @Serializable data class OneDouble(val value: Double)
 
     @Test

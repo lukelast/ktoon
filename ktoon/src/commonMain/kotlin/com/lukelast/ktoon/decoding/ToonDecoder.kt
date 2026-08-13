@@ -73,12 +73,19 @@ internal class ToonDecoder(
     }
 }
 
-/** Decoder for primitive TOON values. */
+/**
+ * Decoder for primitive TOON values.
+ *
+ * @property isMapKey true when [value] is a map's property name rather than a decoded value. Only
+ *   then may text be converted to another primitive type: the parser has already decided the type
+ *   of every real value (§4), so converting a string there would undo that decision.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 @Suppress("TooManyFunctions")
 internal class ToonPrimitiveDecoder(
     private val value: ToonValue,
     override val serializersModule: SerializersModule,
+    private val isMapKey: Boolean = false,
 ) : AbstractDecoder(), ToonValueSource {
 
     override fun currentToonValue(): ToonValue = value
@@ -168,12 +175,11 @@ internal class ToonPrimitiveDecoder(
     }
 
     private fun decodeNumber(): Number {
-        return when (value) {
-            is ToonValue.Number -> value.value
-            is ToonValue.String -> {
+        return when {
+            value is ToonValue.Number -> value.value
+            value is ToonValue.String && isMapKey ->
                 value.value.toDoubleOrNull()
                     ?: throw KtoonDecodingException("Cannot parse '${value.value}' as number")
-            }
             else ->
                 throw KtoonDecodingException.typeMismatch(
                     "Number",
@@ -418,7 +424,7 @@ internal class ToonMapDecoder(
         val key = keys[entryIndex]
 
         if (isKey) {
-            return ToonPrimitiveDecoder(ToonValue.String(key), serializersModule)
+            return ToonPrimitiveDecoder(ToonValue.String(key), serializersModule, isMapKey = true)
         }
 
         val element = value.properties.getValue(key)
@@ -479,7 +485,7 @@ internal class ToonMapDecoder(
 
         val decoder =
             if (isKey) {
-                ToonPrimitiveDecoder(ToonValue.String(key), serializersModule)
+                ToonPrimitiveDecoder(ToonValue.String(key), serializersModule, isMapKey = true)
             } else {
                 val element = value.properties.getValue(key)
                 ToonPrimitiveDecoder(element, serializersModule)
