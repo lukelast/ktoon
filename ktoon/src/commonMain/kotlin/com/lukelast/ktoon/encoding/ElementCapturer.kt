@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.KtoonEncodingException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
@@ -163,7 +164,11 @@ internal class MapElementCapturer(
         currentKey = null
     }
 
-    override fun encodeNull() = addPrimitive("null")
+    override fun encodeNull() {
+        // §2/§3: a TOON object maps string keys to values, so a null key has no representation.
+        if (isKey) throw KtoonEncodingException("TOON does not support null keys in maps")
+        addPrimitive("null")
+    }
 
     override fun encodeBoolean(value: Boolean) = addPrimitive(if (value) "true" else "false")
 
