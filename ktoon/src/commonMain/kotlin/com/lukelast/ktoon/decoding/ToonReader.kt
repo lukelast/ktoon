@@ -4,7 +4,6 @@ import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
 import com.lukelast.ktoon.KtoonValidationException
 import com.lukelast.ktoon.util.isDigit
-import com.lukelast.ktoon.validation.ValidationEngine
 import kotlin.math.floor
 
 /**
@@ -22,13 +21,19 @@ import kotlin.math.floor
  */
 internal class ToonReader(private val tokens: List<Token>, private val config: KtoonConfiguration) {
     private var position = 0
-    private val validator = ValidationEngine(config)
 
     /**
      * Number of array/keyed header spans currently being read. Blank lines inside a header span are
      * strict-mode errors even when they fall between the fields of a list-item object (§12).
      */
     private var arraySpanDepth = 0
+
+    /** §14.1: a declared count must match the actual count in strict mode (never truncates). */
+    private fun validateCount(declared: Int, actual: Int, line: Int) {
+        if (config.strictMode && declared != actual) {
+            throw KtoonValidationException.arrayLengthMismatch(declared, actual, line)
+        }
+    }
 
     /** Reads the root value from the token stream. */
     fun readRoot(): ToonValue {
@@ -280,7 +285,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 .map { parsePrimitive(it, valueToken.line) }
 
         // Validate array length in strict mode
-        validator.validateArrayLength(header.length, values.size, header.line)
+        validateCount(header.length, values.size, header.line)
 
         return ToonValue.Array(values)
     }
@@ -418,7 +423,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             arraySpanDepth--
         }
 
-        validator.validateArrayLength(header.length, elements.size, header.line)
+        validateCount(header.length, elements.size, header.line)
 
         return ToonValue.Array(elements)
     }
@@ -629,7 +634,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             arraySpanDepth--
         }
 
-        validator.validateArrayLength(header.length, entryCount, header.line)
+        validateCount(header.length, entryCount, header.line)
 
         return ToonValue.Object(properties)
     }
@@ -715,7 +720,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         }
 
         if (declaredLength != null) {
-            validator.validateArrayLength(declaredLength, elements.size, headerLine)
+            validateCount(declaredLength, elements.size, headerLine)
         }
 
         return ToonValue.Array(elements)
