@@ -17,7 +17,9 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 
-// Sealed class for contextual nested in polymorphic test
+// Sealed class for contextual nested in polymorphic test. Deliberately a class, not an interface:
+// polymorphic serialization of a sealed *class* is what this exercises.
+@Suppress("AbstractClassCanBeInterface")
 @Serializable
 sealed class Content {
     @Serializable @SerialName("text") data class Text(val value: String) : Content()

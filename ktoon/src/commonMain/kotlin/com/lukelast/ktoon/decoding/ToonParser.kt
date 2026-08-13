@@ -932,22 +932,22 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
 }
 
 /** Represents a parsed TOON value. */
-internal sealed class ToonValue {
+internal sealed interface ToonValue {
     /** Null value */
-    object Null : ToonValue()
+    object Null : ToonValue
 
     /** Boolean value */
-    data class Boolean(val value: kotlin.Boolean) : ToonValue()
+    data class Boolean(val value: kotlin.Boolean) : ToonValue
 
     /** Numeric value (Int, Long, or Double) */
-    data class Number(val value: kotlin.Number) : ToonValue()
+    data class Number(val value: kotlin.Number) : ToonValue
 
     /** String value */
-    data class String(val value: kotlin.String) : ToonValue()
+    data class String(val value: kotlin.String) : ToonValue
 
     /** Object (map of key-value pairs) */
-    data class Object(val properties: Map<kotlin.String, ToonValue>) : ToonValue()
+    data class Object(val properties: Map<kotlin.String, ToonValue>) : ToonValue
 
     /** Array (list of values) */
-    data class Array(val elements: List<ToonValue>) : ToonValue()
+    data class Array(val elements: List<ToonValue>) : ToonValue
 }
