@@ -16,6 +16,12 @@ private const val FIRST_LITERAL_CHAR = 0x20
 /** Size of the ASCII table, the range covered by the SPECIAL_CHARS lookup. */
 private const val ASCII_TABLE_SIZE = 128
 
+/** First character of the §7.3 bare-key pattern `^[A-Za-z_][A-Za-z0-9_.]*$`. */
+private fun Char.isBareKeyStart() = isAsciiLetter() || this == '_'
+
+/** Every character after the first in the §7.3 bare-key pattern. */
+private fun Char.isBareKeyPart() = isBareKeyStart() || isAsciiDigit() || this == '.'
+
 /** §7.2: values spelled as one of these must be quoted so they do not decode as non-strings. */
 private const val LITERAL_TRUE = "true"
 private const val LITERAL_NULL = "null"
@@ -133,13 +139,8 @@ internal object StringQuoting {
 
             // 2. Check Key Validity (if needed)
             if (checkKey && !hasInvalidKeyChar) {
-                // ^[A-Za-z_][A-Za-z0-9_.]*$
-                if (i == 0) {
-                    if (!c.isAsciiLetter() && c != '_') hasInvalidKeyChar = true
-                } else {
-                    if (!c.isAsciiLetter() && !c.isAsciiDigit() && c != '_' && c != '.')
-                        hasInvalidKeyChar = true
-                }
+                val bare = if (i == 0) c.isBareKeyStart() else c.isBareKeyPart()
+                if (!bare) hasInvalidKeyChar = true
             }
 
             // 3. Update Numeric State
@@ -159,7 +160,10 @@ internal object StringQuoting {
                 } else if (c == '+' || c == '-') {
                     // §7.2: a leading sign keeps the token numeric-like ("+1" must be quoted);
                     // otherwise a sign is only allowed directly after the exponent marker.
-                    if (i > 0 && (!seenExp || (str[i - 1] != 'e' && str[i - 1] != 'E'))) {
+                    val leadingSign = i == 0
+                    val afterExponentMarker =
+                        !leadingSign && (str[i - 1] == 'e' || str[i - 1] == 'E')
+                    if (!leadingSign && !(seenExp && afterExponentMarker)) {
                         isNumericLike = false
                     }
                 } else {

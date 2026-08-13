@@ -55,6 +55,9 @@ class Ktoon(
      * @return The encoded TOON string
      * @throws KtoonEncodingException if encoding fails
      */
+    // Public entry point: KtoonException passes through, anything else is wrapped so callers only
+    // ever see this library's exception type.
+    @Suppress("TooGenericExceptionCaught")
     override fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String {
         val writer = ToonWriter(configuration)
         val encoder = ToonEncoder(writer, configuration, serializersModule)
@@ -79,6 +82,9 @@ class Ktoon(
      * @throws KtoonParsingException if parsing fails
      * @throws KtoonValidationException if validation fails (in strict mode)
      */
+    // Public entry point: KtoonException passes through, anything else is wrapped so callers only
+    // ever see this library's exception type.
+    @Suppress("TooGenericExceptionCaught")
     override fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
         try {
             // Tokenize the input

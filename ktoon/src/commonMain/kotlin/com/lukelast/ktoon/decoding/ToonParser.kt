@@ -19,7 +19,7 @@ import kotlin.math.floor
  * - Primitive values under the normative number grammar (§4)
  * - Validation in strict mode
  */
-@Suppress("TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions")
 internal class ToonParser(private val tokens: List<Token>, private val config: KtoonConfiguration) {
     private var position = 0
 
@@ -102,7 +102,12 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads an object (collection of key-value pairs). */
-    @Suppress("CyclomaticComplexMethod", "LongMethod", "ThrowsCount")
+    @Suppress(
+        "CyclomaticComplexMethod",
+        "LongMethod",
+        "LoopWithTooManyJumpStatements",
+        "ThrowsCount",
+    )
     private fun readObject(baseIndent: Int): ToonValue.Object {
         val properties = mutableMapOf<String, ToonValue>()
         var readAny = false
@@ -331,7 +336,12 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads a tabular array: `key[2]{id,name}:\n 1,Ada\n 2,Bob` */
-    @Suppress("CyclomaticComplexMethod", "LongMethod")
+    @Suppress(
+        "CyclomaticComplexMethod",
+        "LongMethod",
+        "LoopWithTooManyJumpStatements",
+        "NestedBlockDepth",
+    )
     private fun readTabularArray(header: Token.Header): ToonValue.Array {
         val fields = header.fields ?: throw KtoonParsingException("Missing field list", header.line)
         validateFieldNames(fields, header.line)
@@ -534,7 +544,13 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads a keyed tabular object: `key[2:]{host,port}:\n alpha: a,1\n beta: b,2` (§9.5). */
-    @Suppress("CyclomaticComplexMethod", "LongMethod", "ThrowsCount")
+    @Suppress(
+        "CyclomaticComplexMethod",
+        "LongMethod",
+        "LoopWithTooManyJumpStatements",
+        "NestedBlockDepth",
+        "ThrowsCount",
+    )
     private fun readKeyedObject(): ToonValue.Object {
         val header = consume<Token.Header>()
         val fields =
@@ -644,6 +660,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         return ToonValue.Object(properties)
     }
 
+    @Suppress("LongParameterList")
     private fun insertKeyedEntry(
         properties: MutableMap<String, ToonValue>,
         rawEntryKey: String,
@@ -678,7 +695,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads list items at [itemIndent]; validates the count when [declaredLength] is present. */
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "LoopWithTooManyJumpStatements")
     private fun readListItems(
         itemIndent: Int,
         declaredLength: Int?,
