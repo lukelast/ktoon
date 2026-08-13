@@ -92,11 +92,6 @@ fun main() {
 
 ktoon targets `toon-spec: 4.1`. Known deviations from the spec:
 
-- **Rows that look like malformed headers (strict mode)**: lines are tokenized before scope
-  context is known, so a tabular row or keyed entry row whose text parses as a malformed array
-  header (e.g. an entry key like `foo[]`) is rejected in strict mode, where the spec classifies
-  it as a row. Conforming encoders never emit such lines, and non-strict mode decodes them as
-  the spec describes.
 - **`sortFields = true`** (opt-in, off by default): emits object fields in sorted order rather
   than the encounter order the spec requires.
 

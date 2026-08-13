@@ -18,6 +18,35 @@ class IssueLexerTest {
 
     @Serializable data class TwoStrings(val a: String, val b: String)
 
+    @Serializable data class IntAndString(val a: Int, val b: String)
+
+    @Test
+    fun `a row whose cell looks like a malformed header is still a row`() {
+        // §9.3: at row depth the delimiter-before-colon rule decides, not the header grammar.
+        val input = "[2]{a,b}:\n  1,Ada\n  2,foo [2]: x"
+        val expected = listOf(IntAndString(1, "Ada"), IntAndString(2, "foo [2]: x"))
+        assertEquals(expected, strict.decodeFromString(input))
+    }
+
+    @Test
+    fun `an entry key that looks like a malformed header is still an entry row`() {
+        // §9.5: every line at entry depth with an unquoted colon is an entry row.
+        val input = "[1:]{a,b}:\n  foo[]: 1,two"
+        assertEquals(
+            mapOf("foo[]" to IntAndString(1, "two")),
+            strict.decodeFromString<Map<String, IntAndString>>(input),
+        )
+    }
+
+    @Test
+    fun `a malformed header in a key position is still an error`() {
+        assertFailsWith<KtoonException> { strict.decodeFromString<TwoStrings>("foo [2]: 1,2") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<TwoStrings>("key[]: 1") }
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<Map<String, String>>("outer:\n  key[03]: 1")
+        }
+    }
+
     @Test
     fun `a tab-delimited row keeps an empty leading cell`() {
         // §11.2: splitting preserves empty tokens, so the row's leading tab is the delimiter and

@@ -221,6 +221,12 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
 
             when (token) {
                 is Token.Key -> {
+                    // §6/§14.2: a header-shaped line that failed the header grammar is an error
+                    // in a key position; only §9.3 rows and §9.5 entry rows reclassify it.
+                    val headerError = token.headerError
+                    if (headerError != null && config.strictMode) {
+                        throw KtoonParsingException.invalidArrayFormat(headerError, token.line)
+                    }
                     advance()
                     val rawKey = token.name
                     val key = unquote(rawKey, token.line)
