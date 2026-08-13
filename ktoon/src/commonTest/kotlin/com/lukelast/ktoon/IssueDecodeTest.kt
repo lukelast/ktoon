@@ -278,6 +278,17 @@ class IssueDecodeTest {
     }
 
     @Test
+    fun `a quoted token error does not report a made-up column`() {
+        val error = assertFailsWith<KtoonParsingException> { strict.decodeToonToJson("\"abc\\q\"") }
+        assertEquals(1, error.line)
+        assertEquals(-1, error.column)
+        assertEquals(
+            "Invalid escape sequence: '\\q' (only \\\\, \\\", \\n, \\r, \\t are allowed) at line 1",
+            error.message,
+        )
+    }
+
+    @Test
     fun `a lone quote reports an unterminated string`() {
         for (ktoon in listOf(strict, lenient)) {
             for (input in listOf("\"", "a: \"")) {

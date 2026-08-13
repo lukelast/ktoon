@@ -22,6 +22,8 @@ private const val FIRST_LITERAL_CHAR = 0x20
  * A token beginning with `"` MUST end at its closing quote (§7.4, both modes): an unterminated
  * quote or content after the closing quote is an error. Valid escapes are `\\`, `\"`, `\n`, `\r`,
  * `\t`, and `\uXXXX`.
+ *
+ * [column] is the token's own 1-based column on its line, or -1 when the caller does not know it.
  */
 @Suppress("CyclomaticComplexMethod", "LongMethod", "ThrowsCount")
 internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
@@ -32,7 +34,7 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
         throw KtoonParsingException(
             "Unpaired surrogate ${str[unpaired].toCodePointLabel()} in input",
             line,
-            column + unpaired,
+            offsetColumn(column, unpaired),
         )
     }
     if (!str.startsWith('"')) return str
@@ -46,7 +48,11 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
         when (val c = str[i]) {
             '\\' -> {
                 if (i + 1 >= str.length)
-                    throw KtoonParsingException.invalidEscapeSequence("\\", line, column + i)
+                    throw KtoonParsingException.invalidEscapeSequence(
+                        "\\",
+                        line,
+                        offsetColumn(column, i),
+                    )
                 when (val next = str[i + 1]) {
                     '\\' -> sb.append('\\')
                     '"' -> sb.append('"')
@@ -58,7 +64,7 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                             throw KtoonParsingException.invalidEscapeSequence(
                                 str.substring(i),
                                 line,
-                                column + i,
+                                offsetColumn(column, i),
                             )
                         val hex = str.substring(i + 2, i + 2 + UNICODE_ESCAPE_DIGITS)
                         // §7.1: exactly 4HEXDIG. toIntOrNull(16) would also accept a leading
@@ -67,7 +73,7 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                             throw KtoonParsingException.invalidEscapeSequence(
                                 "\\u$hex",
                                 line,
-                                column + i,
+                                offsetColumn(column, i),
                             )
                         }
                         val code = hex.toInt(HEX_RADIX)
@@ -77,7 +83,7 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                             throw KtoonParsingException.invalidEscapeSequence(
                                 "\\u$hex",
                                 line,
-                                column + i,
+                                offsetColumn(column, i),
                             )
                         }
                         sb.append(code.toChar())
@@ -87,7 +93,7 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                         throw KtoonParsingException.invalidEscapeSequence(
                             "\\$next",
                             line,
-                            column + i,
+                            offsetColumn(column, i),
                         )
                 }
                 i += 2
@@ -107,7 +113,7 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                     throw KtoonParsingException(
                         "Unescaped control character U+$codePoint",
                         line,
-                        column + i,
+                        offsetColumn(column, i),
                     )
                 }
                 sb.append(c)
@@ -117,6 +123,13 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
     }
     throw KtoonParsingException.unterminatedString(line, column)
 }
+
+/**
+ * The document column of the character [offset] characters into a token that starts at [base].
+ * Without a known base there is no column to report — arithmetic on the unknown marker would turn
+ * it into a plausible but unrelated position.
+ */
+private fun offsetColumn(base: Int, offset: Int): Int = if (base > 0) base + offset else -1
 
 /** Trims surrounding spaces from a token: exactly U+0020, no other whitespace (§12). */
 internal fun String.trimSpaces(): String = trim(' ')
