@@ -36,6 +36,9 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
         )
     }
     if (!str.startsWith('"')) return str
+    // A lone `"` opens a token that never closes; diagnose it before sizing the builder, whose
+    // capacity would otherwise be negative.
+    if (str.length == 1) throw KtoonParsingException.unterminatedString(line, column)
 
     val sb = StringBuilder(str.length - 2)
     var i = 1
