@@ -88,18 +88,6 @@ internal class ToonWriter(private val config: KtoonConfiguration) {
         write(':')
     }
 
-    fun writeTabularArrayHeader(key: String, length: Int, fields: List<String>, delimiter: Char) {
-        write(key)
-        write('[')
-        write(length)
-        if (delimiter != ',') write(delimiter)
-        write(']')
-        write('{')
-        write(fields.joinToString(delimiter.toString()))
-        write('}')
-        write(':')
-    }
-
     override fun toString(): String = array.concatToString(0, size)
 
     private inline fun ensureAdditionalCapacity(expected: Int) {

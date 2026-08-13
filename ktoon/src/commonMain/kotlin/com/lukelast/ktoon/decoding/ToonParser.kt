@@ -199,12 +199,12 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     private fun continuesObjectScope(baseIndent: Int): Boolean {
         var p = position
         while (p < tokens.size && tokens[p] is Token.BlankLine) p++
-        if (p >= tokens.size) return false
-        return when (val token = tokens[p]) {
-            is Token.Key -> token.indent >= baseIndent
-            is Token.Header -> token.indent >= baseIndent
-            else -> false
-        }
+        return p < tokens.size &&
+            when (val token = tokens[p]) {
+                is Token.Key -> token.indent >= baseIndent
+                is Token.Header -> token.indent >= baseIndent
+                else -> false
+            }
     }
 
     private fun insertProperty(
@@ -354,9 +354,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         headerSpanDepth++
         try {
             while (position < tokens.size) {
-                val token = peek()
-
-                when (token) {
+                when (val token = peek()) {
                     is Token.BlankLine -> {
                         if (
                             tryConsumeBlanksInSpan(
@@ -457,13 +455,14 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     private fun nextNonBlankIsRow(rowIndent: Int, delimiter: Char): Boolean {
         var p = position
         while (p < tokens.size && tokens[p] is Token.BlankLine) p++
-        if (p >= tokens.size) return false
-        return when (val token = tokens[p]) {
-            is Token.Value -> true
-            is Token.Key -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
-            is Token.Header -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
-            else -> false
-        }
+        return p < tokens.size &&
+            when (val token = tokens[p]) {
+                is Token.Value -> true
+                is Token.Key -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
+                is Token.Header ->
+                    token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
+                else -> false
+            }
     }
 
     private fun validateRowIndent(indent: Int, rowIndent: Int, headerIndent: Int, line: Int) {
@@ -515,13 +514,13 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         line: Int,
     ): ToonValue.Object {
         val properties = mutableMapOf<String, ToonValue>()
-        for (field in fields) {
-            val name = unquote(field.name, line)
+        for ((name1, group) in fields) {
+            val name = unquote(name1, line)
             val value =
-                if (field.group == null) {
+                if (group == null) {
                     if (cursor[0] < cells.size) cells[cursor[0]++] else break
                 } else {
-                    buildRowObject(field.group, cells, cursor, line)
+                    buildRowObject(group, cells, cursor, line)
                 }
             // Duplicate field names apply last-write-wins in non-strict mode (§9.3); strict mode
             // already rejected them from the header line alone. A plain put keeps the first
@@ -534,12 +533,12 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     /** §9.3/§14.2: repeated field names within one field list are a strict-mode header defect. */
     private fun validateFieldNames(fields: List<FieldNode>, line: Int) {
         val seen = mutableSetOf<String>()
-        for (field in fields) {
-            val name = unquote(field.name, line)
+        for ((name1, group) in fields) {
+            val name = unquote(name1, line)
             if (config.strictMode && !seen.add(name)) {
                 throw KtoonValidationException("Duplicate field name: '$name'", line)
             }
-            if (field.group != null) validateFieldNames(field.group, line)
+            if (group != null) validateFieldNames(group, line)
         }
     }
 
@@ -679,13 +678,13 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     private fun nextNonBlankIsEntry(entryIndent: Int): Boolean {
         var p = position
         while (p < tokens.size && tokens[p] is Token.BlankLine) p++
-        if (p >= tokens.size) return false
-        return when (val token = tokens[p]) {
-            is Token.Key -> token.indent >= entryIndent
-            is Token.Header -> token.indent >= entryIndent
-            is Token.Value -> token.indent >= entryIndent
-            else -> false
-        }
+        return p < tokens.size &&
+            when (val token = tokens[p]) {
+                is Token.Key -> token.indent >= entryIndent
+                is Token.Header -> token.indent >= entryIndent
+                is Token.Value -> token.indent >= entryIndent
+                else -> false
+            }
     }
 
     /** Reads an array in list form: `key[2]:\n - val1\n - val2` */

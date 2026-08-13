@@ -27,7 +27,7 @@ class KtoonValidationException(
     val line: Int = -1,
     val column: Int = -1,
     cause: Throwable? = null,
-) : KtoonException(KtoonException.buildMessage(message, line, column), cause) {
+) : KtoonException(buildMessage(message, line, column), cause) {
     companion object {
         /** Creates a validation exception for array length mismatch. */
         fun arrayLengthMismatch(declared: Int, actual: Int, line: Int) =
@@ -53,11 +53,8 @@ class KtoonParsingException(
     val line: Int = -1,
     val column: Int = -1,
     cause: Throwable? = null,
-) : KtoonException(KtoonException.buildMessage(message, line, column), cause) {
+) : KtoonException(buildMessage(message, line, column), cause) {
     companion object {
-        /** Creates a parsing exception for unexpected token. */
-        fun unexpectedToken(expected: String, actual: String, line: Int, column: Int = -1) =
-            KtoonParsingException("Expected $expected but found '$actual'", line, column)
 
         /** Creates a parsing exception for invalid array format. */
         fun invalidArrayFormat(reason: String, line: Int) =
@@ -75,11 +72,7 @@ class KtoonParsingException(
                 column,
             )
 
-        /** Creates a parsing exception for invalid number format. */
-        fun invalidNumber(value: String, line: Int, column: Int = -1) =
-            KtoonParsingException("Invalid number format: '$value'", line, column)
-
-        /** Creates a parsing exception for unexpected end of input. */
+        /** Creates a parsing exception for the unexpected end of input. */
         fun unexpectedEndOfInput(expected: String) =
             KtoonParsingException("Unexpected end of input, expected $expected")
     }
@@ -87,17 +80,7 @@ class KtoonParsingException(
 
 /** Exception thrown when TOON encoding fails. */
 class KtoonEncodingException(message: String, cause: Throwable? = null) :
-    KtoonException(message, cause) {
-    companion object {
-        /** Creates an encoding exception for unsupported type. */
-        fun unsupportedType(typeName: String) =
-            KtoonEncodingException("Unsupported type for TOON encoding: $typeName")
-
-        /** Creates an encoding exception for circular reference. */
-        fun circularReference(path: String) =
-            KtoonEncodingException("Circular reference detected at path: $path")
-    }
-}
+    KtoonException(message, cause)
 
 /** Exception thrown when TOON decoding fails. */
 class KtoonDecodingException(message: String, cause: Throwable? = null) :
