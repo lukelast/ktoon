@@ -68,8 +68,13 @@ class KtoonSpecConformanceTest {
 
     @Test
     fun `unpaired host surrogates are rejected during encoding`() {
-        assertFailsWith<KtoonEncodingException> { strict.encodeToString("\uD800") }
-        assertFailsWith<KtoonEncodingException> { strict.encodeToString("\uDC00") }
+        // Built at runtime: a lone-surrogate string literal is not valid UTF-8, so it reaches
+        // the Kotlin/JS test runner as U+FFFD instead of the surrogate itself.
+        val highSurrogate = charArrayOf(0xD800.toChar()).concatToString()
+        val lowSurrogate = charArrayOf(0xDC00.toChar()).concatToString()
+
+        assertFailsWith<KtoonEncodingException> { strict.encodeToString(highSurrogate) }
+        assertFailsWith<KtoonEncodingException> { strict.encodeToString(lowSurrogate) }
     }
 
     @Test
