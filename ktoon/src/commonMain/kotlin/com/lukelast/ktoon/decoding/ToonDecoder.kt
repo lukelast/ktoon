@@ -114,20 +114,38 @@ internal class ToonPrimitiveDecoder(
         }
     }
 
-    override fun decodeByte(): Byte {
-        return decodeNumber().toByte()
-    }
+    override fun decodeByte(): Byte =
+        decodeIntegral(Byte.MIN_VALUE.toLong(), Byte.MAX_VALUE.toLong(), "Byte").toByte()
 
-    override fun decodeShort(): Short {
-        return decodeNumber().toShort()
-    }
+    override fun decodeShort(): Short =
+        decodeIntegral(Short.MIN_VALUE.toLong(), Short.MAX_VALUE.toLong(), "Short").toShort()
 
-    override fun decodeInt(): Int {
-        return decodeNumber().toInt()
-    }
+    override fun decodeInt(): Int =
+        decodeIntegral(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong(), "Int").toInt()
 
-    override fun decodeLong(): Long {
-        return decodeNumber().toLong()
+    override fun decodeLong(): Long = decodeIntegral(Long.MIN_VALUE, Long.MAX_VALUE, "Long")
+
+    /**
+     * Reads a whole number of the requested width. The accepted token is measured exactly: host
+     * `Number` conversions truncate a fraction and wrap or saturate an out-of-range value, which
+     * would hand back a different number from the one the document carried.
+     */
+    private fun decodeIntegral(min: Long, max: Long, target: String): Long {
+        val lexeme =
+            when {
+                value is ToonValue.Number -> value.lexeme
+                value is ToonValue.String && isMapKey -> value.value
+                else ->
+                    throw KtoonDecodingException.typeMismatch(
+                        target,
+                        value::class.simpleName ?: "unknown",
+                    )
+            }
+        val exact = if (matchesNumberGrammar(lexeme)) exactIntegralValue(lexeme) else null
+        if (exact == null || exact < min || exact > max) {
+            throw KtoonDecodingException("Cannot decode '$lexeme' as $target")
+        }
+        return exact
     }
 
     override fun decodeFloat(): Float {
