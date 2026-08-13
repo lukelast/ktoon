@@ -22,11 +22,7 @@ data class ToonFixture(
     val category: FixtureCategory,
     val description: String,
     val tests: List<FixtureTestCase>,
-) {
-    fun isEncode(): Boolean = category == FixtureCategory.ENCODE
-
-    fun isDecode(): Boolean = category == FixtureCategory.DECODE
-}
+)
 
 /** Test category: encode (JSON → TOON) or decode (TOON → JSON). */
 @Serializable

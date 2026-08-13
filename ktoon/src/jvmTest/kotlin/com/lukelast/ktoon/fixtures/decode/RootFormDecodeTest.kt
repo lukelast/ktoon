@@ -12,9 +12,11 @@ class RootFormDecodeTest {
 
     private val fixture = "root-form"
 
+    /** A property-less class only has identity equality, so use a singleton object instead. */
+    @Serializable private object EmptyObject
+
     @Test
     fun `parses empty document as empty object`() {
-        @Serializable class EmptyObject
         runFixtureDecodeTest<EmptyObject>(fixture)
     }
 }

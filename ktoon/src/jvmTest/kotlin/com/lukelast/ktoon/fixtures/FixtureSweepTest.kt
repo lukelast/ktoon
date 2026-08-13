@@ -64,12 +64,6 @@ class FixtureSweepTest {
             }
         }
 
-    private fun failureContext(case: FixtureTestCase): String = buildString {
-        append("Fixture case '${case.name}'")
-        case.specSection?.let { append("\nSpec: §$it") }
-        case.note?.let { append("\nNote: $it") }
-    }
-
     private fun decodeToJson(
         toon: String,
         config: KtoonConfiguration,
