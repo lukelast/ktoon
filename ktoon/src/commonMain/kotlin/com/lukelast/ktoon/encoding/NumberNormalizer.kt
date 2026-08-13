@@ -15,9 +15,8 @@ internal object NumberNormalizer {
         if (value.isNaN() || value.isInfinite()) return "null"
         if (value == 0.0) return "0" // Handles both 0.0 and -0.0
 
-        val longValue = value.toLong()
-        if (value == longValue.toDouble()) {
-            return longValue.toString()
+        wholeNumberStringOrNull(value)?.let {
+            return it
         }
 
         return normalizeDecimalString(value.toString())
@@ -28,12 +27,28 @@ internal object NumberNormalizer {
         if (value.isNaN() || value.isInfinite()) return "null"
         if (value == 0.0f) return "0" // Handles both 0.0f and -0.0f
 
-        val longValue = value.toLong()
-        if (value == longValue.toFloat()) {
-            return longValue.toString()
+        // Every Float widens to Double exactly, so the shared probe sees the same value.
+        wholeNumberStringOrNull(value.toDouble())?.let {
+            return it
         }
 
         return normalizeDecimalString(value.toString())
+    }
+
+    /**
+     * Renders [value] as an exact integer, or null when it is not integral. `toLong` saturates, so
+     * a result of `Long.MAX_VALUE` is ambiguous: it is either that value or 2^63, which converts
+     * back to the same Double. The unsigned re-check tells the two apart (§2: an encoder must emit
+     * enough precision for the value to decode back unchanged).
+     */
+    @Suppress("ReturnCount")
+    private fun wholeNumberStringOrNull(value: Double): String? {
+        val signed = value.toLong()
+        if (value != signed.toDouble()) return null
+        if (signed != Long.MAX_VALUE) return signed.toString()
+
+        val unsigned = value.toULong()
+        return if (value == unsigned.toDouble()) unsigned.toString() else null
     }
 
     /** Normalizes a numeric string: expands scientific notation and strips trailing zeros. */
