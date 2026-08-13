@@ -181,7 +181,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
     private sealed interface HeaderParse {
         class Match(
             val key: String,
-            val length: Int,
+            val length: Long,
             val keyed: Boolean,
             val delimiter: KtoonConfiguration.Delimiter,
             val fields: List<FieldNode>?,
@@ -231,8 +231,10 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         if (lengthStr.length > 1 && lengthStr[0] == '0') {
             return HeaderParse.Malformed("leading zeros in bracket length")
         }
-        val length =
-            lengthStr.toIntOrNull() ?: return HeaderParse.Malformed("bracket length out of range")
+        // §6 puts no bound on the declared length, so a value too large for the host is kept as
+        // a saturated count rather than rejected as a syntax error; it can never equal an actual
+        // element count, so the strict count check still reports the mismatch.
+        val length = lengthStr.toLongOrNull() ?: Long.MAX_VALUE
 
         var keyed = false
         if (i < bracket.length && bracket[i] == ':') {
@@ -477,7 +479,7 @@ internal sealed interface Token {
      */
     data class Header(
         val key: String,
-        val length: Int,
+        val length: Long,
         val fields: List<FieldNode>?,
         val delimiter: KtoonConfiguration.Delimiter,
         val keyed: Boolean,
