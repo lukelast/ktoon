@@ -1,18 +1,22 @@
 package com.lukelast.ktoon.fixtures
 
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.json.Json
 
-private val fixtureJson = Json {
-    ignoreUnknownKeys = false // Strict: catch schema mismatches
-    isLenient = true // Allow some parsing flexibility
-    prettyPrint = false
+/** Strict JSON for fixture files and their typed inputs, so schema mismatches fail loudly. */
+val fixtureJson = Json {
+    ignoreUnknownKeys = false
+    isLenient = false
 }
 
-fun loadFixture(resourcePath: String): ToonFixture {
-    val content = loadResourceFile(resourcePath)
-    return fixtureJson.decodeFromString<ToonFixture>(content)
-}
+private val fixtureCache = ConcurrentHashMap<String, ToonFixture>()
+
+/** Loads and parses a fixture file, cached because many tests share the same file. */
+fun loadFixture(resourcePath: String): ToonFixture =
+    fixtureCache.getOrPut(resourcePath) {
+        fixtureJson.decodeFromString<ToonFixture>(loadResourceFile(resourcePath))
+    }
 
 fun loadResourceFile(resourcePath: String): String {
     val url =

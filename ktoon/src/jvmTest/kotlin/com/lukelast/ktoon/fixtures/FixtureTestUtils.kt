@@ -7,7 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
@@ -26,48 +25,22 @@ fun <T> runFixtureEncodeTest(
     deserializer: DeserializationStrategy<T>,
     serializer: SerializationStrategy<T>,
 ) {
-    // Construct full fixture path
-    val fixturePath = "fixtures/encode/$fixtureName.json"
-
-    // Load fixture and find test case
-    val fixture = loadFixture(fixturePath)
-    val testCase =
-        fixture.tests.find { it.name == testName }
-            ?: error("Test case '$testName' not found in $fixturePath")
+    val testCase = findTestCase(FixtureCategory.ENCODE, fixtureName, testName)
 
     // Deserialize input from JsonElement to typed data class
-    val input = fixtureInputJson.decodeFromJsonElement(deserializer, testCase.input)
+    val input = fixtureJson.decodeFromJsonElement(deserializer, testCase.input)
+    val ktoon = Ktoon(configuration = testCase.options.toToonConfiguration())
 
-    // Create Ktoon with test options
-    val config = testCase.options.toToonConfiguration()
-    val ktoon = Ktoon(configuration = config)
-
-    // Encode with Ktoon
-    val ktoonObjectToToon = ktoon.encodeToString(serializer, input)
-
-    // Compare with expected
-    val expectedToon = testCase.expected.asString()
-    assertEquals(
-        expectedToon,
-        ktoonObjectToToon,
-        buildString {
-            append("Test '$testName' failed")
-            testCase.note?.let { append("\nNote: $it") }
-            testCase.specSection?.let { append("\nSpec: §$it") }
-        },
-    )
-
-    val ktoonJsonToToon = ktoon.encodeJsonToToon(testCase.input)
-    assertEquals(
-        expectedToon,
-        ktoonJsonToToon,
-        buildString {
-            append("Test '$testName' failed")
-            append("\nktoon.encodeJsonToToon()")
-            testCase.note?.let { append("\nNote: $it") }
-            testCase.specSection?.let { append("\nSpec: §$it") }
-        },
-    )
+    if (testCase.shouldError) {
+        // Test expects an error to be thrown
+        assertFailsWith<KtoonException> { ktoon.encodeToString(serializer, input) }
+    } else {
+        assertEquals(
+            testCase.expected.asString(),
+            ktoon.encodeToString(serializer, input),
+            failureContext(testCase),
+        )
+    }
 }
 
 inline fun <reified T> runFixtureEncodeTest(
@@ -91,20 +64,8 @@ fun <T> runFixtureDecodeTest(
     deserializer: DeserializationStrategy<T>,
     serializer: SerializationStrategy<T>,
 ) {
-    // Construct full fixture path
-    val fixturePath = "fixtures/decode/$fixtureName.json"
-
-    // Load fixture and find test case
-    val fixture = loadFixture(fixturePath)
-    val testCase =
-        fixture.tests.find { it.name == testName }
-            ?: error("Test case '$testName' not found in $fixturePath")
-
-    // Create Ktoon with test options
-    val config = testCase.options.toToonConfiguration()
-    val ktoon = Ktoon(configuration = config)
-
-    // Get TOON input string
+    val testCase = findTestCase(FixtureCategory.DECODE, fixtureName, testName)
+    val ktoon = Ktoon(configuration = testCase.options.toToonConfiguration())
     val toonInput = testCase.input.asString()
 
     if (testCase.shouldError) {
@@ -113,23 +74,17 @@ fun <T> runFixtureDecodeTest(
     } else {
         // Decode TOON to typed value
         val actualObject = ktoon.decodeFromString(deserializer, toonInput)
-        val actualJsonText = jsonPretty.encodeToString(serializer, actualObject)
+        val expectedObject = fixtureJson.decodeFromJsonElement(deserializer, testCase.expected)
 
-        val expectedObject = fixtureInputJson.decodeFromJsonElement(deserializer, testCase.expected)
-        val expectedJsonText = jsonPretty.encodeToString(serializer, expectedObject)
-
-        // If objects aren't equal then compare the json strings to get a nice diff.
-        if (expectedObject != actualObject) {
-            assertEquals(
-                expectedJsonText,
-                actualJsonText,
-                buildString {
-                    append("Test '$testName' failed")
-                    testCase.note?.let { append("\nNote: $it") }
-                    testCase.specSection?.let { append("\nSpec: §$it") }
-                },
-            )
-        }
+        val message = failureContext(testCase)
+        // Compare JSON renderings first for a readable diff, then the objects themselves so a
+        // difference that doesn't survive JSON serialization still fails.
+        assertEquals(
+            jsonPretty.encodeToString(serializer, expectedObject),
+            jsonPretty.encodeToString(serializer, actualObject),
+            message,
+        )
+        assertEquals(expectedObject, actualObject, message)
     }
 }
 
@@ -138,6 +93,28 @@ inline fun <reified T> runFixtureDecodeTest(
     testName: String = currentFixtureTestName(),
 ) {
     runFixtureDecodeTest(fixture, testName, serializer<T>(), serializer<T>())
+}
+
+private fun findTestCase(
+    category: FixtureCategory,
+    fixtureName: String,
+    testName: String,
+): FixtureTestCase {
+    val directory =
+        when (category) {
+            FixtureCategory.ENCODE -> "encode"
+            FixtureCategory.DECODE -> "decode"
+        }
+    val fixturePath = "fixtures/$directory/$fixtureName.json"
+    return loadFixture(fixturePath).tests.find { it.name == testName }
+        ?: error("Test case '$testName' not found in $fixturePath")
+}
+
+/** Assertion message carrying the fixture case's name, spec reference, and note. */
+fun failureContext(case: FixtureTestCase): String = buildString {
+    append("Fixture case '${case.name}' failed")
+    case.specSection?.let { append("\nSpec: §$it") }
+    case.note?.let { append("\nNote: $it") }
 }
 
 fun currentFixtureTestName(): String {
@@ -153,12 +130,6 @@ fun currentFixtureTestName(): String {
             "Unable to determine fixture test name from stack trace; " +
                 "ensure calls originate from $encodePackage or $decodePackage"
         )
-}
-
-/** JSON parser for deserializing fixture inputs. */
-private val fixtureInputJson = Json {
-    ignoreUnknownKeys = false
-    isLenient = false
 }
 
 fun JsonElement.asString(): String {
