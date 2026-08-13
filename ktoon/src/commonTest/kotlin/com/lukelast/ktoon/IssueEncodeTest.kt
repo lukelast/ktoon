@@ -27,6 +27,16 @@ class IssueEncodeTest {
     }
 
     @Test
+    fun `two to the sixty-third encodes as its own value and not Long MAX_VALUE`() {
+        // §2: the emitted number must carry enough precision to decode back unchanged.
+        val ktoon = Ktoon()
+        assertEquals("9223372036854775808", ktoon.encodeToString(9223372036854775808.0))
+        assertEquals("9223372036854775808", ktoon.encodeToString(9223372036854775808.0f))
+        assertEquals("-9223372036854775808", ktoon.encodeToString(Long.MIN_VALUE.toDouble()))
+        assertEquals("-9223372036854775808", ktoon.encodeToString(Long.MIN_VALUE.toFloat()))
+    }
+
+    @Test
     fun `captured keyed tabular objects keep encounter order by default`() {
         val expected =
             """
