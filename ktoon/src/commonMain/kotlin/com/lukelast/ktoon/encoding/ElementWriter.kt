@@ -60,8 +60,11 @@ internal class ElementWriter(
             val nameSet = names.toSet()
             if (names.size != nameSet.size) return null
             for (other in objects) {
+                // §9.3: every object must carry the same *set* of keys. Comparing sets rather than
+                // membership also rejects an object that repeats one name and so lacks another;
+                // the column lookup below assumes each name is present exactly once.
                 if (other.size != names.size) return null
-                for ((name, _) in other) if (name !in nameSet) return null
+                if (other.mapTo(mutableSetOf()) { it.first } != nameSet) return null
             }
 
             val nodes = ArrayList<FieldNode>(names.size)
