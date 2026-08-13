@@ -49,4 +49,20 @@ class IssueNullDecodingTest {
     fun `schemaless decoding still yields JsonNull`() {
         assertEquals(JsonNull, strict.decodeToonToJson("null"))
     }
+
+    @Serializable data class DefaultedKey(val a: Int = 1)
+
+    @Test
+    fun `a scalar root does not decode as an empty collection`() {
+        assertFailsWith<KtoonException> { strict.decodeFromString<List<Int>>("hello") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<Map<String, Int>>("hello") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<Defaults>("hello") }
+    }
+
+    @Test
+    fun `a structured map key is reported instead of collapsing entries`() {
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<Map<DefaultedKey, Int>>("a: 1\nb: 2")
+        }
+    }
 }
