@@ -316,7 +316,9 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                 if (containsOtherDelimiter(entry, delimiter)) return null
                 nodes.add(FieldNode(entry, null))
             } else {
-                val name = entry.substring(0, braceStart)
+                // §12: a field name is an extracted token, so surrounding spaces are trimmed —
+                // `group {a,b}` declares the nested column `group`, not `group `.
+                val name = entry.substring(0, braceStart).trimSpaces()
                 if (name.isEmpty() || containsOtherDelimiter(name, delimiter)) return null
                 val braceEnd = findMatchingBrace(entry, braceStart)
                 if (braceEnd != entry.length - 1) return null
