@@ -211,7 +211,7 @@ internal class ElementWriter(
         when (position) {
             // §9.1: canonical empty-array forms
             ArrayPosition.FIELD -> {
-                writer.writeKey(quoteKey(key!!))
+                writer.writeKey(quoteKey(checkNotNull(key) { "FIELD arrays are always keyed" }))
                 writer.writeSpace()
                 writer.write("[]")
             }
