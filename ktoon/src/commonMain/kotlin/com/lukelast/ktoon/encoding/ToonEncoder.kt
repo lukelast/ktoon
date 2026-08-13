@@ -103,5 +103,5 @@ internal class ToonEncoder(
             else -> this
         }
 
-    override fun endStructure(descriptor: SerialDescriptor) {}
+    override fun endStructure(descriptor: SerialDescriptor) = Unit
 }

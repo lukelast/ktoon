@@ -1,6 +1,11 @@
 package com.lukelast.ktoon.data1.test08
 
-import com.lukelast.ktoon.data1.*
+import com.lukelast.ktoon.data1.EngineSpec
+import com.lukelast.ktoon.data1.Garage
+import com.lukelast.ktoon.data1.LapTime
+import com.lukelast.ktoon.data1.Modification
+import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.SportsCar
 
 /**
  * Edge cases with single-item arrays. Tests single-item inline arrays, single-row tabular arrays,

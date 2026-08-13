@@ -1,6 +1,11 @@
 package com.lukelast.ktoon.data1.test06
 
-import com.lukelast.ktoon.data1.*
+import com.lukelast.ktoon.data1.EngineSpec
+import com.lukelast.ktoon.data1.Garage
+import com.lukelast.ktoon.data1.LapTime
+import com.lukelast.ktoon.data1.Modification
+import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.SportsCar
 
 /**
  * Basic Garage test with 2 sports cars. Tests tabular arrays, nested objects, null values, and
