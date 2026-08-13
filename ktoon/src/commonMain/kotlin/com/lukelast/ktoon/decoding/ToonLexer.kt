@@ -284,8 +284,9 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
             val c = str[i]
             when {
                 escapeNext -> escapeNext = false
-                c == '\\' -> escapeNext = true
-                c == '"' -> inQuotes = !inQuotes
+                c == '\\' && inQuotes -> escapeNext = true
+                c == '"' && inQuotes -> inQuotes = false
+                c == '"' -> inQuotes = opensQuotedToken(str, i)
                 inQuotes -> {}
                 c == '{' -> depth++
                 c == '}' -> {
@@ -344,7 +345,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
      * Splits field-list content on the active delimiter, respecting quotes and brace nesting.
      * Returns null if quotes and braces are not balanced.
      */
-    @Suppress("ReturnCount")
+    @Suppress("ReturnCount", "CyclomaticComplexMethod")
     private fun splitFieldEntries(content: String, delimiter: Char): List<String>? {
         val result = mutableListOf<String>()
         var current = StringBuilder()
@@ -357,11 +358,12 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                     escapeNext = false
                     current.append(c)
                 }
-                c == '\\' -> {
+                c == '\\' && inQuotes -> {
                     escapeNext = true
                     current.append(c)
                 }
-                c == '"' -> {
+                c == '"' && (inQuotes || current.isBlank()) -> {
+                    // Only a quote at the start of this field entry opens a quoted name (§7.4).
                     inQuotes = !inQuotes
                     current.append(c)
                 }

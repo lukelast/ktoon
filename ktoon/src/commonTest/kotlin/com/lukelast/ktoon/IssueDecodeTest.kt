@@ -120,6 +120,22 @@ class IssueDecodeTest {
     }
 
     @Test
+    fun `a quote inside an unquoted token does not hide a colon or delimiter`() {
+        // §7.4: only a token whose first character is a quote is a quoted token.
+        assertEquals(
+            mapOf("a\"b" to 1),
+            strict.decodeFromString<Map<String, Int>>("a\"b: 1"),
+        )
+        assertEquals(listOf("a\"b", "c"), strict.decodeFromString<List<String>>("[2]: a\"b,c"))
+    }
+
+    @Test
+    fun `a token that starts with a quote is still a quoted token`() {
+        assertEquals(mapOf("a:b" to 1), strict.decodeFromString<Map<String, Int>>("\"a:b\": 1"))
+        assertEquals(listOf("a,b", "c"), strict.decodeFromString<List<String>>("[2]: \"a,b\",c"))
+    }
+
+    @Test
     fun `an indented root line is rejected in strict mode`() {
         // §5: root-form discovery works on depth-0 lines.
         assertFailsWith<KtoonException> { strict.decodeFromString<Int>("  42") }

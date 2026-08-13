@@ -118,6 +118,20 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
 /** Trims surrounding spaces from a token: exactly U+0020, no other whitespace (§12). */
 internal fun String.trimSpaces(): String = trim(' ')
 
+/**
+ * §7.4: a token is quoted only when its *first* character is `"`; a quote further inside an
+ * unquoted token is ordinary data (`a"b: 1` is the key `a"b`). A quote therefore opens a quoted run
+ * only at the start of the scanned text or directly after a character that begins a new token.
+ */
+internal fun opensQuotedToken(str: String, index: Int): Boolean {
+    var i = index - 1
+    while (i >= 0 && str[i] == ' ') i--
+    return i < 0 || str[i] in TOKEN_START_CHARS
+}
+
+/** Characters after which a new token begins: delimiters, colons, and the bracket openers. */
+private const val TOKEN_START_CHARS = ",|\t:[{"
+
 internal fun splitRespectingQuotes(content: String, delimiter: Char): List<String> {
     val result = mutableListOf<String>()
     var current = StringBuilder()
@@ -128,10 +142,11 @@ internal fun splitRespectingQuotes(content: String, delimiter: Char): List<Strin
         if (escapeNext) {
             current.append(char)
             escapeNext = false
-        } else if (char == '\\') {
+        } else if (char == '\\' && inQuotes) {
             current.append(char)
             escapeNext = true
-        } else if (char == '"') {
+        } else if (char == '"' && (inQuotes || current.isBlank())) {
+            // Only a quote at the start of this cell opens a quoted token (§7.4).
             inQuotes = !inQuotes
             current.append(char)
         } else if (char == delimiter && !inQuotes) {
@@ -146,8 +161,8 @@ internal fun splitRespectingQuotes(content: String, delimiter: Char): List<Strin
 }
 
 /**
- * Finds the first unquoted occurrence of a character. Returns -1 if not found. Quoted sections are
- * delimited by unescaped double quotes.
+ * Finds the first unquoted occurrence of a character. Returns -1 if not found. A quoted section
+ * starts at a token-initial double quote and ends at the next unescaped one.
  */
 internal fun findUnquoted(str: String, target: Char, startIndex: Int = 0): Int {
     var inQuotes = false
@@ -156,8 +171,9 @@ internal fun findUnquoted(str: String, target: Char, startIndex: Int = 0): Int {
         val char = str[i]
         when {
             escapeNext -> escapeNext = false
-            char == '\\' -> escapeNext = true
-            char == '"' -> inQuotes = !inQuotes
+            char == '\\' && inQuotes -> escapeNext = true
+            char == '"' && inQuotes -> inQuotes = false
+            char == '"' -> inQuotes = opensQuotedToken(str, i)
             char == target && !inQuotes -> return i
         }
     }
