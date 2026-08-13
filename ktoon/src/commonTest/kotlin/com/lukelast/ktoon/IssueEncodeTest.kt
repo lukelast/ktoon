@@ -67,6 +67,25 @@ class IssueEncodeTest {
         assertEquals("Infinity: 1\n\"-Infinity\": 2", Ktoon().encodeToString(floats))
     }
 
+    @Serializable data class OneString(val value: String)
+
+    @Test
+    fun `a root string starting with a byte-order mark is quoted`() {
+        // §12: a U+FEFF at the very start of a document is its BOM and encoders must not emit one.
+        val ktoon = Ktoon()
+        assertEquals("\"﻿hello\"", ktoon.encodeToString("﻿hello"))
+        assertEquals("﻿hello", ktoon.decodeFromString<String>(ktoon.encodeToString("﻿hello")))
+        assertEquals("\"﻿\"", ktoon.encodeToString('﻿'))
+    }
+
+    @Test
+    fun `a byte-order mark away from the document start still needs no quotes`() {
+        val ktoon = Ktoon()
+        val nested = OneString("﻿hello")
+        assertEquals("value: ﻿hello", ktoon.encodeToString(nested))
+        assertEquals(nested, ktoon.decodeFromString<OneString>(ktoon.encodeToString(nested)))
+    }
+
     @Test
     fun `a null map key is reported instead of written as the text null`() {
         val message = "TOON does not support null keys in maps"

@@ -38,29 +38,19 @@ internal class ToonEncoder(
 
     override fun encodeDouble(value: Double) = writer.write(NumberNormalizer.normalize(value))
 
-    override fun encodeChar(value: Char) =
-        writer.write(
-            StringQuoting.quote(
-                value.toString(),
-                StringQuoting.QuotingContext.OBJECT_VALUE,
-                config.delimiter.char,
-            )
-        )
+    override fun encodeChar(value: Char) = writeRootText(value.toString())
 
-    override fun encodeString(value: String) =
+    override fun encodeString(value: String) = writeRootText(value)
+
+    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
+        writeRootText(enumDescriptor.getElementName(index))
+
+    /** Writes a primitive that is the whole document, where root-only quoting rules apply. */
+    private fun writeRootText(value: String) =
         writer.write(
             StringQuoting.quote(
                 value,
-                StringQuoting.QuotingContext.OBJECT_VALUE,
-                config.delimiter.char,
-            )
-        )
-
-    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
-        writer.write(
-            StringQuoting.quote(
-                enumDescriptor.getElementName(index),
-                StringQuoting.QuotingContext.OBJECT_VALUE,
+                StringQuoting.QuotingContext.ROOT_VALUE,
                 config.delimiter.char,
             )
         )
