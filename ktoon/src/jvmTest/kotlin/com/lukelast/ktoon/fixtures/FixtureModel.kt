@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.fixtures
 
 import com.lukelast.ktoon.KtoonConfiguration
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -22,19 +23,19 @@ data class ToonFixture(
     val description: String,
     val tests: List<FixtureTestCase>,
 ) {
-    fun isEncode(): Boolean = category == FixtureCategory.encode
+    fun isEncode(): Boolean = category == FixtureCategory.ENCODE
 
-    fun isDecode(): Boolean = category == FixtureCategory.decode
+    fun isDecode(): Boolean = category == FixtureCategory.DECODE
 }
 
 /** Test category: encode (JSON → TOON) or decode (TOON → JSON). */
 @Serializable
 enum class FixtureCategory {
     /** Encode tests: convert JSON input to TOON output */
-    encode,
+    @SerialName("encode") ENCODE,
 
     /** Decode tests: convert TOON input to JSON output */
-    decode,
+    @SerialName("decode") DECODE,
 }
 
 /**

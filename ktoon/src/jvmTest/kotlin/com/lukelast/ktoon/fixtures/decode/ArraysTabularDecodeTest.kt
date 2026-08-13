@@ -57,7 +57,10 @@ class ArraysTabularDecodeTest {
 
     @Test
     fun `parses quoted key with tabular array`() {
-        @Serializable data class CustomItemResult(val `x-items`: List<CustomItem>)
+        // The key shape under test is exactly what the rule objects to.
+        @Suppress("ConstructorParameterNaming")
+        @Serializable
+        data class CustomItemResult(val `x-items`: List<CustomItem>)
         runFixtureDecodeTest<CustomItemResult>(fixture)
     }
 

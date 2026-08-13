@@ -12,7 +12,7 @@ class ParseTest {
         val fixture = loadFixture("fixtures/encode/primitives.json")
 
         assertEquals("4.0", fixture.version)
-        assertEquals(FixtureCategory.encode, fixture.category)
+        assertEquals(FixtureCategory.ENCODE, fixture.category)
         assertEquals(
             "Primitive value encoding – strings, numbers, booleans, null",
             fixture.description,
