@@ -2,6 +2,7 @@ package com.lukelast.ktoon.decoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonDecodingException
+import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -213,6 +214,13 @@ internal class ToonPrimitiveDecoder(
         return CompositeDecoder.DECODE_DONE
     }
 
+    override fun decodeInline(descriptor: SerialDescriptor): Decoder =
+        if (isUnsignedDescriptor(descriptor)) {
+            UnsignedNumberDecoder(value, serializersModule, isMapKey)
+        } else {
+            super.decodeInline(descriptor)
+        }
+
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         // A root value reaches this decoder directly, so the shape check that nested values get
         // from createDecoderForStructure has to happen here too.
@@ -281,6 +289,15 @@ internal class ToonObjectDecoder(
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
         return decodeCurrentPrimitive { it.decodeEnum(enumDescriptor) }
     }
+
+    override fun decodeInline(descriptor: SerialDescriptor): Decoder =
+        if (isUnsignedDescriptor(descriptor)) {
+            decodeCurrentPrimitive {
+                UnsignedNumberDecoder(it.currentToonValue(), serializersModule)
+            }
+        } else {
+            super.decodeInline(descriptor)
+        }
 
     private fun <T> decodeCurrentPrimitive(decode: (ToonPrimitiveDecoder) -> T): T {
         val fieldName = getCurrentFieldName()
@@ -369,6 +386,13 @@ internal class ToonArrayDecoder(
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
         return decodeCurrentPrimitive { it.decodeEnum(enumDescriptor) }
     }
+
+    override fun decodeInline(descriptor: SerialDescriptor): Decoder =
+        if (isUnsignedDescriptor(descriptor)) {
+            UnsignedNumberDecoder(getCurrentElement(), serializersModule)
+        } else {
+            super.decodeInline(descriptor)
+        }
 
     private fun <T> decodeCurrentPrimitive(decode: (ToonPrimitiveDecoder) -> T): T {
         val element = getCurrentElement()
@@ -504,6 +528,15 @@ internal class ToonMapDecoder(
 
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
         return decodeCurrentPrimitive { it.decodeEnum(enumDescriptor) }
+    }
+
+    override fun decodeInline(descriptor: SerialDescriptor): Decoder {
+        if (!isUnsignedDescriptor(descriptor)) return super.decodeInline(descriptor)
+        val index = position - 1
+        val isKey = index % 2 == 0
+        val key = keys[index / 2]
+        val element = if (isKey) ToonValue.String(key) else value.properties.getValue(key)
+        return UnsignedNumberDecoder(element, serializersModule, isMapKey = isKey)
     }
 
     private fun <T> decodeCurrentPrimitive(decode: (Decoder) -> T): T {
