@@ -16,6 +16,20 @@ class IssueLexerTest {
 
     @Serializable data class GroupRoot(val items: List<GroupHolder>)
 
+    private val lenient = Ktoon { strictMode = false }
+
+    @Test
+    fun `a declared length too large for the host is still a header`() {
+        // §6 puts no bound on the declared length; only the count check cares about its value.
+        assertEquals(
+            mapOf("items" to listOf("x")),
+            lenient.decodeFromString<Map<String, List<String>>>("items[2147483648]: x"),
+        )
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<Map<String, List<String>>>("items[2147483648]: x")
+        }
+    }
+
     @Serializable data class TwoStrings(val a: String, val b: String)
 
     @Serializable data class IntAndString(val a: Int, val b: String)

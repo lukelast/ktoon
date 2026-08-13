@@ -81,9 +81,12 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** §14.1: a declared count must match the actual count in strict mode (never truncates). */
-    private fun validateCount(declared: Int, actual: Int, line: Int) {
-        if (config.strictMode && declared != actual) {
-            throw KtoonValidationException.arrayLengthMismatch(declared, actual, line)
+    private fun validateCount(declared: Long, actual: Int, line: Int) {
+        if (config.strictMode && declared != actual.toLong()) {
+            throw KtoonValidationException(
+                "Array length mismatch: declared $declared, found $actual",
+                line,
+            )
         }
     }
 
@@ -837,7 +840,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     @Suppress("CyclomaticComplexMethod", "LoopWithTooManyJumpStatements")
     private fun readListItems(
         itemIndent: Int,
-        declaredLength: Int?,
+        declaredLength: Long?,
         headerLine: Int,
     ): ToonValue.Array {
         val elements = mutableListOf<ToonValue>()
