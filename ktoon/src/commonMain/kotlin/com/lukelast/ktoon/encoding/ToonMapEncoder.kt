@@ -100,8 +100,8 @@ internal class ToonMapEncoder(
             StructureKind.CLASS,
             StructureKind.OBJECT -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
-                    ElementCapturer(config, serializersModule, descriptor) { values ->
-                        ElementWriter(writer, config).writeObjectField(key, values, indentLevel)
+                    ElementCapturer(config, serializersModule, descriptor) { entries ->
+                        ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
                     }
                 } else {
                     writer.writeKey(quoteKey(key))
@@ -116,8 +116,8 @@ internal class ToonMapEncoder(
             }
             StructureKind.MAP -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
-                    MapElementCapturer(config, serializersModule) { values ->
-                        ElementWriter(writer, config).writeObjectField(key, values, indentLevel)
+                    MapElementCapturer(config, serializersModule) { entries ->
+                        ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
                     }
                 } else {
                     writer.writeKey(quoteKey(key))

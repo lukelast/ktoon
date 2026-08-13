@@ -65,8 +65,8 @@ internal class ToonEncoder(
             StructureKind.OBJECT -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     // §9.5: capture first so keyed tabular form can be selected from the values
-                    ElementCapturer(config, serializersModule, descriptor) { values ->
-                        ElementWriter(writer, config).writeRootObject(values)
+                    ElementCapturer(config, serializersModule, descriptor) { entries ->
+                        ElementWriter(writer, config).writeRootObject(entries)
                     }
                 } else {
                     ToonObjectEncoder(
@@ -80,8 +80,8 @@ internal class ToonEncoder(
             }
             StructureKind.MAP ->
                 if (ElementWriter.couldBeKeyed(descriptor)) {
-                    MapElementCapturer(config, serializersModule) { values ->
-                        ElementWriter(writer, config).writeRootObject(values)
+                    MapElementCapturer(config, serializersModule) { entries ->
+                        ElementWriter(writer, config).writeRootObject(entries)
                     }
                 } else {
                     ToonMapEncoder(

@@ -19,7 +19,7 @@ import kotlin.math.floor
  * - Primitive values under the normative number grammar (§4)
  * - Validation in strict mode
  */
-internal class ToonReader(private val tokens: List<Token>, private val config: KtoonConfiguration) {
+internal class ToonParser(private val tokens: List<Token>, private val config: KtoonConfiguration) {
     private var position = 0
 
     /**
@@ -50,7 +50,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         // Determine root type from first token
         val result =
             when (val first = peek()) {
-                is Token.ArrayHeader -> {
+                is Token.Header -> {
                     if (first.key.isEmpty()) {
                         // §5: keyless header at root — root array, or keyed tabular root object
                         if (first.keyed) readKeyedObject() else readArray()
@@ -59,7 +59,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                     }
                 }
                 is Token.Dash -> {
-                    readListItems(itemDepth = 0, declaredLength = null, headerLine = first.line)
+                    readListItems(itemIndent = 0, declaredLength = null, headerLine = first.line)
                 }
                 is Token.Key -> {
                     readObject(baseIndent = 0)
@@ -129,7 +129,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
             val indent =
                 when (token) {
                     is Token.Key -> token.indent
-                    is Token.ArrayHeader -> token.indent
+                    is Token.Header -> token.indent
                     else -> -1
                 }
 
@@ -155,7 +155,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                     insertProperty(properties, key, value, token.line)
                     readAny = true
                 }
-                is Token.ArrayHeader -> {
+                is Token.Header -> {
                     // §14.2: a keyless header cannot occupy an object field position
                     if (token.key.isEmpty()) {
                         throw KtoonParsingException(
@@ -194,7 +194,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         if (p >= tokens.size) return false
         return when (val token = tokens[p]) {
             is Token.Key -> token.indent >= baseIndent
-            is Token.ArrayHeader -> token.indent >= baseIndent
+            is Token.Header -> token.indent >= baseIndent
             else -> false
         }
     }
@@ -241,7 +241,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 } else {
                     ToonValue.Object(emptyMap())
                 }
-            is Token.ArrayHeader ->
+            is Token.Header ->
                 if (token.indent > keyToken.indent) {
                     readObject(baseIndent = keyToken.indent + config.indentSize)
                 } else {
@@ -256,7 +256,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
 
     /** Reads an array in any form (inline, tabular, or list). */
     private fun readArray(): ToonValue.Array {
-        val header = consume<Token.ArrayHeader>()
+        val header = consume<Token.Header>()
 
         return when {
             // Tabular form (has fields)
@@ -275,7 +275,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads an inline array: `key[3]: val1,val2,val3` */
-    private fun readInlineArray(header: Token.ArrayHeader): ToonValue.Array {
+    private fun readInlineArray(header: Token.Header): ToonValue.Array {
         val valueToken = consume<Token.InlineArrayValue>()
 
         // Split by delimiter (§12: tokens are trimmed of surrounding spaces, exactly U+0020)
@@ -290,8 +290,8 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         return ToonValue.Array(values)
     }
 
-    /** Computes the depth at which a header's rows/items/entries appear. */
-    private fun contentDepth(header: Token.ArrayHeader): Int {
+    /** Computes the indentation at which a header's rows/items/entries appear. */
+    private fun contentIndent(header: Token.Header): Int {
         // When a keyless header sits on a hyphen line (`- [N]: …`), its children are indented
         // relative to the dash, not the synthetic header indent.
         val previousToken = if (position >= 2) tokens[position - 2] else null
@@ -303,11 +303,11 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     }
 
     /**
-     * Handles a blank-line run inside a header span (§12). Returns true when the caller should
+     * Consumes a blank-line run inside a header span (§12). Returns true when the caller should
      * `continue` the loop (blanks consumed), false when the scope has ended and the blanks belong
      * to an outer scope.
      */
-    private fun handleBlankInSpan(
+    private fun tryConsumeBlanksInSpan(
         hasItems: Boolean,
         scopeContinues: () -> Boolean,
         blankLine: Int,
@@ -327,13 +327,13 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads a tabular array: `key[2]{id,name}:\n 1,Ada\n 2,Bob` */
-    private fun readTabularArray(header: Token.ArrayHeader): ToonValue.Array {
+    private fun readTabularArray(header: Token.Header): ToonValue.Array {
         val fields = header.fields ?: throw KtoonParsingException("Missing field list", header.line)
         validateFieldNames(fields, header.line)
         val leafCount = leafFieldCount(fields)
 
         val elements = mutableListOf<ToonValue>()
-        val rowDepth = contentDepth(header)
+        val rowIndent = contentIndent(header)
         val delimiter = header.delimiter.char
 
         arraySpanDepth++
@@ -344,9 +344,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 when (token) {
                     is Token.BlankLine -> {
                         if (
-                            handleBlankInSpan(
+                            tryConsumeBlanksInSpan(
                                 hasItems = elements.isNotEmpty(),
-                                scopeContinues = { nextNonBlankIsRow(rowDepth, delimiter) },
+                                scopeContinues = { nextNonBlankIsRow(rowIndent, delimiter) },
                                 blankLine = token.line,
                             )
                         ) {
@@ -355,20 +355,20 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                         break
                     }
                     is Token.Value -> {
-                        validateRowIndent(token.indent, rowDepth, header.indent, token.line)
+                        validateRowIndent(token.indent, rowIndent, header.indent, token.line)
                         advance()
                         elements.add(
-                            readRowObject(token.content, fields, leafCount, delimiter, token.line)
+                            parseRowObject(token.content, fields, leafCount, delimiter, token.line)
                         )
                     }
                     is Token.Key -> {
                         // §9.3 disambiguation: at row depth, delimiter before colon → row;
                         // otherwise the rows end at this key-value line. A dedented line is
                         // outside the scope regardless of its shape.
-                        val atRowDepth =
-                            if (config.strictMode) token.indent == rowDepth
+                        val atRowIndent =
+                            if (config.strictMode) token.indent == rowIndent
                             else token.indent > header.indent
-                        if (atRowDepth && isRowLine(token.rawContent, delimiter)) {
+                        if (atRowIndent && isRowLine(token.rawContent, delimiter)) {
                             advance()
                             // Skip the paired value token from the same line
                             if (position < tokens.size) {
@@ -376,7 +376,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                                 if (paired is Token.Value && paired.line == token.line) advance()
                             }
                             elements.add(
-                                readRowObject(
+                                parseRowObject(
                                     token.rawContent,
                                     fields,
                                     leafCount,
@@ -388,14 +388,14 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                             break
                         }
                     }
-                    is Token.ArrayHeader -> {
+                    is Token.Header -> {
                         // §5.2: within a tabular scope the §9.3 rule is authoritative, so a
                         // header-shaped line whose first unquoted delimiter precedes its first
                         // unquoted colon is still a row (e.g. `1,foo[2]: x`).
-                        val atRowDepth =
-                            if (config.strictMode) token.indent == rowDepth
+                        val atRowIndent =
+                            if (config.strictMode) token.indent == rowIndent
                             else token.indent > header.indent
-                        if (atRowDepth && isRowLine(token.rawContent, delimiter)) {
+                        if (atRowIndent && isRowLine(token.rawContent, delimiter)) {
                             advance()
                             if (position < tokens.size) {
                                 val paired = tokens[position]
@@ -404,7 +404,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                                 }
                             }
                             elements.add(
-                                readRowObject(
+                                parseRowObject(
                                     token.rawContent,
                                     fields,
                                     leafCount,
@@ -439,24 +439,24 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     }
 
     /** True when the next non-blank token is another row of this tabular scope. */
-    private fun nextNonBlankIsRow(rowDepth: Int, delimiter: Char): Boolean {
+    private fun nextNonBlankIsRow(rowIndent: Int, delimiter: Char): Boolean {
         var p = position
         while (p < tokens.size && tokens[p] is Token.BlankLine) p++
         if (p >= tokens.size) return false
         return when (val token = tokens[p]) {
             is Token.Value -> true
-            is Token.Key -> token.indent == rowDepth && isRowLine(token.rawContent, delimiter)
-            is Token.ArrayHeader ->
-                token.indent == rowDepth && isRowLine(token.rawContent, delimiter)
+            is Token.Key -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
+            is Token.Header ->
+                token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
             else -> false
         }
     }
 
-    private fun validateRowIndent(indent: Int, rowDepth: Int, headerIndent: Int, line: Int) {
+    private fun validateRowIndent(indent: Int, rowIndent: Int, headerIndent: Int, line: Int) {
         if (config.strictMode) {
-            if (indent != rowDepth) {
+            if (indent != rowIndent) {
                 throw KtoonValidationException(
-                    "Invalid row indentation: expected $rowDepth, got $indent",
+                    "Invalid row indentation: expected $rowIndent, got $indent",
                     line,
                 )
             }
@@ -467,7 +467,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     }
 
     /** Decodes one row of cells against the header's field list (§9.3). */
-    private fun readRowObject(
+    private fun parseRowObject(
         content: String?,
         fields: List<FieldNode>,
         leafCount: Int,
@@ -531,7 +531,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
 
     /** Reads a keyed tabular object: `key[2:]{host,port}:\n alpha: a,1\n beta: b,2` (§9.5). */
     private fun readKeyedObject(): ToonValue.Object {
-        val header = consume<Token.ArrayHeader>()
+        val header = consume<Token.Header>()
         val fields =
             header.fields
                 ?: throw KtoonParsingException("Keyed header without a field list", header.line)
@@ -540,7 +540,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
 
         val properties = mutableMapOf<String, ToonValue>()
         var entryCount = 0
-        val entryDepth = contentDepth(header)
+        val entryIndent = contentIndent(header)
         val delimiter = header.delimiter.char
 
         arraySpanDepth++
@@ -549,9 +549,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 when (val token = peek()) {
                     is Token.BlankLine -> {
                         if (
-                            handleBlankInSpan(
+                            tryConsumeBlanksInSpan(
                                 hasItems = entryCount > 0,
-                                scopeContinues = { nextNonBlankIsEntry(entryDepth) },
+                                scopeContinues = { nextNonBlankIsEntry(entryIndent) },
                                 blankLine = token.line,
                             )
                         ) {
@@ -564,9 +564,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                         // depth or less; every line at entry depth with an unquoted colon is an
                         // entry row.
                         if (token.indent <= header.indent) break
-                        if (config.strictMode && token.indent != entryDepth) {
+                        if (config.strictMode && token.indent != entryIndent) {
                             throw KtoonValidationException(
-                                "Invalid entry row indentation: expected $entryDepth, got ${token.indent}",
+                                "Invalid entry row indentation: expected $entryIndent, got ${token.indent}",
                                 token.line,
                             )
                         }
@@ -579,7 +579,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                                 cellsContent = paired.content
                             }
                         }
-                        readKeyedEntry(
+                        insertKeyedEntry(
                             properties,
                             token.name,
                             cellsContent,
@@ -590,7 +590,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                         )
                         entryCount++
                     }
-                    is Token.ArrayHeader -> {
+                    is Token.Header -> {
                         // A header-shaped line at entry depth is still an entry row (§9.5)
                         if (token.indent <= header.indent) break
                         advance()
@@ -604,7 +604,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                         val colon = findUnquoted(raw, ':')
                         val entryKeyRaw = raw.substring(0, colon).trimSpaces()
                         val cells = raw.substring(colon + 1).trimSpaces()
-                        readKeyedEntry(
+                        insertKeyedEntry(
                             properties,
                             entryKeyRaw,
                             cells.ifEmpty { null },
@@ -639,7 +639,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         return ToonValue.Object(properties)
     }
 
-    private fun readKeyedEntry(
+    private fun insertKeyedEntry(
         properties: MutableMap<String, ToonValue>,
         rawEntryKey: String,
         cellsContent: String?,
@@ -649,32 +649,32 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
         line: Int,
     ) {
         val entryKey = unquote(rawEntryKey, line)
-        val value = readRowObject(cellsContent, fields, leafCount, delimiter, line)
+        val value = parseRowObject(cellsContent, fields, leafCount, delimiter, line)
         insertProperty(properties, entryKey, value, line)
     }
 
     /** True when the next non-blank token is another entry row of this keyed scope. */
-    private fun nextNonBlankIsEntry(entryDepth: Int): Boolean {
+    private fun nextNonBlankIsEntry(entryIndent: Int): Boolean {
         var p = position
         while (p < tokens.size && tokens[p] is Token.BlankLine) p++
         if (p >= tokens.size) return false
         return when (val token = tokens[p]) {
-            is Token.Key -> token.indent >= entryDepth
-            is Token.ArrayHeader -> token.indent >= entryDepth
-            is Token.Value -> token.indent >= entryDepth
+            is Token.Key -> token.indent >= entryIndent
+            is Token.Header -> token.indent >= entryIndent
+            is Token.Value -> token.indent >= entryIndent
             else -> false
         }
     }
 
     /** Reads an array in list form: `key[2]:\n - val1\n - val2` */
-    private fun readListArray(header: Token.ArrayHeader): ToonValue.Array {
-        val itemDepth = contentDepth(header)
-        return readListItems(itemDepth, header.length, header.line)
+    private fun readListArray(header: Token.Header): ToonValue.Array {
+        val itemIndent = contentIndent(header)
+        return readListItems(itemIndent, header.length, header.line)
     }
 
-    /** Reads list items at [itemDepth]; validates the count when [declaredLength] is present. */
+    /** Reads list items at [itemIndent]; validates the count when [declaredLength] is present. */
     private fun readListItems(
-        itemDepth: Int,
+        itemIndent: Int,
         declaredLength: Int?,
         headerLine: Int,
     ): ToonValue.Array {
@@ -686,9 +686,9 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 when (val token = peek()) {
                     is Token.BlankLine -> {
                         if (
-                            handleBlankInSpan(
+                            tryConsumeBlanksInSpan(
                                 hasItems = elements.isNotEmpty(),
-                                scopeContinues = { nextNonBlankIsListItem(itemDepth) },
+                                scopeContinues = { nextNonBlankIsListItem(itemIndent) },
                                 blankLine = token.line,
                             )
                         ) {
@@ -697,14 +697,14 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                         break
                     }
                     is Token.Dash -> {
-                        if (token.indent != itemDepth) break
+                        if (token.indent != itemIndent) break
                         advance()
                         elements.add(readListItemValue(token))
                     }
                     is Token.Value -> {
                         // §5.2: a bare token line inside an array scope is a structural error in
                         // both modes; a dedented one belongs to an outer scope.
-                        if (token.indent >= itemDepth) {
+                        if (token.indent >= itemIndent) {
                             throw KtoonParsingException(
                                 "Misplaced scalar line (missing colon?)",
                                 token.line,
@@ -727,12 +727,12 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
     }
 
     /** True when the next non-blank token is another item of this list scope. */
-    private fun nextNonBlankIsListItem(itemDepth: Int): Boolean {
+    private fun nextNonBlankIsListItem(itemIndent: Int): Boolean {
         var p = position
         while (p < tokens.size && tokens[p] is Token.BlankLine) p++
         if (p >= tokens.size) return false
         val token = tokens[p]
-        return token is Token.Dash && token.indent == itemDepth
+        return token is Token.Dash && token.indent == itemIndent
     }
 
     /** Reads the value of one list item, after its dash marker has been consumed. */
@@ -755,7 +755,7 @@ internal class ToonReader(private val tokens: List<Token>, private val config: K
                 if (next.content == "[]") ToonValue.Array(emptyList())
                 else parsePrimitive(next.content, next.line)
             }
-            is Token.ArrayHeader -> {
+            is Token.Header -> {
                 if (next.key.isEmpty()) {
                     // §9.4: `- [M]:` opens a nested array; a fields-bearing keyless header is
                     // not valid in list-item position.

@@ -8,7 +8,7 @@ internal sealed class EncodedElement {
     class Primitive(val value: String) : EncodedElement()
 
     /** An object's fields (or a map's entries) in encounter order; names are raw (unquoted). */
-    class Structure(val values: List<Pair<String, EncodedElement>>) : EncodedElement()
+    class Structure(val entries: List<Pair<String, EncodedElement>>) : EncodedElement()
 
     class NestedArray(val elements: List<EncodedElement>) : EncodedElement()
 }

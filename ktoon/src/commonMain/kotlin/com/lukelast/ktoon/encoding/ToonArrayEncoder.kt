@@ -29,7 +29,7 @@ internal class ToonArrayEncoder(
         elements.add(EncodedElement.Primitive(value))
     }
 
-    private fun quote(value: String) =
+    private fun quoteElement(value: String) =
         StringQuoting.quote(
             value,
             StringQuoting.QuotingContext.ARRAY_ELEMENT,
@@ -52,12 +52,12 @@ internal class ToonArrayEncoder(
 
     override fun encodeDouble(value: Double) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeChar(value: Char) = addPrimitive(quote(value.toString()))
+    override fun encodeChar(value: Char) = addPrimitive(quoteElement(value.toString()))
 
-    override fun encodeString(value: String) = addPrimitive(quote(value))
+    override fun encodeString(value: String) = addPrimitive(quoteElement(value))
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
-        addPrimitive(quote(enumDescriptor.getElementName(index)))
+        addPrimitive(quoteElement(enumDescriptor.getElementName(index)))
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
         when (descriptor.kind) {
