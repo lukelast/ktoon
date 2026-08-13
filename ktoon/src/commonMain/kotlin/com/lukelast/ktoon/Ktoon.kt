@@ -126,6 +126,15 @@ class Ktoon(
     }
 
     /**
+     * Decodes a TOON document into a generic [JsonElement] tree without needing a schema.
+     *
+     * Numbers surface with their host representation's textual form (e.g. `1e21` decodes to a
+     * [JsonElement] rendering as `1.0E21`); the mathematical value is preserved.
+     */
+    fun decodeToonToJson(toon: String): JsonElement =
+        decodeFromString(KtoonJsonElementSerializer, toon)
+
+    /**
      * Convenience method to decode a value with reified type parameter.
      *
      * Example:

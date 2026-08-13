@@ -12,6 +12,16 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.modules.SerializersModule
 
 /**
+ * Implemented by every TOON decoder so format-specific serializers (like
+ * [com.lukelast.ktoon.serializers.KtoonJsonElementSerializer]) can read the raw [ToonValue] the
+ * decoder is currently positioned on, mirroring how JsonDecoder exposes decodeJsonElement.
+ */
+internal interface ToonValueSource {
+    /** The [ToonValue] the next decode call would consume. */
+    fun currentToonValue(): ToonValue
+}
+
+/**
  * Root decoder for TOON format.
  *
  * Converts parsed ToonValue structures back into Kotlin objects using kotlinx.serialization
@@ -26,14 +36,17 @@ internal class ToonDecoder(
     private val parser: ToonParser,
     override val serializersModule: SerializersModule,
     private val config: KtoonConfiguration,
-) : AbstractDecoder() {
+) : AbstractDecoder(), ToonValueSource {
 
     private var rootValue: ToonValue? = null
+
+    override fun currentToonValue(): ToonValue =
+        rootValue ?: parser.readRoot().also { rootValue = it }
 
     /** Decodes a serializable value using the given deserializer. */
     override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
         // Read root value if not already read
-        val value = rootValue ?: parser.readRoot().also { rootValue = it }
+        val value = currentToonValue()
 
         // Create appropriate decoder based on root value type
         return when (value) {
@@ -68,7 +81,9 @@ internal class ToonDecoder(
 internal class ToonPrimitiveDecoder(
     private val value: ToonValue,
     override val serializersModule: SerializersModule,
-) : AbstractDecoder() {
+) : AbstractDecoder(), ToonValueSource {
+
+    override fun currentToonValue(): ToonValue = value
 
     override fun decodeNull(): Nothing? {
         return null
@@ -181,10 +196,16 @@ internal class ToonObjectDecoder(
     private val value: ToonValue.Object,
     override val serializersModule: SerializersModule,
     private val config: KtoonConfiguration,
-) : AbstractDecoder() {
+) : AbstractDecoder(), ToonValueSource {
 
     private var currentIndex = 0
     private var currentFieldName: String? = null
+
+    override fun currentToonValue(): ToonValue {
+        // Before any decodeElementIndex call this decoder stands for the whole object.
+        val fieldName = currentFieldName ?: return value
+        return value.properties[fieldName] ?: throw KtoonDecodingException.missingField(fieldName)
+    }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         while (currentIndex < descriptor.elementsCount) {
@@ -271,9 +292,14 @@ internal class ToonArrayDecoder(
     private val value: ToonValue.Array,
     override val serializersModule: SerializersModule,
     private val config: KtoonConfiguration,
-) : AbstractDecoder() {
+) : AbstractDecoder(), ToonValueSource {
 
     private var currentIndex = 0
+
+    override fun currentToonValue(): ToonValue {
+        // Before any decodeElementIndex call this decoder stands for the whole array.
+        return if (currentIndex == 0) value else getCurrentElement()
+    }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         return if (currentIndex < value.elements.size) {
@@ -353,10 +379,23 @@ internal class ToonMapDecoder(
     private val value: ToonValue.Object,
     override val serializersModule: SerializersModule,
     private val config: KtoonConfiguration,
-) : AbstractDecoder() {
+) : AbstractDecoder(), ToonValueSource {
 
     private val keys = value.properties.keys.toList()
     private var position = 0
+
+    override fun currentToonValue(): ToonValue {
+        // Before any decodeElementIndex call this decoder stands for the whole map.
+        if (position == 0) return value
+
+        val index = position - 1
+        val key = keys[index / 2]
+        return if (index % 2 == 0) {
+            ToonValue.String(key)
+        } else {
+            value.properties.getValue(key)
+        }
+    }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         if (position < keys.size * 2) {

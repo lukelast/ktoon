@@ -1,11 +1,7 @@
 package com.lukelast.ktoon.fixtures
 
 import com.lukelast.ktoon.Ktoon
-import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonException
-import com.lukelast.ktoon.decoding.ToonLexer
-import com.lukelast.ktoon.decoding.ToonParser
-import com.lukelast.ktoon.decoding.ToonValue
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -22,9 +18,9 @@ import org.junit.jupiter.api.assertThrows
  * Runs every case in every fixture file, so fixture coverage never depends on a hand-written test
  * existing for each case.
  *
- * Encode cases go through [Ktoon.encodeJsonToToon]. Decode cases go through the internal
- * lexer/parser (there is no public generic TOON→JSON API yet) and compare against the expected JSON
- * using the spec's JSON-model equality: ordered object keys, mathematical number equality.
+ * Encode cases go through [Ktoon.encodeJsonToToon] and decode cases through
+ * [Ktoon.decodeToonToJson], comparing against the expected JSON using the spec's JSON-model
+ * equality: ordered object keys, mathematical number equality.
  */
 class FixtureSweepTest {
 
@@ -35,7 +31,7 @@ class FixtureSweepTest {
                 DynamicTest.dynamicTest("$file :: ${case.name}") {
                     val ktoon = Ktoon(configuration = case.options.toToonConfiguration())
                     if (case.shouldError) {
-                        assertThrows<KtoonException> { ktoon.encodeJsonToToon(case.input) }
+                        assertToonError { ktoon.encodeJsonToToon(case.input) }
                     } else {
                         val actual = ktoon.encodeJsonToToon(case.input)
                         assertEquals(case.expected.asString(), actual, failureContext(case))
@@ -49,11 +45,11 @@ class FixtureSweepTest {
         loadDecodeFixtures().flatMap { (file, fixture) ->
             fixture.tests.map { case ->
                 DynamicTest.dynamicTest("$file :: ${case.name}") {
-                    val config = case.options.toToonConfiguration()
+                    val ktoon = Ktoon(configuration = case.options.toToonConfiguration())
                     if (case.shouldError) {
-                        assertThrows<KtoonException> { decodeToJson(case.input.asString(), config) }
+                        assertToonError { ktoon.decodeToonToJson(case.input.asString()) }
                     } else {
-                        val actual = decodeToJson(case.input.asString(), config)
+                        val actual = ktoon.decodeToonToJson(case.input.asString())
                         assertEquals(
                             canonical(case.expected),
                             canonical(actual),
@@ -64,30 +60,18 @@ class FixtureSweepTest {
             }
         }
 
-    private fun decodeToJson(
-        toon: String,
-        config: KtoonConfiguration,
-    ): JsonElement {
-        val root =
-            try {
-                ToonParser(ToonLexer(toon, config).tokenize(), config).readRoot()
-            } catch (e: KtoonException) {
-                throw e
-            } catch (e: Exception) {
-                fail("Parser crashed with ${e::class.simpleName}: ${e.message}", e)
-            }
-        return root.toJsonElement()
-    }
-
-    private fun ToonValue.toJsonElement(): JsonElement =
-        when (this) {
-            is ToonValue.Null -> JsonNull
-            is ToonValue.Boolean -> JsonPrimitive(value)
-            is ToonValue.Number -> JsonPrimitive(value)
-            is ToonValue.String -> JsonPrimitive(value)
-            is ToonValue.Object -> JsonObject(properties.mapValues { (_, v) -> v.toJsonElement() })
-            is ToonValue.Array -> JsonArray(elements.map { it.toJsonElement() })
+    /**
+     * Asserts the block fails with a genuine TOON error. The public API wraps unexpected crashes in
+     * a KtoonException with the original exception as cause, so a non-Ktoon cause means the
+     * implementation crashed rather than rejected the input.
+     */
+    private fun assertToonError(block: () -> Unit) {
+        val error = assertThrows<KtoonException>(block)
+        val cause = error.cause
+        if (cause != null && cause !is KtoonException) {
+            fail("Implementation crashed with ${cause::class.simpleName}: ${cause.message}", error)
         }
+    }
 
     /**
      * Canonical text form implementing the spec's JSON-model equality (§2): object key order is
