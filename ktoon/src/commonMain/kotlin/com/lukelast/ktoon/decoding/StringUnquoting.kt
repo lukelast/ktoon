@@ -2,6 +2,18 @@ package com.lukelast.ktoon.decoding
 
 import com.lukelast.ktoon.KtoonParsingException
 
+/** Number of hex digits in a `\uXXXX` escape (§7.1). */
+private const val UNICODE_ESCAPE_DIGITS = 4
+
+private const val HEX_RADIX = 16
+
+/** Surrogate code points, which a `\uXXXX` escape may never denote (§7.1). */
+private const val MIN_SURROGATE = 0xD800
+private const val MAX_SURROGATE = 0xDFFF
+
+/** First character allowed to appear literally; C0 controls below it must be escaped (§7.1). */
+private const val FIRST_LITERAL_CHAR = 0x20
+
 /**
  * Unescapes a quoted token per §7.1, or returns the input unchanged when it is not quoted.
  *
@@ -26,13 +38,13 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                     'r' -> sb.append('\r')
                     't' -> sb.append('\t')
                     'u' -> {
-                        if (i + 5 >= str.length)
+                        if (i + 1 + UNICODE_ESCAPE_DIGITS >= str.length)
                             throw KtoonParsingException.invalidEscapeSequence(
                                 str.substring(i),
                                 line,
                                 column + i,
                             )
-                        val hex = str.substring(i + 2, i + 6)
+                        val hex = str.substring(i + 2, i + 2 + UNICODE_ESCAPE_DIGITS)
                         // §7.1: exactly 4HEXDIG. toIntOrNull(16) would also accept a leading
                         // sign, so validate the characters directly.
                         if (!hex.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) {
@@ -42,10 +54,10 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                                 column + i,
                             )
                         }
-                        val code = hex.toInt(16)
+                        val code = hex.toInt(HEX_RADIX)
                         // §7.1: escapes must denote Unicode scalar values; surrogate code points
                         // are never valid (supplementary characters appear as literal UTF-8).
-                        if (code in 0xD800..0xDFFF) {
+                        if (code in MIN_SURROGATE..MAX_SURROGATE) {
                             throw KtoonParsingException.invalidEscapeSequence(
                                 "\\u$hex",
                                 line,
@@ -53,7 +65,7 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
                             )
                         }
                         sb.append(code.toChar())
-                        i += 4
+                        i += UNICODE_ESCAPE_DIGITS
                     }
                     else ->
                         throw KtoonParsingException.invalidEscapeSequence(
@@ -73,8 +85,9 @@ internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
             else -> {
                 // §7.1 quoted-char excludes literal C0 controls other than HTAB. Those values
                 // must use one of the short escapes or a \uXXXX escape.
-                if (c.code < 0x20 && c != '\t') {
-                    val codePoint = c.code.toString(16).uppercase().padStart(4, '0')
+                if (c.code < FIRST_LITERAL_CHAR && c != '\t') {
+                    val codePoint =
+                        c.code.toString(HEX_RADIX).uppercase().padStart(UNICODE_ESCAPE_DIGITS, '0')
                     throw KtoonParsingException(
                         "Unescaped control character U+$codePoint",
                         line,

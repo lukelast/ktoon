@@ -1,3 +1,7 @@
+// The 12-level nesting this fixture exists to exercise indents the innermost values past the line
+// limit. ktfmt has already broken these lines as far as they go, so the depth is the point.
+@file:Suppress("MaxLineLength")
+
 package com.lukelast.ktoon.data1.test28
 
 import com.lukelast.ktoon.data1.Runner
