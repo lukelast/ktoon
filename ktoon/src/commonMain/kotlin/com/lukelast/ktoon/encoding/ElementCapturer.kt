@@ -17,7 +17,7 @@ internal class ElementCapturer(
     private val onComplete: (List<Pair<String, EncodedElement>>) -> Unit,
 ) : AbstractEncoder() {
 
-    private val values = mutableListOf<Pair<String, EncodedElement>>()
+    private val entries = mutableListOf<Pair<String, EncodedElement>>()
     private var currentIndex = -1
     private val isArray = descriptor.kind == StructureKind.LIST
 
@@ -28,10 +28,10 @@ internal class ElementCapturer(
             } else {
                 descriptor.getElementName(currentIndex)
             }
-        values.add(name to value)
+        entries.add(name to value)
     }
 
-    private fun quote(value: String) =
+    private fun quoteElement(value: String) =
         StringQuoting.quote(
             value,
             StringQuoting.QuotingContext.ARRAY_ELEMENT,
@@ -79,15 +79,15 @@ internal class ElementCapturer(
     }
 
     override fun encodeChar(value: Char) {
-        add(EncodedElement.Primitive(quote(value.toString())))
+        add(EncodedElement.Primitive(quoteElement(value.toString())))
     }
 
     override fun encodeString(value: String) {
-        add(EncodedElement.Primitive(quote(value)))
+        add(EncodedElement.Primitive(quoteElement(value)))
     }
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
-        add(EncodedElement.Primitive(quote(enumDescriptor.getElementName(index))))
+        add(EncodedElement.Primitive(quoteElement(enumDescriptor.getElementName(index))))
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
@@ -107,7 +107,7 @@ internal class ElementCapturer(
         }
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        onComplete(values)
+        onComplete(entries)
     }
 }
 
@@ -122,7 +122,7 @@ internal class MapElementCapturer(
     private val onComplete: (List<Pair<String, EncodedElement>>) -> Unit,
 ) : AbstractEncoder() {
 
-    private val values = mutableListOf<Pair<String, EncodedElement>>()
+    private val entries = mutableListOf<Pair<String, EncodedElement>>()
     private var isKey = true
     private var currentKey: String? = null
 
@@ -134,7 +134,7 @@ internal class MapElementCapturer(
         return true
     }
 
-    private fun quote(value: String) =
+    private fun quoteElement(value: String) =
         StringQuoting.quote(
             value,
             StringQuoting.QuotingContext.ARRAY_ELEMENT,
@@ -151,7 +151,7 @@ internal class MapElementCapturer(
 
     private fun addValue(value: EncodedElement) {
         val key = currentKey ?: error("Map value encoded without preceding key")
-        values.add(key to value)
+        entries.add(key to value)
         currentKey = null
     }
 
@@ -171,13 +171,14 @@ internal class MapElementCapturer(
 
     override fun encodeDouble(value: Double) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeChar(value: Char) = addPrimitive(value.toString(), quote(value.toString()))
+    override fun encodeChar(value: Char) =
+        addPrimitive(value.toString(), quoteElement(value.toString()))
 
-    override fun encodeString(value: String) = addPrimitive(value, quote(value))
+    override fun encodeString(value: String) = addPrimitive(value, quoteElement(value))
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
         val name = enumDescriptor.getElementName(index)
-        addPrimitive(name, quote(name))
+        addPrimitive(name, quoteElement(name))
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
@@ -201,6 +202,6 @@ internal class MapElementCapturer(
     }
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        onComplete(values)
+        onComplete(entries)
     }
 }

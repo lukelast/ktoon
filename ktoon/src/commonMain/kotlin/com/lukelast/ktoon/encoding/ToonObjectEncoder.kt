@@ -23,7 +23,7 @@ internal class ToonObjectEncoder(
     private var currentKey: String? = null
 
     // Sorting support: buffer fields when sortFields is enabled
-    private val sortedFields: MutableList<Pair<String, String>>? =
+    private val bufferedFields: MutableList<Pair<String, String>>? =
         if (config.sortFields) mutableListOf() else null
     private var fieldWriter: ToonWriter? = null
 
@@ -38,7 +38,7 @@ internal class ToonObjectEncoder(
         currentKey = descriptor.getElementName(index)
 
         // Start capturing to field buffer if sorting
-        if (sortedFields != null) {
+        if (bufferedFields != null) {
             fieldWriter = ToonWriter(config)
             // When sorting, only write indent to buffer (newlines added during sorted write)
             fieldWriter!!.writeIndent(indentLevel)
@@ -52,28 +52,28 @@ internal class ToonObjectEncoder(
         return true
     }
 
-    override fun encodeNull() = writeKeyAndValue("null")
+    override fun encodeNull() = writePrimitiveField("null")
 
-    override fun encodeBoolean(value: Boolean) = writeKeyAndValue(if (value) "true" else "false")
+    override fun encodeBoolean(value: Boolean) = writePrimitiveField(if (value) "true" else "false")
 
-    override fun encodeByte(value: Byte) = writeKeyAndValue(NumberNormalizer.normalize(value))
+    override fun encodeByte(value: Byte) = writePrimitiveField(NumberNormalizer.normalize(value))
 
-    override fun encodeShort(value: Short) = writeKeyAndValue(NumberNormalizer.normalize(value))
+    override fun encodeShort(value: Short) = writePrimitiveField(NumberNormalizer.normalize(value))
 
-    override fun encodeInt(value: Int) = writeKeyAndValue(NumberNormalizer.normalize(value))
+    override fun encodeInt(value: Int) = writePrimitiveField(NumberNormalizer.normalize(value))
 
-    override fun encodeLong(value: Long) = writeKeyAndValue(NumberNormalizer.normalize(value))
+    override fun encodeLong(value: Long) = writePrimitiveField(NumberNormalizer.normalize(value))
 
-    override fun encodeFloat(value: Float) = writeKeyAndValue(NumberNormalizer.normalize(value))
+    override fun encodeFloat(value: Float) = writePrimitiveField(NumberNormalizer.normalize(value))
 
-    override fun encodeDouble(value: Double) = writeKeyAndValue(NumberNormalizer.normalize(value))
+    override fun encodeDouble(value: Double) = writePrimitiveField(NumberNormalizer.normalize(value))
 
-    override fun encodeChar(value: Char) = writeKeyAndValue(quoteValue(value.toString()))
+    override fun encodeChar(value: Char) = writePrimitiveField(quoteValue(value.toString()))
 
-    override fun encodeString(value: String) = writeKeyAndValue(quoteValue(value))
+    override fun encodeString(value: String) = writePrimitiveField(quoteValue(value))
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
-        writeKeyAndValue(quoteValue(enumDescriptor.getElementName(index)))
+        writePrimitiveField(quoteValue(enumDescriptor.getElementName(index)))
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         val key = currentKey ?: error("Current key is null for structure start")
@@ -83,8 +83,8 @@ internal class ToonObjectEncoder(
             StructureKind.OBJECT -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     // §9.5: capture first so keyed tabular form can be selected from the values
-                    ElementCapturer(config, serializersModule, descriptor) { values ->
-                        ElementWriter(writer, config).writeObjectField(key, values, indentLevel)
+                    ElementCapturer(config, serializersModule, descriptor) { entries ->
+                        ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
                         finishField()
                     }
                 } else {
@@ -101,8 +101,8 @@ internal class ToonObjectEncoder(
             }
             StructureKind.MAP -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
-                    MapElementCapturer(config, serializersModule) { values ->
-                        ElementWriter(writer, config).writeObjectField(key, values, indentLevel)
+                    MapElementCapturer(config, serializersModule) { entries ->
+                        ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
                         finishField()
                     }
                 } else {
@@ -132,8 +132,8 @@ internal class ToonObjectEncoder(
 
     override fun endStructure(descriptor: SerialDescriptor) {
         // Write sorted fields to actual writer
-        if (sortedFields != null) {
-            val sorted = sortedFields.sortedBy { it.first }
+        if (bufferedFields != null) {
+            val sorted = bufferedFields.sortedBy { it.first }
             sorted.forEachIndexed { index, (_, output) ->
                 if (!isRoot || index > 0) rawWriter.writeNewline()
                 rawWriter.write(output)
@@ -150,7 +150,7 @@ internal class ToonObjectEncoder(
 
     private fun writeKey(key: String) = writer.writeKey(quoteKey(key))
 
-    private fun writeKeyAndValue(value: String) {
+    private fun writePrimitiveField(value: String) {
         val key = currentKey
         if (key != null) {
             writer.writeKeyValue(quoteKey(key), value)
@@ -161,7 +161,7 @@ internal class ToonObjectEncoder(
     private fun finishField() {
         val fw = fieldWriter ?: return
         val key = currentKey ?: return
-        sortedFields?.add(key to fw.toString())
+        bufferedFields?.add(key to fw.toString())
         fieldWriter = null
     }
 }

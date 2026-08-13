@@ -2,7 +2,7 @@ package com.lukelast.ktoon
 
 import com.lukelast.ktoon.decoding.ToonDecoder
 import com.lukelast.ktoon.decoding.ToonLexer
-import com.lukelast.ktoon.decoding.ToonReader
+import com.lukelast.ktoon.decoding.ToonParser
 import com.lukelast.ktoon.encoding.ToonEncoder
 import com.lukelast.ktoon.encoding.ToonWriter
 import com.lukelast.ktoon.serializers.JsonElementSerializer
@@ -86,10 +86,10 @@ class Ktoon(
             val tokens = lexer.tokenize()
 
             // Parse tokens into structured data
-            val reader = ToonReader(tokens, configuration)
+            val parser = ToonParser(tokens, configuration)
 
             // Decode using kotlinx.serialization
-            val decoder = ToonDecoder(reader, serializersModule, configuration)
+            val decoder = ToonDecoder(parser, serializersModule, configuration)
             return decoder.decodeSerializableValue(deserializer)
         } catch (e: KtoonException) {
             throw e

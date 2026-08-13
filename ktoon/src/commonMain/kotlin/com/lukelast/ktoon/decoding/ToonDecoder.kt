@@ -17,13 +17,13 @@ import kotlinx.serialization.modules.SerializersModule
  * Converts parsed ToonValue structures back into Kotlin objects using kotlinx.serialization
  * descriptors.
  *
- * @property reader Parser that provides ToonValue structures
+ * @property parser Parser that provides ToonValue structures
  * @property serializersModule Module with contextual and polymorphic serializers
  * @property config Configuration
  */
 @OptIn(ExperimentalSerializationApi::class)
 internal class ToonDecoder(
-    private val reader: ToonReader,
+    private val parser: ToonParser,
     override val serializersModule: SerializersModule,
     private val config: KtoonConfiguration,
 ) : AbstractDecoder() {
@@ -34,7 +34,7 @@ internal class ToonDecoder(
     override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
         // Read root value if not already read
         if (rootValue == null) {
-            rootValue = reader.readRoot()
+            rootValue = parser.readRoot()
         }
 
         // Create appropriate decoder based on root value type
@@ -206,29 +206,29 @@ internal class ToonObjectDecoder(
 
     override fun decodeNull(): Nothing? = null
 
-    override fun decodeBoolean(): Boolean = decodePrimitiveValue { it.decodeBoolean() }
+    override fun decodeBoolean(): Boolean = decodeCurrentPrimitive { it.decodeBoolean() }
 
-    override fun decodeByte(): Byte = decodePrimitiveValue { it.decodeByte() }
+    override fun decodeByte(): Byte = decodeCurrentPrimitive { it.decodeByte() }
 
-    override fun decodeShort(): Short = decodePrimitiveValue { it.decodeShort() }
+    override fun decodeShort(): Short = decodeCurrentPrimitive { it.decodeShort() }
 
-    override fun decodeInt(): Int = decodePrimitiveValue { it.decodeInt() }
+    override fun decodeInt(): Int = decodeCurrentPrimitive { it.decodeInt() }
 
-    override fun decodeLong(): Long = decodePrimitiveValue { it.decodeLong() }
+    override fun decodeLong(): Long = decodeCurrentPrimitive { it.decodeLong() }
 
-    override fun decodeFloat(): Float = decodePrimitiveValue { it.decodeFloat() }
+    override fun decodeFloat(): Float = decodeCurrentPrimitive { it.decodeFloat() }
 
-    override fun decodeDouble(): Double = decodePrimitiveValue { it.decodeDouble() }
+    override fun decodeDouble(): Double = decodeCurrentPrimitive { it.decodeDouble() }
 
-    override fun decodeChar(): Char = decodePrimitiveValue { it.decodeChar() }
+    override fun decodeChar(): Char = decodeCurrentPrimitive { it.decodeChar() }
 
-    override fun decodeString(): String = decodePrimitiveValue { it.decodeString() }
+    override fun decodeString(): String = decodeCurrentPrimitive { it.decodeString() }
 
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
-        return decodePrimitiveValue { it.decodeEnum(enumDescriptor) }
+        return decodeCurrentPrimitive { it.decodeEnum(enumDescriptor) }
     }
 
-    private fun <T> decodePrimitiveValue(decode: (ToonPrimitiveDecoder) -> T): T {
+    private fun <T> decodeCurrentPrimitive(decode: (ToonPrimitiveDecoder) -> T): T {
         val fieldName = getCurrentFieldName()
         val fieldValue =
             value.properties[fieldName] ?: throw KtoonDecodingException.missingField(fieldName)
@@ -288,29 +288,29 @@ internal class ToonArrayDecoder(
 
     override fun decodeNull(): Nothing? = null
 
-    override fun decodeBoolean(): Boolean = decodeCurrentElement { it.decodeBoolean() }
+    override fun decodeBoolean(): Boolean = decodeCurrentPrimitive { it.decodeBoolean() }
 
-    override fun decodeByte(): Byte = decodeCurrentElement { it.decodeByte() }
+    override fun decodeByte(): Byte = decodeCurrentPrimitive { it.decodeByte() }
 
-    override fun decodeShort(): Short = decodeCurrentElement { it.decodeShort() }
+    override fun decodeShort(): Short = decodeCurrentPrimitive { it.decodeShort() }
 
-    override fun decodeInt(): Int = decodeCurrentElement { it.decodeInt() }
+    override fun decodeInt(): Int = decodeCurrentPrimitive { it.decodeInt() }
 
-    override fun decodeLong(): Long = decodeCurrentElement { it.decodeLong() }
+    override fun decodeLong(): Long = decodeCurrentPrimitive { it.decodeLong() }
 
-    override fun decodeFloat(): Float = decodeCurrentElement { it.decodeFloat() }
+    override fun decodeFloat(): Float = decodeCurrentPrimitive { it.decodeFloat() }
 
-    override fun decodeDouble(): Double = decodeCurrentElement { it.decodeDouble() }
+    override fun decodeDouble(): Double = decodeCurrentPrimitive { it.decodeDouble() }
 
-    override fun decodeChar(): Char = decodeCurrentElement { it.decodeChar() }
+    override fun decodeChar(): Char = decodeCurrentPrimitive { it.decodeChar() }
 
-    override fun decodeString(): String = decodeCurrentElement { it.decodeString() }
+    override fun decodeString(): String = decodeCurrentPrimitive { it.decodeString() }
 
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
-        return decodeCurrentElement { it.decodeEnum(enumDescriptor) }
+        return decodeCurrentPrimitive { it.decodeEnum(enumDescriptor) }
     }
 
-    private fun <T> decodeCurrentElement(decode: (ToonPrimitiveDecoder) -> T): T {
+    private fun <T> decodeCurrentPrimitive(decode: (ToonPrimitiveDecoder) -> T): T {
         val element = getCurrentElement()
         val decoder = ToonPrimitiveDecoder(element, serializersModule)
         return decode(decoder)
@@ -408,29 +408,29 @@ internal class ToonMapDecoder(
 
     override fun decodeNull(): Nothing? = null
 
-    override fun decodeBoolean(): Boolean = decodeCurrent { it.decodeBoolean() }
+    override fun decodeBoolean(): Boolean = decodeCurrentPrimitive { it.decodeBoolean() }
 
-    override fun decodeByte(): Byte = decodeCurrent { it.decodeByte() }
+    override fun decodeByte(): Byte = decodeCurrentPrimitive { it.decodeByte() }
 
-    override fun decodeShort(): Short = decodeCurrent { it.decodeShort() }
+    override fun decodeShort(): Short = decodeCurrentPrimitive { it.decodeShort() }
 
-    override fun decodeInt(): Int = decodeCurrent { it.decodeInt() }
+    override fun decodeInt(): Int = decodeCurrentPrimitive { it.decodeInt() }
 
-    override fun decodeLong(): Long = decodeCurrent { it.decodeLong() }
+    override fun decodeLong(): Long = decodeCurrentPrimitive { it.decodeLong() }
 
-    override fun decodeFloat(): Float = decodeCurrent { it.decodeFloat() }
+    override fun decodeFloat(): Float = decodeCurrentPrimitive { it.decodeFloat() }
 
-    override fun decodeDouble(): Double = decodeCurrent { it.decodeDouble() }
+    override fun decodeDouble(): Double = decodeCurrentPrimitive { it.decodeDouble() }
 
-    override fun decodeChar(): Char = decodeCurrent { it.decodeChar() }
+    override fun decodeChar(): Char = decodeCurrentPrimitive { it.decodeChar() }
 
-    override fun decodeString(): String = decodeCurrent { it.decodeString() }
+    override fun decodeString(): String = decodeCurrentPrimitive { it.decodeString() }
 
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
-        return decodeCurrent { it.decodeEnum(enumDescriptor) }
+        return decodeCurrentPrimitive { it.decodeEnum(enumDescriptor) }
     }
 
-    private fun <T> decodeCurrent(decode: (Decoder) -> T): T {
+    private fun <T> decodeCurrentPrimitive(decode: (Decoder) -> T): T {
         val index = position - 1
         val entryIndex = index / 2
         val isKey = index % 2 == 0

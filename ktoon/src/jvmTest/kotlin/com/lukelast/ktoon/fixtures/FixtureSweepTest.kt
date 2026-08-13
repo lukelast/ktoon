@@ -4,7 +4,7 @@ import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonException
 import com.lukelast.ktoon.decoding.ToonLexer
-import com.lukelast.ktoon.decoding.ToonReader
+import com.lukelast.ktoon.decoding.ToonParser
 import com.lukelast.ktoon.decoding.ToonValue
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.assertThrows
  * existing for each case.
  *
  * Encode cases go through [Ktoon.encodeJsonToToon]. Decode cases go through the internal
- * lexer/reader (there is no public generic TOON→JSON API yet) and compare against the expected JSON
+ * lexer/parser (there is no public generic TOON→JSON API yet) and compare against the expected JSON
  * using the spec's JSON-model equality: ordered object keys, mathematical number equality.
  */
 class FixtureSweepTest {
@@ -76,7 +76,7 @@ class FixtureSweepTest {
     ): JsonElement {
         val root =
             try {
-                ToonReader(ToonLexer(toon, config).tokenize(), config).readRoot()
+                ToonParser(ToonLexer(toon, config).tokenize(), config).readRoot()
             } catch (e: KtoonException) {
                 throw e
             } catch (e: Exception) {

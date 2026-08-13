@@ -36,14 +36,14 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
             // comment lines are removed before every other rule and never affect scopes.
             if (rawLine.trimStart(' ').startsWith('#')) continue
             // §12: trailing spaces are not part of the line's content.
-            processLine(rawLine.trimEnd(' '))
+            tokenizeLine(rawLine.trimEnd(' '))
         }
 
         return tokens
     }
 
     /** Processes a single line of TOON input. */
-    private fun processLine(line: String) {
+    private fun tokenizeLine(line: String) {
         // Emit blank line token. Only indentation characters are blank here; other Unicode
         // whitespace such as NBSP remains token content (§12).
         if (line.all { it == ' ' || it == '\t' }) {
@@ -52,7 +52,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         }
 
         // Count leading spaces for indentation
-        val indent = countLeadingSpaces(line)
+        val indent = countIndentation(line)
         // §12: only spaces and, in non-strict mode, leading indentation tabs are indentation.
         // Other Unicode whitespace (for example NBSP) is token content and must be preserved.
         val trimmed = line.trimStart(' ', '\t')
@@ -66,15 +66,15 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                 // §10 depth model: content on the hyphen line sits one level below the marker —
                 // the same column as the item's continuation lines, which is the hyphen column
                 // plus 2 only when indentSize is 2.
-                processLineContent(value, indent + config.indentSize)
+                tokenizeLineContent(value, indent + config.indentSize)
             }
             return
         }
 
-        processLineContent(trimmed, indent)
+        tokenizeLineContent(trimmed, indent)
     }
 
-    private fun processLineContent(content: String, indent: Int) {
+    private fun tokenizeLineContent(content: String, indent: Int) {
         // §4/§9.1: the literal token [] (root, object-field, and list-item positions) is a value,
         // never a header candidate.
         if (content == "[]") {
@@ -94,7 +94,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
             when (val header = parseHeader(content, bracketStart)) {
                 is HeaderParse.Match -> {
                     tokens.add(
-                        Token.ArrayHeader(
+                        Token.Header(
                             key = header.key,
                             length = header.length,
                             fields = header.fields,
@@ -142,7 +142,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
      * Counts leading indentation. Tabs are not allowed in strict mode (§12); in non-strict mode a
      * leading tab is accepted as indentation and counts as one level (documented choice).
      */
-    private fun countLeadingSpaces(line: String): Int {
+    private fun countIndentation(line: String): Int {
         var count = 0
         for (char in line) {
             if (char == ' ') {
@@ -444,7 +444,7 @@ internal sealed class Token {
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
-    data class ArrayHeader(
+    data class Header(
         val key: String,
         val length: Int,
         val fields: List<FieldNode>?,

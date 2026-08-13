@@ -34,18 +34,18 @@ internal class ElementWriter(
          */
         fun tabularTree(elements: List<EncodedElement>): List<FieldTreeNode>? {
             if (elements.isEmpty()) return null
-            val objects = elements.map { (it as? EncodedElement.Structure)?.values ?: return null }
+            val objects = elements.map { (it as? EncodedElement.Structure)?.entries ?: return null }
             return fieldTree(objects)
         }
 
         /**
-         * §9.5 keyed tabular detection: at least two entries whose values are uniform non-empty
+         * §9.5 keyed tabular detection: at least two entries whose entries are uniform non-empty
          * objects. Returns the field tree, or null.
          */
-        fun keyedTree(values: List<Pair<String, EncodedElement>>): List<FieldTreeNode>? {
-            if (values.size < 2) return null
-            val objects = values.map { (_, v) ->
-                (v as? EncodedElement.Structure)?.values ?: return null
+        fun keyedTree(entries: List<Pair<String, EncodedElement>>): List<FieldTreeNode>? {
+            if (entries.size < 2) return null
+            val objects = entries.map { (_, v) ->
+                (v as? EncodedElement.Structure)?.entries ?: return null
             }
             return fieldTree(objects)
         }
@@ -69,9 +69,9 @@ internal class ElementWriter(
                 when {
                     column.all { it is EncodedElement.Primitive } ->
                         nodes.add(FieldTreeNode(name, null))
-                    column.all { it is EncodedElement.Structure && it.values.isNotEmpty() } -> {
+                    column.all { it is EncodedElement.Structure && it.entries.isNotEmpty() } -> {
                         val sub =
-                            fieldTree(column.map { (it as EncodedElement.Structure).values })
+                            fieldTree(column.map { (it as EncodedElement.Structure).entries })
                                 ?: return null
                         nodes.add(FieldTreeNode(name, sub))
                     }
@@ -120,13 +120,13 @@ internal class ElementWriter(
     /**
      * Writes a captured root object: keyed tabular when eligible (§9.5), plain fields otherwise.
      */
-    fun writeRootObject(values: List<Pair<String, EncodedElement>>) {
-        val tree = keyedTree(values)
+    fun writeRootObject(entries: List<Pair<String, EncodedElement>>) {
+        val tree = keyedTree(entries)
         if (tree != null) {
-            writeKeyedTable(null, values, tree, 0)
+            writeKeyedTable(null, entries, tree, 0)
             return
         }
-        values.forEachIndexed { i, (name, element) ->
+        entries.forEachIndexed { i, (name, element) ->
             if (i > 0) writer.writeNewline()
             writer.writeIndent(0)
             writeField(name, element, 0)
@@ -137,14 +137,14 @@ internal class ElementWriter(
      * Writes a captured object in field position, starting at the key: a keyed table, a bare `key:`
      * for an empty object (§8), or `key:` with nested fields at depth +1.
      */
-    fun writeObjectField(name: String, values: List<Pair<String, EncodedElement>>, indent: Int) {
-        val tree = keyedTree(values)
+    fun writeObjectField(name: String, entries: List<Pair<String, EncodedElement>>, indent: Int) {
+        val tree = keyedTree(entries)
         when {
-            tree != null -> writeKeyedTable(quoteKey(name), values, tree, indent)
-            values.isEmpty() -> writer.writeKey(quoteKey(name))
+            tree != null -> writeKeyedTable(quoteKey(name), entries, tree, indent)
+            entries.isEmpty() -> writer.writeKey(quoteKey(name))
             else -> {
                 writer.writeKey(quoteKey(name))
-                writeStructureFields(values, indent, firstInline = false)
+                writeNestedFields(entries, indent, firstInline = false)
             }
         }
     }
@@ -154,7 +154,7 @@ internal class ElementWriter(
             is EncodedElement.Primitive -> writer.writeKeyValue(quoteKey(name), element.value)
             is EncodedElement.NestedArray ->
                 writeArray(name, element.elements, indent, ArrayPosition.FIELD)
-            is EncodedElement.Structure -> writeObjectField(name, element.values, indent)
+            is EncodedElement.Structure -> writeObjectField(name, element.entries, indent)
         }
     }
 
@@ -162,12 +162,12 @@ internal class ElementWriter(
      * Writes an object's fields at depth [indent] + 1. When [firstInline] is true the first field
      * continues the current line (list-item objects, §10).
      */
-    private fun writeStructureFields(
-        values: List<Pair<String, EncodedElement>>,
+    private fun writeNestedFields(
+        entries: List<Pair<String, EncodedElement>>,
         indent: Int,
         firstInline: Boolean,
     ) {
-        values.forEachIndexed { i, (name, value) ->
+        entries.forEachIndexed { i, (name, value) ->
             if (i > 0 || !firstInline) {
                 writer.writeNewline()
                 writer.writeIndent(indent + 1)
@@ -240,9 +240,9 @@ internal class ElementWriter(
             }
             is EncodedElement.Structure -> {
                 // §10: an empty-object list item is the bare marker "-"
-                if (element.values.isNotEmpty()) {
+                if (element.entries.isNotEmpty()) {
                     writer.writeSpace()
-                    writeStructureFields(element.values, indent, firstInline = true)
+                    writeNestedFields(element.entries, indent, firstInline = true)
                 }
             }
             is EncodedElement.NestedArray -> {
@@ -284,7 +284,7 @@ internal class ElementWriter(
         elements.forEach { element ->
             writer.writeNewline()
             writer.writeIndent(indent + 1)
-            writeRowCells((element as EncodedElement.Structure).values, tree, first = true)
+            writeRowCells((element as EncodedElement.Structure).entries, tree, first = true)
         }
     }
 
@@ -310,7 +310,7 @@ internal class ElementWriter(
             writer.write(quoteKey(entryKey))
             writer.write(':')
             writer.writeSpace()
-            writeRowCells((value as EncodedElement.Structure).values, tree, first = true)
+            writeRowCells((value as EncodedElement.Structure).entries, tree, first = true)
         }
     }
 
@@ -327,18 +327,18 @@ internal class ElementWriter(
     }
 
     /**
-     * Writes one row's cells: leaf values in a depth-first, pre-order walk of the field tree
+     * Writes one row's cells: leaf entries in a depth-first, pre-order walk of the field tree
      * (§9.3). Returns whether any leaf has been written yet, to place delimiters between leaves
      * across group boundaries.
      */
     private fun writeRowCells(
-        values: List<Pair<String, EncodedElement>>,
+        entries: List<Pair<String, EncodedElement>>,
         tree: List<FieldTreeNode>,
         first: Boolean,
     ): Boolean {
         var isFirst = first
         for (node in tree) {
-            val value = values.first { it.first == node.name }.second
+            val value = entries.first { it.first == node.name }.second
             if (node.children == null) {
                 if (!isFirst) writer.writeDelimiter()
                 isFirst = false
@@ -346,7 +346,7 @@ internal class ElementWriter(
             } else {
                 isFirst =
                     writeRowCells(
-                        (value as EncodedElement.Structure).values,
+                        (value as EncodedElement.Structure).entries,
                         node.children,
                         isFirst,
                     )
