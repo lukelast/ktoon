@@ -132,6 +132,7 @@ internal class MapElementCapturer(
     private val entries = mutableListOf<Pair<String, EncodedElement>>()
     private var isKey = true
     private var currentKey: String? = null
+    private val keyNames = MapKeyNames()
 
     /** Map entries don't have defaults in the serialization sense; always encode them. */
     override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int) = true
@@ -150,7 +151,7 @@ internal class MapElementCapturer(
 
     private fun addPrimitive(raw: String, encoded: String = raw) {
         if (isKey) {
-            currentKey = raw
+            currentKey = keyNames.claim(raw)
         } else {
             addValue(EncodedElement.Primitive(encoded))
         }
@@ -174,9 +175,11 @@ internal class MapElementCapturer(
 
     override fun encodeLong(value: Long) = addPrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeFloat(value: Float) = addPrimitive(NumberNormalizer.normalize(value))
+    override fun encodeFloat(value: Float) =
+        addPrimitive(if (isKey) keyNames.format(value) else NumberNormalizer.normalize(value))
 
-    override fun encodeDouble(value: Double) = addPrimitive(NumberNormalizer.normalize(value))
+    override fun encodeDouble(value: Double) =
+        addPrimitive(if (isKey) keyNames.format(value) else NumberNormalizer.normalize(value))
 
     override fun encodeChar(value: Char) =
         addPrimitive(value.toString(), quoteElement(value.toString()))
