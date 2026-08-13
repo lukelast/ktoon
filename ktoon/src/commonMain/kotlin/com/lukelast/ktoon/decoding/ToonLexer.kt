@@ -164,7 +164,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         return count
     }
 
-    private sealed class HeaderParse {
+    private sealed interface HeaderParse {
         class Match(
             val key: String,
             val length: Int,
@@ -173,11 +173,11 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
             val fields: List<FieldNode>?,
             /** Index of the header's terminating colon within the line content. */
             val colonIndex: Int,
-        ) : HeaderParse()
+        ) : HeaderParse
 
-        class Malformed(val reason: String) : HeaderParse()
+        class Malformed(val reason: String) : HeaderParse
 
-        object NotAHeader : HeaderParse()
+        object NotAHeader : HeaderParse
     }
 
     /**
@@ -408,8 +408,8 @@ internal fun leafFieldCount(nodes: List<FieldNode>): Int {
 }
 
 /** Token types produced by the lexer. */
-internal sealed class Token {
-    abstract val line: Int
+internal sealed interface Token {
+    val line: Int
 
     /**
      * Object key token.
@@ -424,7 +424,7 @@ internal sealed class Token {
         val rawContent: String,
         val indent: Int,
         override val line: Int,
-    ) : Token()
+    ) : Token
 
     /**
      * Value token (primitive or string).
@@ -433,7 +433,7 @@ internal sealed class Token {
      * @property indent Indentation of the line this value appeared on
      * @property line Line number (1-based)
      */
-    data class Value(val content: String, val indent: Int, override val line: Int) : Token()
+    data class Value(val content: String, val indent: Int, override val line: Int) : Token
 
     /**
      * Array or keyed header token.
@@ -457,7 +457,7 @@ internal sealed class Token {
         val rawContent: String,
         val indent: Int,
         override val line: Int,
-    ) : Token()
+    ) : Token
 
     /**
      * Inline array value (delimiter-separated values after array header).
@@ -465,7 +465,7 @@ internal sealed class Token {
      * @property content The raw value content
      * @property line Line number (1-based)
      */
-    data class InlineArrayValue(val content: String, override val line: Int) : Token()
+    data class InlineArrayValue(val content: String, override val line: Int) : Token
 
     /**
      * Dash marker for a list-form array element.
@@ -473,12 +473,12 @@ internal sealed class Token {
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
      */
-    data class Dash(val indent: Int, override val line: Int) : Token()
+    data class Dash(val indent: Int, override val line: Int) : Token
 
     /**
      * Blank line token.
      *
      * @property line Line number (1-based)
      */
-    data class BlankLine(override val line: Int) : Token()
+    data class BlankLine(override val line: Int) : Token
 }
