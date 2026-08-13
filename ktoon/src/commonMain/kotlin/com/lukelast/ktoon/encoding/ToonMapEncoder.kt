@@ -22,6 +22,7 @@ internal class ToonMapEncoder(
 
     private var currentKey: String? = null
     private var isKey = true
+    private val keyNames = MapKeyNames()
 
     /**
      * Maps always encode all entries — unlike class properties, map entries don't have "default
@@ -42,7 +43,7 @@ internal class ToonMapEncoder(
 
     private fun encodePrimitive(value: String) {
         if (isKey) {
-            currentKey = value
+            currentKey = keyNames.claim(value)
         } else {
             val key = currentKey ?: error("Map value encoded without preceding key")
             writer.writeKeyValue(quoteKey(key), value)
@@ -62,9 +63,11 @@ internal class ToonMapEncoder(
 
     override fun encodeLong(value: Long) = encodePrimitive(NumberNormalizer.normalize(value))
 
-    override fun encodeFloat(value: Float) = encodePrimitive(NumberNormalizer.normalize(value))
+    override fun encodeFloat(value: Float) =
+        encodePrimitive(if (isKey) keyNames.format(value) else NumberNormalizer.normalize(value))
 
-    override fun encodeDouble(value: Double) = encodePrimitive(NumberNormalizer.normalize(value))
+    override fun encodeDouble(value: Double) =
+        encodePrimitive(if (isKey) keyNames.format(value) else NumberNormalizer.normalize(value))
 
     override fun encodeChar(value: Char) {
         if (isKey) encodePrimitive(value.toString())
