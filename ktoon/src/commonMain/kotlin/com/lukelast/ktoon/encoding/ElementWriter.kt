@@ -5,6 +5,9 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 
+/** §9.5: a keyed tabular object has at least two entries. */
+private const val MIN_KEYED_ENTRIES = 2
+
 /** One entry of a tabular or keyed header's field list; a group is a nested-uniform column. */
 internal class FieldNode(val name: String, val group: List<FieldNode>?)
 
@@ -86,9 +89,10 @@ internal class ElementWriter(
         }
 
         /**
-         * Cheap descriptor pre-gate for keyed tabular capture: an object can only be keyed when
-         * every field is itself object-shaped (§9.5). Values decide; this just avoids capturing
-         * objects that obviously cannot qualify.
+         * Cheap descriptor pre-gate for keyed tabular capture: a keyed object needs at least two
+         * object-shaped entries (§9.5). A field that is not object-shaped may still be omitted
+         * during serialization, so it cannot rule the object out — the captured values decide. This
+         * only avoids capturing objects that obviously cannot qualify.
          */
         fun couldBeKeyed(descriptor: SerialDescriptor): Boolean =
             when (descriptor.kind) {
@@ -97,10 +101,9 @@ internal class ElementWriter(
                         isObjectLike(descriptor.getElementDescriptor(1))
                 StructureKind.CLASS,
                 StructureKind.OBJECT ->
-                    descriptor.elementsCount >= 2 &&
-                        (0 until descriptor.elementsCount).all {
-                            isObjectLike(descriptor.getElementDescriptor(it))
-                        }
+                    (0 until descriptor.elementsCount).count {
+                        isObjectLike(descriptor.getElementDescriptor(it))
+                    } >= MIN_KEYED_ENTRIES
                 else -> false
             }
 
