@@ -17,6 +17,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonUnquotedLiteral
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
@@ -34,8 +35,8 @@ internal const val MAX_JSON_NESTING_DEPTH: Int = DEFAULT_MAX_NESTING_DEPTH
  * Serialization works with any [Encoder], allowing a [JsonElement] to be encoded to TOON.
  * Deserialization is format-specific and only works with decoders created by
  * [com.lukelast.ktoon.Ktoon], mirroring how kotlinx's own JsonElement serializer requires a
- * JsonDecoder. Decoded numbers carry the host representation (Long or Double), so their textual
- * form is normalized (e.g. `1e21` becomes `1.0E21`) while the mathematical value is preserved.
+ * JsonDecoder. Decoded numbers keep the document's own literal, so their exact value survives even
+ * when it needs more precision than a host `Long` or `Double` carries.
  *
  * Values nested deeper than [MAX_JSON_NESTING_DEPTH] containers are rejected with a
  * [KtoonEncodingException].
@@ -61,7 +62,9 @@ object KtoonJsonElementSerializer : KSerializer<JsonElement> {
         when (this) {
             is ToonValue.Null -> JsonNull
             is ToonValue.Boolean -> JsonPrimitive(value)
-            is ToonValue.Number -> JsonPrimitive(value)
+            // §4: the accepted token carries the exact value, which the host Int/Long/Double may
+            // only approximate, so schema-less JSON keeps the literal rather than the host form.
+            is ToonValue.Number -> JsonUnquotedLiteral(lexeme)
             is ToonValue.String -> JsonPrimitive(value)
             is ToonValue.Object -> JsonObject(properties.mapValues { (_, v) -> v.toJsonElement() })
             is ToonValue.Array -> JsonArray(elements.map { it.toJsonElement() })

@@ -1027,13 +1027,13 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         // Try integer first (for simple cases without exponents)
         val intValue = str.toIntOrNull()
         if (intValue != null) {
-            return ToonValue.Number(intValue)
+            return ToonValue.Number(intValue, str)
         }
 
         // Try long
         val longValue = str.toLongOrNull()
         if (longValue != null) {
-            return ToonValue.Number(longValue)
+            return ToonValue.Number(longValue, str)
         }
 
         // Try double (handles fractional and exponent forms)
@@ -1042,13 +1042,13 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
             // If the double has no fractional part and fits in Int/Long, store as integer
             if (doubleValue == floor(doubleValue)) {
                 if (doubleValue >= Int.MIN_VALUE && doubleValue <= Int.MAX_VALUE) {
-                    return ToonValue.Number(doubleValue.toInt())
+                    return ToonValue.Number(doubleValue.toInt(), str)
                 }
                 if (doubleValue >= Long.MIN_VALUE && doubleValue <= Long.MAX_VALUE) {
-                    return ToonValue.Number(doubleValue.toLong())
+                    return ToonValue.Number(doubleValue.toLong(), str)
                 }
             }
-            return ToonValue.Number(doubleValue)
+            return ToonValue.Number(doubleValue, str)
         }
 
         // Out-of-domain (e.g. overflowing exponent): documented policy is to decode as string
@@ -1102,8 +1102,14 @@ internal sealed interface ToonValue {
     /** Boolean value */
     data class Boolean(val value: kotlin.Boolean) : ToonValue
 
-    /** Numeric value (Int, Long, or Double) */
-    data class Number(val value: kotlin.Number) : ToonValue
+    /**
+     * Numeric value.
+     *
+     * @property value the host representation (Int, Long, or Double), which may be an approximation
+     *   of a literal that needs more precision than the host type carries
+     * @property lexeme the accepted source token, which carries the exact value (§4)
+     */
+    data class Number(val value: kotlin.Number, val lexeme: kotlin.String) : ToonValue
 
     /** String value */
     data class String(val value: kotlin.String) : ToonValue
