@@ -43,7 +43,20 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
     }
 
     /** Processes a single line of TOON input. */
+    @Suppress("ReturnCount")
     private fun tokenizeLine(line: String) {
+        // §11.2/§12: a tab that follows real space indentation may be the active delimiter of a
+        // row whose first cell is empty, and a line of spaces and tabs does not trim to empty so
+        // it is not blank either. The line's content is kept intact and the reader decides; away
+        // from a tab-delimited row's depth the value token is the structural error an indentation
+        // tab must be. Rows always stand at least one level deep, so a tab in column 0 is never
+        // one and keeps the plain indentation reading.
+        val spaces = line.indexOfFirst { it != ' ' }
+        if (config.strictMode && spaces > 0 && line[spaces] == '\t') {
+            tokens.add(Token.Value(line.substring(spaces), spaces, currentLine))
+            return
+        }
+
         // Emit blank line token. Only indentation characters are blank here; other Unicode
         // whitespace such as NBSP remains token content (§12).
         if (line.all { it == ' ' || it == '\t' }) {
