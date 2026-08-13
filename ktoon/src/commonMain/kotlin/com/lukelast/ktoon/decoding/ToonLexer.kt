@@ -104,6 +104,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         // its terminating colon), so e.g. the row line `1,[]` is not a header candidate. Note the
         // keyed marker `[N:]` puts a colon inside the bracket segment, so header detection must
         // run on the full line, not on a split-at-first-colon key part.
+        var headerError: String? = null
         if (bracketStart != -1 && colonIndex != -1 && bracketStart < colonIndex) {
             when (val header = parseHeader(content, bracketStart)) {
                 is HeaderParse.Match -> {
@@ -126,10 +127,10 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                     return
                 }
                 is HeaderParse.Malformed -> {
-                    // §6/§14.2: strict mode errors; non-strict mode falls through to key-value.
-                    if (config.strictMode) {
-                        throw KtoonParsingException.invalidArrayFormat(header.reason, currentLine)
-                    }
+                    // §6/§14.2: a header error, but only where a header may stand. §9.3 and §9.5
+                    // are authoritative at row and entry depth, where the same text is a row, so
+                    // the reason travels with the fallthrough token and the reader raises it.
+                    headerError = header.reason
                 }
                 is HeaderParse.NotAHeader -> {
                     // Not header-shaped at all (e.g. no closing bracket): key-value in both modes.
@@ -146,7 +147,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         // Regular key-value pair, split at the first unquoted colon (§7.4)
         val keyRaw = content.substring(0, colonIndex)
         val valuePart = content.substring(colonIndex + 1).trimSpaces()
-        tokens.add(Token.Key(keyRaw.trimSpaces(), content, indent, currentLine))
+        tokens.add(Token.Key(keyRaw.trimSpaces(), content, indent, currentLine, headerError))
         if (valuePart.isNotEmpty()) {
             tokens.add(Token.Value(valuePart, indent, currentLine))
         }
@@ -441,12 +442,15 @@ internal sealed interface Token {
      * @property rawContent The full line content after indentation (for row re-classification)
      * @property indent Indentation level in spaces
      * @property line Line number (1-based)
+     * @property headerError Why the line failed the §6 header grammar, when it looked like a
+     *   header. It is an error only where a header may stand, not at row or entry depth.
      */
     data class Key(
         val name: String,
         val rawContent: String,
         val indent: Int,
         override val line: Int,
+        val headerError: String? = null,
     ) : Token
 
     /**
