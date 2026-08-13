@@ -292,6 +292,26 @@ class IssueDecodeTest {
     }
 
     @Test
+    fun `content a root object could not read is not silently dropped`() {
+        // §5: a root object extends to the last line, so the non-strict allowance for trailing
+        // content after a root array or keyed root object does not apply to it.
+        assertFailsWith<KtoonException> {
+            lenient.decodeToonToJson("fruits:\n  - apple\n  - banana")
+        }
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson("a: 1\n\nloose") }
+    }
+
+    @Test
+    fun `trailing content after a root array is still ignored in non-strict mode`() {
+        assertEquals(listOf(1, 2), lenient.decodeFromString<List<Int>>("[2]: 1,2\nextra: 1"))
+        assertEquals(emptyList(), lenient.decodeFromString<List<Int>>("[]\nextra: 1"))
+        assertEquals(
+            mapOf("a" to OneValueInt(1)),
+            lenient.decodeFromString<Map<String, OneValueInt>>("[1:]{v}:\n  a: 1\nextra: 1"),
+        )
+    }
+
+    @Test
     fun `an indented root line is rejected in strict mode`() {
         // §5: root-form discovery works on depth-0 lines.
         assertFailsWith<KtoonException> { strict.decodeFromString<Int>("  42") }
