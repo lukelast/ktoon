@@ -58,6 +58,30 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         skipBlankLines()
     }
 
+    /**
+     * Number of container values currently being read. SPEC §15 lets a decoder impose a documented
+     * nesting limit and report exceeding it, rather than recursing until the host stack is gone.
+     */
+    private var nestingDepth = 0
+
+    /**
+     * Reads one nested container, refusing input deeper than [KtoonConfiguration.maxNestingDepth].
+     */
+    private inline fun <T> withNesting(line: Int, block: () -> T): T {
+        if (nestingDepth >= config.maxNestingDepth) {
+            throw KtoonParsingException(
+                "Maximum nesting depth of ${config.maxNestingDepth} exceeded",
+                line,
+            )
+        }
+        nestingDepth++
+        return try {
+            block()
+        } finally {
+            nestingDepth--
+        }
+    }
+
     /** §14.1: a declared count must match the actual count in strict mode (never truncates). */
     private fun validateCount(declared: Int, actual: Int, line: Int) {
         if (config.strictMode && declared != actual) {
@@ -131,13 +155,16 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads an object (collection of key-value pairs). */
+    private fun readObject(baseIndent: Int): ToonValue.Object =
+        withNesting(nextTokenLine()) { readObjectFields(baseIndent) }
+
     @Suppress(
         "CyclomaticComplexMethod",
         "LongMethod",
         "LoopWithTooManyJumpStatements",
         "ThrowsCount",
     )
-    private fun readObject(baseIndent: Int): ToonValue.Object {
+    private fun readObjectFields(baseIndent: Int): ToonValue.Object {
         val properties = mutableMapOf<String, ToonValue>()
 
         while (position < tokens.size) {
@@ -291,7 +318,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads an array in any form (inline, tabular, or list). */
-    private fun readArray(): ToonValue.Array {
+    private fun readArray(): ToonValue.Array = withNesting(nextTokenLine()) { readArrayForm() }
+
+    private fun readArrayForm(): ToonValue.Array {
         val header = consume<Token.Header>()
 
         return when {
@@ -588,6 +617,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads a keyed tabular object: `key[2:]{host,port}:\n alpha: a,1\n beta: b,2` (§9.5). */
+    private fun readKeyedObject(): ToonValue.Object =
+        withNesting(nextTokenLine()) { readKeyedEntries() }
+
     @Suppress(
         "CyclomaticComplexMethod",
         "LongMethod",
@@ -595,7 +627,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         "NestedBlockDepth",
         "ThrowsCount",
     )
-    private fun readKeyedObject(): ToonValue.Object {
+    private fun readKeyedEntries(): ToonValue.Object {
         val header = consume<Token.Header>()
         val fields =
             header.fields
@@ -994,6 +1026,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         // Out-of-domain (e.g. overflowing exponent): documented policy is to decode as string
         return null
     }
+
+    /** Line of the next token, for diagnostics before it is consumed. */
+    private fun nextTokenLine(): Int = if (position < tokens.size) tokens[position].line else -1
 
     /** Peeks at the current token without consuming it. */
     private fun peek(): Token {

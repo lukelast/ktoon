@@ -87,6 +87,38 @@ class IssueDecodeTest {
         )
     }
 
+    private fun nestedObjects(levels: Int): String = buildString {
+        for (i in 0 until levels) {
+            append("  ".repeat(i))
+            append("a:\n")
+        }
+        append("  ".repeat(levels))
+        append("b: 1")
+    }
+
+    private fun nestedFieldGroups(levels: Int): String =
+        "[1]" + "{a".repeat(levels) + "}".repeat(levels) + ":\n  1"
+
+    @Test
+    fun `nesting deeper than the configured limit is rejected`() {
+        // SPEC §15: a decoder may impose a documented depth limit and report exceeding it.
+        val toon = Ktoon { maxNestingDepth = 5 }
+        toon.decodeToonToJson(nestedObjects(4))
+        assertFailsWith<KtoonException> { toon.decodeToonToJson(nestedObjects(5)) }
+    }
+
+    @Test
+    fun `very deep values fail with a library error rather than exhausting the stack`() {
+        assertFailsWith<KtoonException> { strict.decodeToonToJson(nestedObjects(1000)) }
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson(nestedObjects(1000)) }
+    }
+
+    @Test
+    fun `very deep header field groups fail with a library error`() {
+        assertFailsWith<KtoonException> { strict.decodeToonToJson(nestedFieldGroups(1000)) }
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson(nestedFieldGroups(1000)) }
+    }
+
     @Serializable data class OneInt(val value: Int)
 
     @Test

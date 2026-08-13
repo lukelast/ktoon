@@ -4,6 +4,15 @@ package com.lukelast.ktoon
 private const val MAX_INDENT_SIZE = 16
 
 /**
+ * Default value of [KtoonConfiguration.maxNestingDepth].
+ *
+ * SPEC §15 sets no format nesting limit but lets implementations document one and report it as an
+ * error rather than exhausting the host stack. Real documents never come close to this depth, and
+ * it leaves a wide margin below the shallowest stack among the supported targets.
+ */
+public const val DEFAULT_MAX_NESTING_DEPTH: Int = 128
+
+/**
  * Configuration for TOON format encoding and decoding.
  *
  * @property strictMode Enable strict validation of TOON format rules (default: true)
@@ -11,6 +20,8 @@ private const val MAX_INDENT_SIZE = 16
  * @property indentSize Number of spaces per indentation level (default: 2)
  * @property sortFields Enable alphabetical sorting of object fields (default: false)
  * @property encodeDefaults Enable encoding of default property values (default: true)
+ * @property maxNestingDepth Maximum number of nested containers a document may contain (default:
+ *   [DEFAULT_MAX_NESTING_DEPTH])
  */
 data class KtoonConfiguration(
     val strictMode: Boolean = true,
@@ -18,12 +29,14 @@ data class KtoonConfiguration(
     val indentSize: Int = 2,
     val sortFields: Boolean = false,
     val encodeDefaults: Boolean = true,
+    val maxNestingDepth: Int = DEFAULT_MAX_NESTING_DEPTH,
 ) {
     init {
         require(indentSize > 0) { "indentSize must be positive, got $indentSize" }
         require(indentSize <= MAX_INDENT_SIZE) {
             "indentSize must be <= $MAX_INDENT_SIZE, got $indentSize"
         }
+        require(maxNestingDepth > 0) { "maxNestingDepth must be positive, got $maxNestingDepth" }
     }
 
     /** Delimiter character for separating values in inline arrays and tabular format. */
@@ -78,6 +91,13 @@ class KtoonConfigurationBuilder {
      */
     var encodeDefaults: Boolean = true
 
+    /**
+     * Maximum number of nested containers (objects, arrays, and header field groups) a document may
+     * contain. Decoding a document nested deeper than this fails with a [KtoonParsingException]
+     * instead of exhausting the host stack (SPEC §15).
+     */
+    var maxNestingDepth: Int = DEFAULT_MAX_NESTING_DEPTH
+
     fun build(): KtoonConfiguration =
         KtoonConfiguration(
             strictMode = strictMode,
@@ -85,5 +105,6 @@ class KtoonConfigurationBuilder {
             indentSize = indentSize,
             sortFields = sortFields,
             encodeDefaults = encodeDefaults,
+            maxNestingDepth = maxNestingDepth,
         )
 }
