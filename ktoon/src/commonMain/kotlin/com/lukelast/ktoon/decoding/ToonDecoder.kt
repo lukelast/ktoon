@@ -477,7 +477,10 @@ internal class ToonMapDecoder(
         val key = keys[entryIndex]
 
         if (isKey) {
-            return ToonPrimitiveDecoder(ToonValue.String(key), serializersModule, isMapKey = true)
+            // §2: object keys are strings. A key serializer that asks for a composite has no
+            // representation here, and the returned decoder would report an empty structure —
+            // every entry would then decode to the same default key.
+            throw KtoonDecodingException("TOON does not support complex keys in maps")
         }
 
         val element = value.properties.getValue(key)
