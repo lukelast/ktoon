@@ -102,6 +102,8 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
             return ToonValue.Object(emptyMap())
         }
 
+        validateRootIndent()
+
         // Determine root type from first token
         val result =
             when (val first = peek()) {
@@ -152,6 +154,29 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         }
 
         return result
+    }
+
+    /**
+     * §5/§14.2: the root form is discovered from depth-0 lines, so an indented first line is
+     * over-indented relative to the root scope. Object roots already fail this through
+     * `readObject(baseIndent = 0)`; scalar and keyless-header roots need the same check.
+     */
+    private fun validateRootIndent() {
+        val token = peek()
+        val indent =
+            when (token) {
+                is Token.Header -> token.indent
+                is Token.Key -> token.indent
+                is Token.Value -> token.indent
+                is Token.Dash -> token.indent
+                else -> 0
+            }
+        if (config.strictMode && indent != 0) {
+            throw KtoonValidationException(
+                "Invalid indentation: expected 0, got $indent",
+                token.line,
+            )
+        }
     }
 
     /** Reads an object (collection of key-value pairs). */
