@@ -7,7 +7,7 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 
 /** One entry of a tabular or keyed header's field list; a group is a nested-uniform column. */
-internal class FieldTreeNode(val name: String, val children: List<FieldTreeNode>?)
+internal class FieldNode(val name: String, val group: List<FieldNode>?)
 
 /**
  * Writes captured [EncodedElement] trees, selecting the form each value MUST take under §9: inline,
@@ -34,7 +34,7 @@ internal class ElementWriter(
          * every column is uniform-primitive or nested-uniform. Returns the field tree, or null.
          */
         @Suppress("ReturnCount")
-        fun tabularTree(elements: List<EncodedElement>): List<FieldTreeNode>? {
+        fun tabularTree(elements: List<EncodedElement>): List<FieldNode>? {
             if (elements.isEmpty()) return null
             val objects = elements.map { (it as? EncodedElement.Structure)?.entries ?: return null }
             return fieldTree(objects)
@@ -45,7 +45,7 @@ internal class ElementWriter(
          * objects. Returns the field tree, or null.
          */
         @Suppress("ReturnCount")
-        fun keyedTree(entries: List<Pair<String, EncodedElement>>): List<FieldTreeNode>? {
+        fun keyedTree(entries: List<Pair<String, EncodedElement>>): List<FieldNode>? {
             if (entries.size < 2) return null
             val objects = entries.map { (_, v) ->
                 (v as? EncodedElement.Structure)?.entries ?: return null
@@ -54,9 +54,7 @@ internal class ElementWriter(
         }
 
         @Suppress("ReturnCount")
-        private fun fieldTree(
-            objects: List<List<Pair<String, EncodedElement>>>
-        ): List<FieldTreeNode>? {
+        private fun fieldTree(objects: List<List<Pair<String, EncodedElement>>>): List<FieldNode>? {
             val first = objects.first()
             if (first.isEmpty()) return null // empty objects are excluded (§9.3)
             val names = first.map { it.first }
@@ -67,17 +65,17 @@ internal class ElementWriter(
                 for ((name, _) in other) if (name !in nameSet) return null
             }
 
-            val nodes = ArrayList<FieldTreeNode>(names.size)
+            val nodes = ArrayList<FieldNode>(names.size)
             for (name in names) {
                 val column = objects.map { obj -> obj.first { it.first == name }.second }
                 when {
                     column.all { it is EncodedElement.Primitive } ->
-                        nodes.add(FieldTreeNode(name, null))
+                        nodes.add(FieldNode(name, null))
                     column.all { it is EncodedElement.Structure && it.entries.isNotEmpty() } -> {
                         val sub =
                             fieldTree(column.map { (it as EncodedElement.Structure).entries })
                                 ?: return null
-                        nodes.add(FieldTreeNode(name, sub))
+                        nodes.add(FieldNode(name, sub))
                     }
                     else -> return null
                 }
@@ -141,42 +139,46 @@ internal class ElementWriter(
      * Writes a captured object in field position, starting at the key: a keyed table, a bare `key:`
      * for an empty object (§8), or `key:` with nested fields at depth +1.
      */
-    fun writeObjectField(name: String, entries: List<Pair<String, EncodedElement>>, indent: Int) {
+    fun writeObjectField(
+        name: String,
+        entries: List<Pair<String, EncodedElement>>,
+        indentLevel: Int,
+    ) {
         val tree = keyedTree(entries)
         when {
-            tree != null -> writeKeyedTable(quoteKey(name), entries, tree, indent)
+            tree != null -> writeKeyedTable(quoteKey(name), entries, tree, indentLevel)
             entries.isEmpty() -> writer.writeKey(quoteKey(name))
             else -> {
                 writer.writeKey(quoteKey(name))
-                writeNestedFields(entries, indent, firstInline = false)
+                writeNestedFields(entries, indentLevel, firstInline = false)
             }
         }
     }
 
-    private fun writeField(name: String, element: EncodedElement, indent: Int) {
+    private fun writeField(name: String, element: EncodedElement, indentLevel: Int) {
         when (element) {
             is EncodedElement.Primitive -> writer.writeKeyValue(quoteKey(name), element.value)
             is EncodedElement.NestedArray ->
-                writeArray(name, element.elements, indent, ArrayPosition.FIELD)
-            is EncodedElement.Structure -> writeObjectField(name, element.entries, indent)
+                writeArray(name, element.elements, indentLevel, ArrayPosition.FIELD)
+            is EncodedElement.Structure -> writeObjectField(name, element.entries, indentLevel)
         }
     }
 
     /**
-     * Writes an object's fields at depth [indent] + 1. When [firstInline] is true the first field
-     * continues the current line (list-item objects, §10).
+     * Writes an object's fields at depth [indentLevel] + 1. When [firstInline] is true the first
+     * field continues the current line (list-item objects, §10).
      */
     private fun writeNestedFields(
         entries: List<Pair<String, EncodedElement>>,
-        indent: Int,
+        indentLevel: Int,
         firstInline: Boolean,
     ) {
         entries.forEachIndexed { i, (name, value) ->
             if (i > 0 || !firstInline) {
                 writer.writeNewline()
-                writer.writeIndent(indent + 1)
+                writer.writeIndent(indentLevel + 1)
             }
-            writeField(name, value, indent + 1)
+            writeField(name, value, indentLevel + 1)
         }
     }
 
@@ -185,7 +187,7 @@ internal class ElementWriter(
     fun writeArray(
         key: String?,
         elements: List<EncodedElement>,
-        indent: Int,
+        indentLevel: Int,
         position: ArrayPosition,
     ) {
         if (elements.isEmpty()) {
@@ -199,9 +201,9 @@ internal class ElementWriter(
         // §9.4: tabular form is unavailable directly after a list-item hyphen
         val tree = if (position == ArrayPosition.LIST_ITEM) null else tabularTree(elements)
         if (tree != null) {
-            writeTabularTable(key, elements, tree, indent)
+            writeTabularTable(key, elements, tree, indentLevel)
         } else {
-            writeListArray(key, elements, indent)
+            writeListArray(key, elements, indentLevel)
         }
     }
 
@@ -228,14 +230,14 @@ internal class ElementWriter(
         }
     }
 
-    private fun writeListArray(key: String?, elements: List<EncodedElement>, indent: Int) {
+    private fun writeListArray(key: String?, elements: List<EncodedElement>, indentLevel: Int) {
         writeArrayHeader(key, elements.size)
-        elements.forEach { writeListItem(it, indent + 1) }
+        elements.forEach { writeListItem(it, indentLevel + 1) }
     }
 
-    private fun writeListItem(element: EncodedElement, indent: Int) {
+    private fun writeListItem(element: EncodedElement, indentLevel: Int) {
         writer.writeNewline()
-        writer.writeIndent(indent)
+        writer.writeIndent(indentLevel)
         writer.writeDash()
         when (element) {
             is EncodedElement.Primitive -> {
@@ -246,12 +248,12 @@ internal class ElementWriter(
                 // §10: an empty-object list item is the bare marker "-"
                 if (element.entries.isNotEmpty()) {
                     writer.writeSpace()
-                    writeNestedFields(element.entries, indent, firstInline = true)
+                    writeNestedFields(element.entries, indentLevel, firstInline = true)
                 }
             }
             is EncodedElement.NestedArray -> {
                 writer.writeSpace()
-                writeArray(null, element.elements, indent, ArrayPosition.LIST_ITEM)
+                writeArray(null, element.elements, indentLevel, ArrayPosition.LIST_ITEM)
             }
         }
     }
@@ -273,8 +275,8 @@ internal class ElementWriter(
     private fun writeTabularTable(
         key: String?,
         elements: List<EncodedElement>,
-        tree: List<FieldTreeNode>,
-        indent: Int,
+        tree: List<FieldNode>,
+        indentLevel: Int,
     ) {
         val delim = config.delimiter.char
         if (key != null) writer.write(quoteKey(key))
@@ -287,7 +289,7 @@ internal class ElementWriter(
 
         elements.forEach { element ->
             writer.writeNewline()
-            writer.writeIndent(indent + 1)
+            writer.writeIndent(indentLevel + 1)
             writeRowCells((element as EncodedElement.Structure).entries, tree, first = true)
         }
     }
@@ -295,8 +297,8 @@ internal class ElementWriter(
     private fun writeKeyedTable(
         quotedKey: String?,
         entries: List<Pair<String, EncodedElement>>,
-        tree: List<FieldTreeNode>,
-        indent: Int,
+        tree: List<FieldNode>,
+        indentLevel: Int,
     ) {
         val delim = config.delimiter.char
         if (quotedKey != null) writer.write(quotedKey)
@@ -310,7 +312,7 @@ internal class ElementWriter(
 
         entries.forEach { (entryKey, value) ->
             writer.writeNewline()
-            writer.writeIndent(indent + 1)
+            writer.writeIndent(indentLevel + 1)
             writer.write(quoteKey(entryKey))
             writer.write(':')
             writer.writeSpace()
@@ -318,13 +320,13 @@ internal class ElementWriter(
         }
     }
 
-    private fun writeFieldTree(tree: List<FieldTreeNode>) {
+    private fun writeFieldTree(tree: List<FieldNode>) {
         tree.forEachIndexed { i, node ->
             if (i > 0) writer.writeDelimiter()
             writer.write(quoteKey(node.name))
-            if (node.children != null) {
+            if (node.group != null) {
                 writer.write('{')
-                writeFieldTree(node.children)
+                writeFieldTree(node.group)
                 writer.write('}')
             }
         }
@@ -337,13 +339,13 @@ internal class ElementWriter(
      */
     private fun writeRowCells(
         entries: List<Pair<String, EncodedElement>>,
-        tree: List<FieldTreeNode>,
+        tree: List<FieldNode>,
         first: Boolean,
     ): Boolean {
         var isFirst = first
         for (node in tree) {
             val value = entries.first { it.first == node.name }.second
-            if (node.children == null) {
+            if (node.group == null) {
                 if (!isFirst) writer.writeDelimiter()
                 isFirst = false
                 writer.write((value as EncodedElement.Primitive).value)
@@ -351,7 +353,7 @@ internal class ElementWriter(
                 isFirst =
                     writeRowCells(
                         (value as EncodedElement.Structure).entries,
-                        node.children,
+                        node.group,
                         isFirst,
                     )
             }

@@ -1,7 +1,7 @@
 package com.lukelast.ktoon.fixtures.decode
 
 import com.lukelast.ktoon.fixtures.runFixtureDecodeTest
-import com.lukelast.ktoon.util.isDigit
+import com.lukelast.ktoon.util.isAsciiDigit
 import kotlin.test.Test
 import kotlinx.serialization.Serializable
 
@@ -119,7 +119,7 @@ class NumbersDecodeTest {
     @Test
     fun `parses negative zero with exponent as number`() {
         @Serializable data class Value(val value: Int)
-        '0'.isDigit()
+        '0'.isAsciiDigit()
         runFixtureDecodeTest<Value>(fixture)
     }
 

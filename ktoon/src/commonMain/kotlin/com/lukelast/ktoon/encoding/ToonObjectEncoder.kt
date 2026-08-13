@@ -67,7 +67,8 @@ internal class ToonObjectEncoder(
 
     override fun encodeFloat(value: Float) = writePrimitiveField(NumberNormalizer.normalize(value))
 
-    override fun encodeDouble(value: Double) = writePrimitiveField(NumberNormalizer.normalize(value))
+    override fun encodeDouble(value: Double) =
+        writePrimitiveField(NumberNormalizer.normalize(value))
 
     override fun encodeChar(value: Char) = writePrimitiveField(quoteValue(value.toString()))
 

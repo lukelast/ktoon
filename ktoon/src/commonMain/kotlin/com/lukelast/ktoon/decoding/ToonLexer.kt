@@ -2,7 +2,7 @@ package com.lukelast.ktoon.decoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
-import com.lukelast.ktoon.util.isDigit
+import com.lukelast.ktoon.util.isAsciiDigit
 
 /**
  * Lexer for tokenizing TOON format text.
@@ -206,7 +206,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
 
         // Parse the bracket segment: N, optional ':' (keyed), optional delimiter symbol.
         var i = 0
-        while (i < bracket.length && bracket[i].isDigit()) i++
+        while (i < bracket.length && bracket[i].isAsciiDigit()) i++
         if (i == 0) {
             return HeaderParse.Malformed(
                 if (bracket.isEmpty()) "bracket segment without a length"

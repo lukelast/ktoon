@@ -2,8 +2,8 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonEncodingException
-import com.lukelast.ktoon.util.isAlpha
-import com.lukelast.ktoon.util.isDigit
+import com.lukelast.ktoon.util.isAsciiDigit
+import com.lukelast.ktoon.util.isAsciiLetter
 
 /** Number of hex digits in a `\uXXXX` escape (§7.1). */
 private const val UNICODE_ESCAPE_DIGITS = 4
@@ -135,16 +135,16 @@ internal object StringQuoting {
             if (checkKey && !hasInvalidKeyChar) {
                 // ^[A-Za-z_][A-Za-z0-9_.]*$
                 if (i == 0) {
-                    if (!c.isAlpha() && c != '_') hasInvalidKeyChar = true
+                    if (!c.isAsciiLetter() && c != '_') hasInvalidKeyChar = true
                 } else {
-                    if (!c.isAlpha() && !c.isDigit() && c != '_' && c != '.')
+                    if (!c.isAsciiLetter() && !c.isAsciiDigit() && c != '_' && c != '.')
                         hasInvalidKeyChar = true
                 }
             }
 
             // 3. Update Numeric State
             if (isNumericLike) {
-                if (c.isDigit()) {
+                if (c.isAsciiDigit()) {
                     seenDigit = true
                 } else if (c == '.') {
                     // §7.2's regex needs a digit before the dot (".5" stays bare) and at least
@@ -175,7 +175,7 @@ internal object StringQuoting {
         // Spec: "Matches /^-?\d+(?:\.\d+)?(?:e[+-]?\d+)?$/i"
         // This implies it must end with a digit.
         if (isNumericLike) {
-            if (last.isDigit()) {
+            if (last.isAsciiDigit()) {
                 return true
             }
         }

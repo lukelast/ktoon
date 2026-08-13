@@ -22,7 +22,7 @@ import kotlinx.serialization.json.longOrNull
  * This allows encoding a [JsonElement] (parsed from JSON) into other formats like TOON. Note: This
  * serializer currently only supports encoding (serialization).
  */
-object JsonElementSerializer : KSerializer<JsonElement> {
+object KtoonJsonElementSerializer : KSerializer<JsonElement> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("JsonElement")
 
     @OptIn(ExperimentalSerializationApi::class)
@@ -62,7 +62,9 @@ object JsonElementSerializer : KSerializer<JsonElement> {
             is JsonObject -> {
                 val descriptor =
                     buildClassSerialDescriptor("JsonObject") {
-                        value.keys.forEach { k -> element(k, JsonElementSerializer.descriptor) }
+                        value.keys.forEach { k ->
+                            element(k, KtoonJsonElementSerializer.descriptor)
+                        }
                     }
                 val composite = encoder.beginStructure(descriptor)
                 var index = 0
@@ -75,6 +77,6 @@ object JsonElementSerializer : KSerializer<JsonElement> {
     }
 
     override fun deserialize(decoder: Decoder): JsonElement {
-        TODO("Deserialization is not yet supported for generic JsonElementSerializer")
+        TODO("Deserialization is not yet supported for KtoonJsonElementSerializer")
     }
 }
