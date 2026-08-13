@@ -68,9 +68,7 @@ object KtoonJsonElementSerializer : KSerializer<JsonElement> {
             is JsonObject -> {
                 val descriptor =
                     buildClassSerialDescriptor("JsonObject") {
-                        value.keys.forEach { k ->
-                            element(k, KtoonJsonElementSerializer.descriptor)
-                        }
+                        value.keys.forEach { k -> element(k, descriptor) }
                     }
                 val composite = encoder.beginStructure(descriptor)
                 var index = 0

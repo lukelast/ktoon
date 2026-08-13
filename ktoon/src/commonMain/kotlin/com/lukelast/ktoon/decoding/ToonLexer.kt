@@ -393,16 +393,13 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
  * One member of a header's field list: a field name (raw, possibly quoted) optionally carrying a
  * nested field group (§6, §9.3).
  */
-internal data class FieldNode(val name: String, val group: List<FieldNode>?) {
-    val isLeaf: Boolean
-        get() = group == null
-}
+internal data class FieldNode(val name: String, val group: List<FieldNode>?)
 
 /** Total number of leaf fields under [nodes], via a depth-first walk. */
 internal fun leafFieldCount(nodes: List<FieldNode>): Int {
     var count = 0
-    for (node in nodes) {
-        count += if (node.group == null) 1 else leafFieldCount(node.group)
+    for ((_, group) in nodes) {
+        count += if (group == null) 1 else leafFieldCount(group)
     }
     return count
 }

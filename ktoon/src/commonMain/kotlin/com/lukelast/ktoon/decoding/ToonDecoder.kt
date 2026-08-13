@@ -46,10 +46,8 @@ internal class ToonDecoder(
     /** Decodes a serializable value using the given deserializer. */
     override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
         // Read root value if not already read
-        val value = currentToonValue()
-
         // Create appropriate decoder based on root value type
-        return when (value) {
+        return when (val value = currentToonValue()) {
             is ToonValue.Object -> {
                 if (deserializer.descriptor.kind == StructureKind.MAP) {
                     ToonMapDecoder(value, serializersModule, config)

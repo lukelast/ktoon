@@ -1,7 +1,6 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
@@ -88,7 +87,6 @@ internal class ElementWriter(
          * every field is itself object-shaped (§9.5). Values decide; this just avoids capturing
          * objects that obviously cannot qualify.
          */
-        @OptIn(ExperimentalSerializationApi::class)
         fun couldBeKeyed(descriptor: SerialDescriptor): Boolean =
             when (descriptor.kind) {
                 StructureKind.MAP ->
@@ -103,7 +101,6 @@ internal class ElementWriter(
                 else -> false
             }
 
-        @OptIn(ExperimentalSerializationApi::class)
         private fun isObjectLike(descriptor: SerialDescriptor): Boolean =
             when (descriptor.kind) {
                 StructureKind.CLASS,
