@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.util.isObjectKind
 import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -100,9 +101,8 @@ internal class ToonObjectEncoder(
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         val key = currentKey ?: error("Current key is null for structure start")
 
-        return when (descriptor.kind) {
-            StructureKind.CLASS,
-            StructureKind.OBJECT -> {
+        return when {
+            descriptor.isObjectKind() -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     // §9.5: capture first so keyed tabular form can be selected from the values
                     ElementCapturer(config, serializersModule, descriptor) { entries ->
@@ -121,7 +121,7 @@ internal class ToonObjectEncoder(
                     )
                 }
             }
-            StructureKind.MAP -> {
+            descriptor.kind == StructureKind.MAP -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     MapElementCapturer(config, serializersModule) { entries ->
                         ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
@@ -139,7 +139,7 @@ internal class ToonObjectEncoder(
                     )
                 }
             }
-            StructureKind.LIST ->
+            descriptor.kind == StructureKind.LIST ->
                 ToonArrayEncoder(
                     writer = writer,
                     config = config,

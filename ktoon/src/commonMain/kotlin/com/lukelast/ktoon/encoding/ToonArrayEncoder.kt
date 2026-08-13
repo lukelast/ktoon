@@ -1,6 +1,7 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.util.isObjectKind
 import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -73,17 +74,16 @@ internal class ToonArrayEncoder(
         }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
-        when (descriptor.kind) {
-            StructureKind.CLASS,
-            StructureKind.OBJECT ->
+        when {
+            descriptor.isObjectKind() ->
                 ElementCapturer(config, serializersModule, descriptor) {
                     elements.add(EncodedElement.Structure(it))
                 }
-            StructureKind.MAP ->
+            descriptor.kind == StructureKind.MAP ->
                 MapElementCapturer(config, serializersModule) {
                     elements.add(EncodedElement.Structure(it))
                 }
-            StructureKind.LIST ->
+            descriptor.kind == StructureKind.LIST ->
                 ElementCapturer(config, serializersModule, descriptor) {
                     elements.add(EncodedElement.NestedArray(it.map { (_, v) -> v }))
                 }

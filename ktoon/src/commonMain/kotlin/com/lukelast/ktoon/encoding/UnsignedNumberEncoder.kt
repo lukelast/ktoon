@@ -1,5 +1,6 @@
 package com.lukelast.ktoon.encoding
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.modules.SerializersModule
 
@@ -8,6 +9,7 @@ import kotlinx.serialization.modules.SerializersModule
  * this reinterprets them and hands the positive decimal text to the enclosing encoder's own
  * primitive sink, which keeps field ordering, map key state, and tabular capture intact.
  */
+@OptIn(ExperimentalSerializationApi::class)
 internal class UnsignedNumberEncoder(
     override val serializersModule: SerializersModule,
     private val sink: (String) -> Unit,
