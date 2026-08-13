@@ -165,6 +165,20 @@ class IssueDecodeTest {
     }
 
     @Test
+    fun `a lone quote reports an unterminated string`() {
+        for (ktoon in listOf(strict, lenient)) {
+            for (input in listOf("\"", "a: \"")) {
+                val error =
+                    assertFailsWith<KtoonParsingException> {
+                        ktoon.decodeFromString<Map<String, String>>(input)
+                    }
+                assertEquals(1, error.line)
+                assertEquals("Unterminated string literal at line 1", error.message)
+            }
+        }
+    }
+
+    @Test
     fun `an indented root line is rejected in strict mode`() {
         // §5: root-form discovery works on depth-0 lines.
         assertFailsWith<KtoonException> { strict.decodeFromString<Int>("  42") }
