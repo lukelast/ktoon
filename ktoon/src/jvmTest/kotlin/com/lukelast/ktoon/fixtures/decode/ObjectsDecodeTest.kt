@@ -167,7 +167,10 @@ class ObjectsDecodeTest {
         runFixtureDecodeTest<Map<String, String>>(fixture)
     }
 
-    @Serializable data class WithUnderscore(val _private: Int)
+    // The key shape under test is exactly what the rule objects to.
+    @Suppress("ConstructorParameterNaming")
+    @Serializable
+    data class WithUnderscore(val _private: Int)
 
     @Test
     fun `parses underscore-prefixed keys`() {
@@ -176,7 +179,10 @@ class ObjectsDecodeTest {
 
     @Test
     fun `parses underscore-containing keys`() {
-        @Serializable data class WithUnderscoreContain(val user_name: Int)
+        // The key shape under test is exactly what the rule objects to.
+        @Suppress("ConstructorParameterNaming")
+        @Serializable
+        data class WithUnderscoreContain(val user_name: Int)
         runFixtureDecodeTest<WithUnderscoreContain>(fixture)
     }
 

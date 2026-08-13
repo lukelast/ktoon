@@ -165,7 +165,10 @@ class ArraysNestedDecodeTest {
 
     @Test
     fun `parses quoted key with list-form array`() {
-        @Serializable data class CustomItems(val `x-items`: List<RootId>)
+        // The key shape under test is exactly what the rule objects to.
+        @Suppress("ConstructorParameterNaming")
+        @Serializable
+        data class CustomItems(val `x-items`: List<RootId>)
         runFixtureDecodeTest<CustomItems>(fixture)
     }
 }
