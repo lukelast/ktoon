@@ -1,5 +1,13 @@
 package com.lukelast.ktoon.encoding
 
+import com.lukelast.ktoon.util.isAsciiDigit
+
+/** §2: plain decimal form is required down to 1e-6, i.e. a decimal point at position -5. */
+private const val PLAIN_MIN_POINT = -5
+
+/** §2: plain decimal form is required up to but excluding 1e21. */
+private const val PLAIN_MAX_POINT = 21
+
 /**
  * Normalizes numbers to TOON canonical format per SPEC §2:
  * - No exponent notation (e.g., 1e6 → 1000000, 1e-6 → 0.000001)
@@ -8,6 +16,7 @@ package com.lukelast.ktoon.encoding
  * - -0 normalized to 0
  * - NaN/Infinity become null
  */
+@Suppress("TooManyFunctions")
 internal object NumberNormalizer {
 
     @Suppress("ReturnCount")
@@ -114,6 +123,70 @@ internal object NumberNormalizer {
     private fun stripTrailingZeros(s: String): String {
         if (!s.contains('.')) return s
         return s.trimEnd('0').trimEnd('.')
+    }
+
+    /**
+     * Canonicalizes an already-validated numeric literal without routing it through a host number,
+     * so digits a `Long` or `Double` cannot hold survive. §2: plain decimal form is required for 0
+     * and for 1e-6 ≤ |n| < 1e21; outside that range exponent notation is allowed, and is used here
+     * so a literal like `1e400` stays short.
+     */
+    @Suppress("ReturnCount", "CyclomaticComplexMethod")
+    fun normalizeLiteral(literal: String): String {
+        var i = 0
+        val negative = literal[0] == '-'
+        if (negative) i++
+
+        val intStart = i
+        while (i < literal.length && literal[i].isAsciiDigit()) i++
+        val intPart = literal.substring(intStart, i)
+
+        var fracPart = ""
+        if (i < literal.length && literal[i] == '.') {
+            i++
+            val fracStart = i
+            while (i < literal.length && literal[i].isAsciiDigit()) i++
+            fracPart = literal.substring(fracStart, i)
+        }
+
+        var exponent = 0
+        if (i < literal.length && (literal[i] == 'e' || literal[i] == 'E')) {
+            // An exponent beyond Int is beyond any representable magnitude; keep the source text.
+            exponent = literal.substring(i + 1).toIntOrNull() ?: return literal
+        }
+
+        // The digits with the decimal point at `pointPos`, so the value is 0.<digits> *
+        // 10^pointPos.
+        val digits = intPart + fracPart
+        var lead = 0
+        while (lead < digits.length && digits[lead] == '0') lead++
+        val significant = digits.substring(lead).trimEnd('0')
+        if (significant.isEmpty()) return "0" // §2: -0 normalizes to 0
+        val pointPos = intPart.length + exponent - lead
+
+        val body =
+            if (pointPos in PLAIN_MIN_POINT..PLAIN_MAX_POINT) {
+                plainDecimal(significant, pointPos)
+            } else {
+                exponentForm(significant, pointPos)
+            }
+        return if (negative) "-$body" else body
+    }
+
+    private fun plainDecimal(significant: String, pointPos: Int): String =
+        when {
+            pointPos <= 0 -> "0." + "0".repeat(-pointPos) + significant
+            pointPos >= significant.length ->
+                significant + "0".repeat(pointPos - significant.length)
+            else -> significant.substring(0, pointPos) + "." + significant.substring(pointPos)
+        }
+
+    private fun exponentForm(significant: String, pointPos: Int): String {
+        val mantissa =
+            if (significant.length == 1) significant
+            else significant.substring(0, 1) + "." + significant.substring(1)
+        val exponent = pointPos - 1
+        return if (exponent < 0) "${mantissa}e$exponent" else "${mantissa}e+$exponent"
     }
 
     fun normalize(value: Long): String = value.toString()

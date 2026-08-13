@@ -5,6 +5,8 @@ import com.lukelast.ktoon.KtoonDecodingException
 import com.lukelast.ktoon.KtoonEncodingException
 import com.lukelast.ktoon.decoding.ToonValue
 import com.lukelast.ktoon.decoding.ToonValueSource
+import com.lukelast.ktoon.decoding.matchesNumberGrammar
+import com.lukelast.ktoon.encoding.ToonNumberSink
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -94,6 +96,15 @@ private class JsonElementSerializerAtDepth(private val depth: Int) : KSerializer
                     val boolean = value.booleanOrNull
                     if (boolean != null) {
                         encoder.encodeBoolean(boolean)
+                        return
+                    }
+
+                    // A JsonPrimitive holds its number as text. Converting it to a host Long or
+                    // Double first would round a large integer and turn an out-of-range literal
+                    // into null, so a TOON encoder is handed the digits instead.
+                    val content = value.content
+                    if (encoder is ToonNumberSink && matchesNumberGrammar(content)) {
+                        encoder.encodeNumberLiteral(content)
                         return
                     }
 
