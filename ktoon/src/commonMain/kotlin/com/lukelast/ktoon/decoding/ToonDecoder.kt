@@ -212,6 +212,14 @@ internal class ToonPrimitiveDecoder(
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         return CompositeDecoder.DECODE_DONE
     }
+
+    override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
+        // A root value reaches this decoder directly, so the shape check that nested values get
+        // from createDecoderForStructure has to happen here too.
+        val kind = descriptor.kind
+        if (kind is StructureKind) requireShape(kind, value)
+        return this
+    }
 }
 
 /** Decoder for TOON objects (structures with named fields). */
@@ -515,7 +523,30 @@ internal class ToonMapDecoder(
     }
 }
 
-@Suppress("ThrowsCount")
+/**
+ * Checks that [value] has the shape the requested structure needs. A null is a real value, not a
+ * missing one: substituting an empty object for it would hand back an all-defaults class or an
+ * empty map that the document never contained. Nullable types never reach here — kotlinx asks
+ * `decodeNotNullMark` first.
+ */
+private fun requireShape(kind: StructureKind, value: ToonValue): ToonValue {
+    val expected =
+        when (kind) {
+            StructureKind.CLASS,
+            StructureKind.OBJECT -> "Object"
+            StructureKind.MAP -> "Map"
+            StructureKind.LIST -> "Array"
+            else -> return value
+        }
+    val matches =
+        if (kind == StructureKind.LIST) value is ToonValue.Array else value is ToonValue.Object
+    if (!matches) {
+        throw KtoonDecodingException.typeMismatch(expected, value::class.simpleName ?: "unknown")
+    }
+    return value
+}
+
+@OptIn(ExperimentalSerializationApi::class)
 internal fun createDecoderForStructure(
     descriptor: SerialDescriptor,
     value: ToonValue,
@@ -523,37 +554,15 @@ internal fun createDecoderForStructure(
     config: KtoonConfiguration,
     fallback: CompositeDecoder,
 ): CompositeDecoder {
-    return when (descriptor.kind) {
+    val kind = descriptor.kind
+    if (kind !is StructureKind) return fallback
+    val target = requireShape(kind, value)
+    return when (kind) {
         StructureKind.CLASS,
-        StructureKind.OBJECT -> {
-            val target = if (value is ToonValue.Null) ToonValue.Object(emptyMap()) else value
-            if (target !is ToonValue.Object) {
-                throw KtoonDecodingException.typeMismatch(
-                    "Object",
-                    target::class.simpleName ?: "unknown",
-                )
-            }
-            ToonObjectDecoder(target, serializersModule, config)
-        }
-        StructureKind.LIST -> {
-            if (value !is ToonValue.Array) {
-                throw KtoonDecodingException.typeMismatch(
-                    "Array",
-                    value::class.simpleName ?: "unknown",
-                )
-            }
-            ToonArrayDecoder(value, serializersModule, config)
-        }
-        StructureKind.MAP -> {
-            val target = if (value is ToonValue.Null) ToonValue.Object(emptyMap()) else value
-            if (target !is ToonValue.Object) {
-                throw KtoonDecodingException.typeMismatch(
-                    "Map",
-                    target::class.simpleName ?: "unknown",
-                )
-            }
-            ToonMapDecoder(target, serializersModule, config)
-        }
+        StructureKind.OBJECT ->
+            ToonObjectDecoder(target as ToonValue.Object, serializersModule, config)
+        StructureKind.LIST -> ToonArrayDecoder(target as ToonValue.Array, serializersModule, config)
+        StructureKind.MAP -> ToonMapDecoder(target as ToonValue.Object, serializersModule, config)
         else -> fallback
     }
 }
