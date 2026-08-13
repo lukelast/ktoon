@@ -29,18 +29,19 @@ internal fun Char.toCodePointLabel(): String =
     "U+" + code.toString(HEX_RADIX).uppercase().padStart(UNICODE_ESCAPE_DIGITS, '0')
 
 /**
- * §3/§7.1: TOON text is a sequence of Unicode scalar values, so a surrogate may only appear as
- * part of a well-formed pair. Returns the index of the first unpaired surrogate, or -1 if there is
- * none.
+ * §3/§7.1: TOON text is a sequence of Unicode scalar values, so a surrogate may only appear as part
+ * of a well-formed pair. Returns the index of the first unpaired surrogate, or -1 if there is none.
  */
 internal fun String.indexOfUnpairedSurrogate(): Int {
     for (i in indices) {
         val c = this[i]
-        if (c.isHighSurrogate()) {
-            if (i + 1 >= length || !this[i + 1].isLowSurrogate()) return i
-        } else if (c.isLowSurrogate()) {
-            if (i == 0 || !this[i - 1].isHighSurrogate()) return i
-        }
+        val paired =
+            when {
+                c.isHighSurrogate() -> i + 1 < length && this[i + 1].isLowSurrogate()
+                c.isLowSurrogate() -> i > 0 && this[i - 1].isHighSurrogate()
+                else -> true
+            }
+        if (!paired) return i
     }
     return -1
 }

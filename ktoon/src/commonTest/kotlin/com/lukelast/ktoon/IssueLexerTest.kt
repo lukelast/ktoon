@@ -19,6 +19,9 @@ class IssueLexerTest {
     fun `a space before a nested field group's brace is not part of the field name`() {
         // §12: field names are extracted tokens, so surrounding spaces are trimmed.
         val input = "items[1]{group {id,name}}:\n  1,Ada"
-        assertEquals(GroupRoot(listOf(GroupHolder(Named(1, "Ada")))), strict.decodeFromString(input))
+        assertEquals(
+            GroupRoot(listOf(GroupHolder(Named(1, "Ada")))),
+            strict.decodeFromString(input),
+        )
     }
 }

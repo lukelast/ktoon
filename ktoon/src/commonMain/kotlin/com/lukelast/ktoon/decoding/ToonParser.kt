@@ -24,10 +24,39 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     private var position = 0
 
     /**
-     * Number of array/keyed header spans currently being read. Blank lines inside a header span are
-     * strict-mode errors even when they fall between the fields of a list-item object (§12).
+     * One frame per array/keyed header scope currently being read; the flag records whether that
+     * scope's span has started, i.e. whether its first row, item, or entry line has been reached. A
+     * blank line inside a started span is a strict-mode error even when it falls between the fields
+     * of a list-item object or inside a nested scope (§12).
      */
-    private var headerSpanDepth = 0
+    private val headerSpans = mutableListOf<Boolean>()
+
+    private fun pushHeaderSpan() {
+        headerSpans.add(false)
+    }
+
+    private fun popHeaderSpan() {
+        headerSpans.removeAt(headerSpans.lastIndex)
+    }
+
+    /** Records that the innermost header scope has reached its first row, item, or entry line. */
+    private fun markHeaderSpanStarted() {
+        headerSpans[headerSpans.lastIndex] = true
+    }
+
+    /**
+     * Consumes a blank-line run whose caller has already established that the surrounding scope
+     * continues. §12: such a run lies inside every started header span, which strict mode rejects.
+     */
+    private fun consumeBlanksInContinuingScope(blankLine: Int) {
+        if (config.strictMode && headerSpans.any { it }) {
+            throw KtoonValidationException(
+                "Blank lines are not allowed within an array or keyed header span in strict mode",
+                blankLine,
+            )
+        }
+        skipBlankLines()
+    }
 
     /** §14.1: a declared count must match the actual count in strict mode (never truncates). */
     private fun validateCount(declared: Int, actual: Int, line: Int) {
@@ -110,7 +139,6 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     )
     private fun readObject(baseIndent: Int): ToonValue.Object {
         val properties = mutableMapOf<String, ToonValue>()
-        var readAny = false
 
         while (position < tokens.size) {
             val token = peek()
@@ -123,13 +151,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
                 // §12: a blank line inside an array's header span is a strict-mode error, even
                 // between a list-item object's fields. Outside any span, blank lines are ignored.
-                if (config.strictMode && headerSpanDepth > 0 && readAny) {
-                    throw KtoonValidationException(
-                        "Blank lines are not allowed within an array or keyed header span in strict mode",
-                        token.line,
-                    )
-                }
-                advance()
+                consumeBlanksInContinuingScope(token.line)
                 continue
             }
 
@@ -161,7 +183,6 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     val value = readValueForKey(token)
 
                     insertProperty(properties, key, value, token.line)
-                    readAny = true
                 }
                 is Token.Header -> {
                     // §14.2: a keyless header cannot occupy an object field position
@@ -175,7 +196,6 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     val rawKey = token.key
                     val key = unquote(rawKey, token.line)
                     insertProperty(properties, key, arrayValue, token.line)
-                    readAny = true
                 }
                 is Token.Value -> {
                     // §5.2: a scalar line is valid only as a root primitive; anywhere else it is
@@ -237,30 +257,37 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
             }
         }
 
-        skipBlankLines()
-        if (position >= tokens.size) {
+        // §12: a blank run here belongs to the nested scope this key opens, so it may only be
+        // consumed once that scope is known to continue — otherwise the enclosing reader must see
+        // it and decide (blank inside a started header span, or a harmless trailing blank).
+        val nextIndex = indexOfNextNonBlank()
+        if (nextIndex >= tokens.size) {
             // §8: key: alone is an empty object
             return ToonValue.Object(emptyMap())
         }
 
-        return when (val token = peek()) {
-            is Token.Key ->
-                if (token.indent > keyToken.indent) {
-                    readObject(baseIndent = keyToken.indent + config.indentSize)
-                } else {
-                    ToonValue.Object(emptyMap())
-                }
-            is Token.Header ->
-                if (token.indent > keyToken.indent) {
-                    readObject(baseIndent = keyToken.indent + config.indentSize)
-                } else {
-                    ToonValue.Object(emptyMap())
-                }
-            is Token.Value ->
-                // A value on a later line is a misplaced scalar (§5.2)
-                throw KtoonParsingException("Misplaced scalar line (missing colon?)", token.line)
-            else -> ToonValue.Object(emptyMap())
+        val token = tokens[nextIndex]
+        if (token is Token.Value) {
+            // A value on a later line is a misplaced scalar (§5.2)
+            throw KtoonParsingException("Misplaced scalar line (missing colon?)", token.line)
         }
+        val opensScope =
+            when (token) {
+                is Token.Key -> token.indent > keyToken.indent
+                is Token.Header -> token.indent > keyToken.indent
+                else -> false
+            }
+        if (!opensScope) return ToonValue.Object(emptyMap())
+
+        if (nextIndex != position) consumeBlanksInContinuingScope(tokens[position].line)
+        return readObject(baseIndent = keyToken.indent + config.indentSize)
+    }
+
+    /** Index of the next token that is not a blank line. */
+    private fun indexOfNextNonBlank(): Int {
+        var p = position
+        while (p < tokens.size && tokens[p] is Token.BlankLine) p++
+        return p
     }
 
     /** Reads an array in any form (inline, tabular, or list). */
@@ -316,19 +343,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
      * `continue` the loop (blanks consumed), false when the scope has ended and the blanks belong
      * to an outer scope.
      */
-    private fun tryConsumeBlanksInSpan(
-        hasItems: Boolean,
-        scopeContinues: () -> Boolean,
-        blankLine: Int,
-    ): Boolean {
+    private fun tryConsumeBlanksInSpan(scopeContinues: () -> Boolean, blankLine: Int): Boolean {
         return if (scopeContinues()) {
-            if (config.strictMode && hasItems) {
-                throw KtoonValidationException(
-                    "Blank lines are not allowed within an array or keyed header span in strict mode",
-                    blankLine,
-                )
-            }
-            skipBlankLines()
+            consumeBlanksInContinuingScope(blankLine)
             true
         } else {
             false
@@ -351,14 +368,13 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         val rowIndent = contentIndent(header)
         val delimiter = header.delimiter.char
 
-        headerSpanDepth++
+        pushHeaderSpan()
         try {
             while (position < tokens.size) {
                 when (val token = peek()) {
                     is Token.BlankLine -> {
                         if (
                             tryConsumeBlanksInSpan(
-                                hasItems = elements.isNotEmpty(),
                                 scopeContinues = { nextNonBlankIsRow(rowIndent, delimiter) },
                                 blankLine = token.line,
                             )
@@ -370,6 +386,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     is Token.Value -> {
                         validateRowIndent(token.indent, rowIndent, header.indent, token.line)
                         advance()
+                        markHeaderSpanStarted()
                         elements.add(
                             parseRowObject(token.content, fields, leafCount, delimiter, token.line)
                         )
@@ -383,6 +400,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                             else token.indent > header.indent
                         if (atRowIndent && isRowLine(token.rawContent, delimiter)) {
                             advance()
+                            markHeaderSpanStarted()
                             // Skip the paired value token from the same line
                             if (position < tokens.size) {
                                 val paired = tokens[position]
@@ -408,6 +426,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                             break
                         }
                         advance()
+                        markHeaderSpanStarted()
                         skipTokensOnLine(token.line)
                         elements.add(
                             parseRowObject(
@@ -428,6 +447,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                             else token.indent > header.indent
                         if (atRowIndent && isRowLine(token.rawContent, delimiter)) {
                             advance()
+                            markHeaderSpanStarted()
                             if (position < tokens.size) {
                                 val paired = tokens[position]
                                 if (paired is Token.InlineArrayValue && paired.line == token.line) {
@@ -451,7 +471,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
             }
         } finally {
-            headerSpanDepth--
+            popHeaderSpan()
         }
 
         validateCount(header.length, elements.size, header.line)
@@ -588,14 +608,13 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         val entryIndent = contentIndent(header)
         val delimiter = header.delimiter.char
 
-        headerSpanDepth++
+        pushHeaderSpan()
         try {
             while (position < tokens.size) {
                 when (val token = peek()) {
                     is Token.BlankLine -> {
                         if (
                             tryConsumeBlanksInSpan(
-                                hasItems = entryCount > 0,
                                 scopeContinues = { nextNonBlankIsEntry(entryIndent) },
                                 blankLine = token.line,
                             )
@@ -616,6 +635,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                             )
                         }
                         advance()
+                        markHeaderSpanStarted()
                         var cellsContent: String? = null
                         if (position < tokens.size) {
                             val paired = tokens[position]
@@ -639,6 +659,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                         // A header-shaped line at entry depth is still an entry row (§9.5)
                         if (token.indent <= header.indent) break
                         advance()
+                        markHeaderSpanStarted()
                         val raw = token.rawContent
                         if (position < tokens.size) {
                             val paired = tokens[position]
@@ -679,6 +700,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                             )
                         }
                         advance()
+                        markHeaderSpanStarted()
                         skipTokensOnLine(token.line)
                         if (colon != -1) {
                             val cells = token.rawContent.substring(colon + 1).trimSpaces()
@@ -710,7 +732,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
             }
         } finally {
-            headerSpanDepth--
+            popHeaderSpan()
         }
 
         validateCount(header.length, entryCount, header.line)
@@ -762,14 +784,13 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     ): ToonValue.Array {
         val elements = mutableListOf<ToonValue>()
 
-        headerSpanDepth++
+        pushHeaderSpan()
         try {
             while (position < tokens.size) {
                 when (val token = peek()) {
                     is Token.BlankLine -> {
                         if (
                             tryConsumeBlanksInSpan(
-                                hasItems = elements.isNotEmpty(),
                                 scopeContinues = { nextNonBlankIsListItem(itemIndent) },
                                 blankLine = token.line,
                             )
@@ -781,6 +802,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     is Token.Dash -> {
                         if (token.indent != itemIndent) break
                         advance()
+                        // §12: the span starts at the item line, before its content is read, so a
+                        // blank inside this item's nested scopes is already inside the span.
+                        markHeaderSpanStarted()
                         elements.add(readListItemValue(token))
                     }
                     is Token.Value -> {
@@ -798,7 +822,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
             }
         } finally {
-            headerSpanDepth--
+            popHeaderSpan()
         }
 
         if (declaredLength != null) {
