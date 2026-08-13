@@ -92,3 +92,51 @@ internal fun exactIntegralValue(str: String): Long? {
         else significant + "0".repeat(pointPos - significant.length)
     return (if (negative) "-$whole" else whole).toLongOrNull()
 }
+
+/** Number of decimal digits in the widest `ULong`. */
+private const val MAX_ULONG_DIGITS = 20
+
+/**
+ * The exact value of a [matchesNumberGrammar]-valid literal as a `ULong`, or null when the literal
+ * is negative, not a whole number, or does not fit.
+ */
+@Suppress("ReturnCount", "CyclomaticComplexMethod")
+internal fun exactUnsignedValue(str: String): ULong? {
+    if (str.startsWith('-')) return null
+
+    var i = 0
+    val intStart = i
+    while (i < str.length && str[i].isAsciiDigit()) i++
+    val intPart = str.substring(intStart, i)
+
+    var fracPart = ""
+    if (i < str.length && str[i] == '.') {
+        i++
+        val fracStart = i
+        while (i < str.length && str[i].isAsciiDigit()) i++
+        fracPart = str.substring(fracStart, i)
+    }
+
+    var exponent = 0
+    if (i < str.length && (str[i] == 'e' || str[i] == 'E')) {
+        exponent = str.substring(i + 1).toIntOrNull() ?: return null
+    }
+
+    val digits = intPart + fracPart
+    var lead = 0
+    while (lead < digits.length && digits[lead] == '0') lead++
+    val significant = digits.substring(lead)
+    if (significant.isEmpty()) return 0uL
+    val pointPos = intPart.length + exponent - lead
+
+    for (j in maxOf(pointPos, 0) until significant.length) {
+        if (significant[j] != '0') return null
+    }
+    if (pointPos <= 0) return null
+    if (pointPos > MAX_ULONG_DIGITS) return null
+
+    val whole =
+        if (pointPos <= significant.length) significant.substring(0, pointPos)
+        else significant + "0".repeat(pointPos - significant.length)
+    return whole.toULongOrNull()
+}

@@ -1,11 +1,13 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 
 /** Encoder for TOON objects (structures with named fields). */
@@ -77,6 +79,13 @@ internal class ToonObjectEncoder(
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
         writePrimitiveField(quoteValue(enumDescriptor.getElementName(index)))
+
+    override fun encodeInline(descriptor: SerialDescriptor): Encoder =
+        if (isUnsignedDescriptor(descriptor)) {
+            UnsignedNumberEncoder(serializersModule) { writePrimitiveField(it) }
+        } else {
+            super.encodeInline(descriptor)
+        }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         val key = currentKey ?: error("Current key is null for structure start")

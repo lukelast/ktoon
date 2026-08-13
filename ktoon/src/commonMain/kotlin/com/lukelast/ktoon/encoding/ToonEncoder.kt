@@ -1,11 +1,13 @@
 package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
+import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 
 /** Root encoder for TOON format. */
@@ -59,6 +61,13 @@ internal class ToonEncoder(
                 config.delimiter.char,
             )
         )
+
+    override fun encodeInline(descriptor: SerialDescriptor): Encoder =
+        if (isUnsignedDescriptor(descriptor)) {
+            UnsignedNumberEncoder(serializersModule) { writer.write(it) }
+        } else {
+            super.encodeInline(descriptor)
+        }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
         when (descriptor.kind) {

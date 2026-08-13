@@ -2,11 +2,13 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonEncodingException
+import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 
 /** Encoder for TOON maps (key-value pairs). */
@@ -88,6 +90,13 @@ internal class ToonMapEncoder(
         val name = enumDescriptor.getElementName(index)
         if (isKey) encodePrimitive(name) else encodePrimitive(quoteValue(name))
     }
+
+    override fun encodeInline(descriptor: SerialDescriptor): Encoder =
+        if (isUnsignedDescriptor(descriptor)) {
+            UnsignedNumberEncoder(serializersModule) { encodePrimitive(it) }
+        } else {
+            super.encodeInline(descriptor)
+        }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         require(!isKey) { "TOON does not support complex keys in maps" }

@@ -2,11 +2,13 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonEncodingException
+import com.lukelast.ktoon.util.isUnsignedDescriptor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 
 /** Captures field values or array elements during encoding. */
@@ -91,6 +93,13 @@ internal class ElementCapturer(
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
         add(EncodedElement.Primitive(quoteElement(enumDescriptor.getElementName(index))))
     }
+
+    override fun encodeInline(descriptor: SerialDescriptor): Encoder =
+        if (isUnsignedDescriptor(descriptor)) {
+            UnsignedNumberEncoder(serializersModule) { add(EncodedElement.Primitive(it)) }
+        } else {
+            super.encodeInline(descriptor)
+        }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
         when (descriptor.kind) {
@@ -195,6 +204,13 @@ internal class MapElementCapturer(
         val name = enumDescriptor.getElementName(index)
         addPrimitive(name, quoteElement(name))
     }
+
+    override fun encodeInline(descriptor: SerialDescriptor): Encoder =
+        if (isUnsignedDescriptor(descriptor)) {
+            UnsignedNumberEncoder(serializersModule) { addPrimitive(it) }
+        } else {
+            super.encodeInline(descriptor)
+        }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         require(!isKey) { "TOON does not support complex keys in maps" }
