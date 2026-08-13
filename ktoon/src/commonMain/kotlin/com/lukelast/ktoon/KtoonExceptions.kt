@@ -36,20 +36,6 @@ class KtoonValidationException(
                 line,
             )
 
-        /** Creates a validation exception for tabular array field count mismatch. */
-        fun tabularFieldMismatch(expected: Int, actual: Int, elementIndex: Int, line: Int) =
-            KtoonValidationException(
-                "Tabular array element $elementIndex has $actual fields, expected $expected",
-                line,
-            )
-
-        /** Creates a validation exception for invalid indentation. */
-        fun invalidIndentation(indent: Int, indentSize: Int, line: Int) =
-            KtoonValidationException(
-                "Invalid indentation: $indent spaces (expected multiple of $indentSize)",
-                line,
-            )
-
         /** Creates a validation exception for duplicate object keys. */
         fun duplicateKey(key: String, line: Int) =
             KtoonValidationException("Duplicate key: '$key'", line)
