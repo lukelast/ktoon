@@ -102,12 +102,18 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
 
         validateRootIndent()
 
+        // §5: only a root array, a root `[]`, and a keyed tabular root object end before the last
+        // line, so only those may have trailing content ignored in non-strict mode. A root object
+        // extends to the end of the document, so leftovers there are an error in either mode.
+        var lenientTrailingContent = false
+
         // Determine root type from first token
         val result =
             when (val first = peek()) {
                 is Token.Header -> {
                     if (first.key.isEmpty()) {
                         // §5: keyless header at root — root array, or keyed tabular root object
+                        lenientTrailingContent = true
                         if (first.keyed) readKeyedObject() else readArray()
                     } else {
                         readObject(baseIndent = 0)
@@ -123,19 +129,10 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     advance()
                     // §5: the literal token [] at root decodes as an empty array
                     if (first.content == "[]") {
+                        lenientTrailingContent = true
                         ToonValue.Array(emptyList())
                     } else {
-                        // §5/§14.2: a primitive root requires the document to have exactly one
-                        // non-blank line; anything after a root scalar errors in both modes.
-                        val primitive = parsePrimitive(first.content, first.line)
-                        skipBlankLines()
-                        if (position < tokens.size) {
-                            throw KtoonParsingException(
-                                "Top-level document must start with a key-value or array-header line",
-                                peek().line,
-                            )
-                        }
-                        primitive
+                        parsePrimitive(first.content, first.line)
                     }
                 }
                 else -> {
@@ -143,12 +140,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
             }
 
-        // §5: the root form spans the whole document. In strict mode trailing content MUST error;
-        // in non-strict mode it MAY be ignored.
         skipBlankLines()
-        if (config.strictMode && position < tokens.size) {
-            val token = peek()
-            throw KtoonParsingException("Unexpected content after root value", token.line)
+        if (position < tokens.size && (config.strictMode || !lenientTrailingContent)) {
+            throw KtoonParsingException("Unexpected content after root value", peek().line)
         }
 
         return result
