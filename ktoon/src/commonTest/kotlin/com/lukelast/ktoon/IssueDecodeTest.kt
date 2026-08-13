@@ -164,6 +164,26 @@ class IssueDecodeTest {
         assertEquals(listOf("a,b", "c"), strict.decodeFromString<List<String>>("[2]: \"a,b\",c"))
     }
 
+    @Serializable data class OneDouble(val value: Double)
+
+    @Test
+    fun `schemaless decoding keeps a number's exact literal`() {
+        // §4: lossless-first is recommended; the host Double cannot hold these digits.
+        assertEquals(
+            Json.parseToJsonElement("""{"value":0.123456789012345678901}"""),
+            strict.decodeToonToJson("value: 0.123456789012345678901"),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"value":1e21}"""),
+            strict.decodeToonToJson("value: 1e21"),
+        )
+        // Asking for a Double still yields the host approximation.
+        assertEquals(
+            OneDouble(0.12345678901234568),
+            strict.decodeFromString<OneDouble>("value: 0.123456789012345678901"),
+        )
+    }
+
     @Test
     fun `a lone quote reports an unterminated string`() {
         for (ktoon in listOf(strict, lenient)) {
