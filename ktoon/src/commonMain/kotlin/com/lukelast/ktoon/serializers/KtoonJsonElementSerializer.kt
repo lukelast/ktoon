@@ -1,5 +1,8 @@
 package com.lukelast.ktoon.serializers
 
+import com.lukelast.ktoon.KtoonDecodingException
+import com.lukelast.ktoon.decoding.ToonValue
+import com.lukelast.ktoon.decoding.ToonValueSource
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -17,10 +20,13 @@ import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 
 /**
- * Serializer for [JsonElement] that works with any [Encoder], not just JsonEncoder.
+ * Serializer for [JsonElement] that bridges the JSON data model and the TOON format.
  *
- * This allows encoding a [JsonElement] (parsed from JSON) into other formats like TOON. Note: This
- * serializer currently only supports encoding (serialization).
+ * Serialization works with any [Encoder], allowing a [JsonElement] to be encoded to TOON.
+ * Deserialization is format-specific and only works with decoders created by
+ * [com.lukelast.ktoon.Ktoon], mirroring how kotlinx's own JsonElement serializer requires a
+ * JsonDecoder. Decoded numbers carry the host representation (Long or Double), so their textual
+ * form is normalized (e.g. `1e21` becomes `1.0E21`) while the mathematical value is preserved.
  */
 object KtoonJsonElementSerializer : KSerializer<JsonElement> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("JsonElement")
@@ -77,6 +83,22 @@ object KtoonJsonElementSerializer : KSerializer<JsonElement> {
     }
 
     override fun deserialize(decoder: Decoder): JsonElement {
-        TODO("Deserialization is not yet supported for KtoonJsonElementSerializer")
+        val source =
+            decoder as? ToonValueSource
+                ?: throw KtoonDecodingException(
+                    "KtoonJsonElementSerializer requires a Ktoon decoder, " +
+                        "got ${decoder::class.simpleName}"
+                )
+        return source.currentToonValue().toJsonElement()
     }
+
+    private fun ToonValue.toJsonElement(): JsonElement =
+        when (this) {
+            is ToonValue.Null -> JsonNull
+            is ToonValue.Boolean -> JsonPrimitive(value)
+            is ToonValue.Number -> JsonPrimitive(value)
+            is ToonValue.String -> JsonPrimitive(value)
+            is ToonValue.Object -> JsonObject(properties.mapValues { (_, v) -> v.toJsonElement() })
+            is ToonValue.Array -> JsonArray(elements.map { it.toJsonElement() })
+        }
 }
