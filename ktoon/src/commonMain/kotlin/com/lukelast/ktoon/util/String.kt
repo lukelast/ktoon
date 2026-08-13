@@ -7,13 +7,13 @@ private const val ALPHABET_LETTERS = 26u
 
 private const val DECIMAL_DIGITS = 10u
 
-fun Char.isAlpha(): Boolean {
+internal fun Char.isAsciiLetter(): Boolean {
     // 1. (c.code or ASCII_CASE_BIT): Force the char to lowercase (e.g., 'A' becomes 'a')
     // 2. Subtract 'a': Align the range to start at 0
     return ((code or ASCII_CASE_BIT) - 'a'.code).toUInt() < ALPHABET_LETTERS
 }
 
-fun Char.isDigit(): Boolean {
+internal fun Char.isAsciiDigit(): Boolean {
     // Subtracts '0'. If c was less than '0', it wraps around to a huge
     // positive number (because of UInt). If it's 0-9, it stays small.
     return (this - '0').toUInt() < DECIMAL_DIGITS

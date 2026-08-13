@@ -3,7 +3,7 @@ package com.lukelast.ktoon.decoding
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonParsingException
 import com.lukelast.ktoon.KtoonValidationException
-import com.lukelast.ktoon.util.isDigit
+import com.lukelast.ktoon.util.isAsciiDigit
 import kotlin.math.floor
 
 /**
@@ -27,7 +27,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
      * Number of array/keyed header spans currently being read. Blank lines inside a header span are
      * strict-mode errors even when they fall between the fields of a list-item object (§12).
      */
-    private var arraySpanDepth = 0
+    private var headerSpanDepth = 0
 
     /** §14.1: a declared count must match the actual count in strict mode (never truncates). */
     private fun validateCount(declared: Int, actual: Int, line: Int) {
@@ -118,9 +118,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
                 // §12: a blank line inside an array's header span is a strict-mode error, even
                 // between a list-item object's fields. Outside any span, blank lines are ignored.
-                if (config.strictMode && arraySpanDepth > 0 && readAny) {
+                if (config.strictMode && headerSpanDepth > 0 && readAny) {
                     throw KtoonValidationException(
-                        "Blank lines are not allowed within arrays in strict mode",
+                        "Blank lines are not allowed within an array or keyed header span in strict mode",
                         token.line,
                     )
                 }
@@ -319,7 +319,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         return if (scopeContinues()) {
             if (config.strictMode && hasItems) {
                 throw KtoonValidationException(
-                    "Blank lines are not allowed within arrays in strict mode",
+                    "Blank lines are not allowed within an array or keyed header span in strict mode",
                     blankLine,
                 )
             }
@@ -341,7 +341,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         val rowIndent = contentIndent(header)
         val delimiter = header.delimiter.char
 
-        arraySpanDepth++
+        headerSpanDepth++
         try {
             while (position < tokens.size) {
                 val token = peek()
@@ -425,7 +425,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
             }
         } finally {
-            arraySpanDepth--
+            headerSpanDepth--
         }
 
         validateCount(header.length, elements.size, header.line)
@@ -451,8 +451,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         return when (val token = tokens[p]) {
             is Token.Value -> true
             is Token.Key -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
-            is Token.Header ->
-                token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
+            is Token.Header -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
             else -> false
         }
     }
@@ -549,7 +548,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         val entryIndent = contentIndent(header)
         val delimiter = header.delimiter.char
 
-        arraySpanDepth++
+        headerSpanDepth++
         try {
             while (position < tokens.size) {
                 when (val token = peek()) {
@@ -637,7 +636,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
             }
         } finally {
-            arraySpanDepth--
+            headerSpanDepth--
         }
 
         validateCount(header.length, entryCount, header.line)
@@ -687,7 +686,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     ): ToonValue.Array {
         val elements = mutableListOf<ToonValue>()
 
-        arraySpanDepth++
+        headerSpanDepth++
         try {
             while (position < tokens.size) {
                 when (val token = peek()) {
@@ -723,7 +722,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
             }
         } finally {
-            arraySpanDepth--
+            headerSpanDepth--
         }
 
         if (declaredLength != null) {
@@ -836,7 +835,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         if (i < str.length && str[i] == '-') i++
 
         val intStart = i
-        while (i < str.length && str[i].isDigit()) i++
+        while (i < str.length && str[i].isAsciiDigit()) i++
         val intLen = i - intStart
         if (intLen == 0) return false
         // Forbidden leading zeros in the integer part (e.g. "05", "-0001")
@@ -845,7 +844,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         if (i < str.length && str[i] == '.') {
             i++
             val fracStart = i
-            while (i < str.length && str[i].isDigit()) i++
+            while (i < str.length && str[i].isAsciiDigit()) i++
             if (i == fracStart) return false
         }
 
@@ -853,7 +852,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
             i++
             if (i < str.length && (str[i] == '+' || str[i] == '-')) i++
             val expStart = i
-            while (i < str.length && str[i].isDigit()) i++
+            while (i < str.length && str[i].isAsciiDigit()) i++
             if (i == expStart) return false
         }
 

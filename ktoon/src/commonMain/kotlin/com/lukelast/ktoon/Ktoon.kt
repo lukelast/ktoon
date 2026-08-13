@@ -5,7 +5,7 @@ import com.lukelast.ktoon.decoding.ToonLexer
 import com.lukelast.ktoon.decoding.ToonParser
 import com.lukelast.ktoon.encoding.ToonEncoder
 import com.lukelast.ktoon.encoding.ToonWriter
-import com.lukelast.ktoon.serializers.JsonElementSerializer
+import com.lukelast.ktoon.serializers.KtoonJsonElementSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.StringFormat
@@ -112,7 +112,7 @@ class Ktoon(
         encodeToString(kotlinx.serialization.serializer(), value)
 
     fun encodeJsonToToon(jsonElement: JsonElement): String =
-        encodeToString(JsonElementSerializer, jsonElement)
+        encodeToString(KtoonJsonElementSerializer, jsonElement)
 
     fun encodeJsonToToon(json: String): String {
         val jsonElement = Json.parseToJsonElement(json)
