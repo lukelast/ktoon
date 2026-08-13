@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /** Regression tests for decoding issues reported in `.workflow/issues`. */
 class IssueDecodeTest {
@@ -127,6 +128,34 @@ class IssueDecodeTest {
             strict.decodeFromString<Map<String, Int>>("a\"b: 1"),
         )
         assertEquals(listOf("a\"b", "c"), strict.decodeFromString<List<String>>("[2]: a\"b,c"))
+    }
+
+    @Test
+    fun `a backslash outside a quoted token does not hide a colon or delimiter`() {
+        // §7.1/§7.4: backslash escapes are syntax only inside a quoted token.
+        assertEquals(mapOf("path\\" to 1), strict.decodeFromString<Map<String, Int>>("path\\: 1"))
+        assertEquals(
+            mapOf("items\\" to listOf("left", "right")),
+            strict.decodeFromString<Map<String, List<String>>>("items\\[2]: left,right"),
+        )
+        assertEquals(
+            listOf("left\\", "right"),
+            strict.decodeFromString<List<String>>("[2]: left\\,right"),
+        )
+    }
+
+    @Test
+    fun `a backslash in a field list does not hide a separator or brace`() {
+        assertEquals(
+            Json.parseToJsonElement("""[{"left\\": 1, "right": 2}]"""),
+            strict.decodeToonToJson("[1]{left\\,right}:\n  1,2"),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""[{"group\\": {"value": 1}}]"""),
+            strict.decodeToonToJson("[1]{group\\{value}}:\n  1"),
+        )
+        // The comma is still a foreign delimiter for a pipe-delimited header (§14.2).
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("[1|]{left\\,right}:\n  1|2") }
     }
 
     @Test
