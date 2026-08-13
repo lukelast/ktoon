@@ -1,6 +1,8 @@
 package com.lukelast.ktoon.decoding
 
 import com.lukelast.ktoon.KtoonParsingException
+import com.lukelast.ktoon.util.indexOfUnpairedSurrogate
+import com.lukelast.ktoon.util.toCodePointLabel
 
 /** Number of hex digits in a `\uXXXX` escape (§7.1). */
 private const val UNICODE_ESCAPE_DIGITS = 4
@@ -23,6 +25,16 @@ private const val FIRST_LITERAL_CHAR = 0x20
  */
 @Suppress("CyclomaticComplexMethod", "LongMethod", "ThrowsCount")
 internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
+    // §7.1: `unescaped-char` excludes U+D800–U+DFFF, so a literal lone surrogate is never valid
+    // TOON text — decoding one would hand back a string the encoder cannot write again.
+    val unpaired = str.indexOfUnpairedSurrogate()
+    if (unpaired != -1) {
+        throw KtoonParsingException(
+            "Unpaired surrogate ${str[unpaired].toCodePointLabel()} in input",
+            line,
+            column + unpaired,
+        )
+    }
     if (!str.startsWith('"')) return str
 
     val sb = StringBuilder(str.length - 2)

@@ -2,8 +2,10 @@ package com.lukelast.ktoon.encoding
 
 import com.lukelast.ktoon.KtoonConfiguration
 import com.lukelast.ktoon.KtoonEncodingException
+import com.lukelast.ktoon.util.indexOfUnpairedSurrogate
 import com.lukelast.ktoon.util.isAsciiDigit
 import com.lukelast.ktoon.util.isAsciiLetter
+import com.lukelast.ktoon.util.toCodePointLabel
 
 /** Number of hex digits in a `\uXXXX` escape (§7.1). */
 private const val UNICODE_ESCAPE_DIGITS = 4
@@ -61,22 +63,13 @@ internal object StringQuoting {
      * representable in TOON and MUST error rather than be emitted or replaced.
      */
     private fun validateScalarValues(str: String) {
-        for (i in str.indices) {
-            val c = str[i]
-            if (c.isHighSurrogate()) {
-                if (i + 1 >= str.length || !str[i + 1].isLowSurrogate()) unpairedSurrogate(c)
-            } else if (c.isLowSurrogate()) {
-                if (i == 0 || !str[i - 1].isHighSurrogate()) unpairedSurrogate(c)
-            }
+        val index = str.indexOfUnpairedSurrogate()
+        if (index != -1) {
+            throw KtoonEncodingException(
+                "Unpaired surrogate ${str[index].toCodePointLabel()} cannot be encoded to TOON"
+            )
         }
     }
-
-    private fun unpairedSurrogate(c: Char): Nothing =
-        throw KtoonEncodingException(
-            "Unpaired surrogate " +
-                "U+${c.code.toString(HEX_RADIX).uppercase().padStart(UNICODE_ESCAPE_DIGITS, '0')} " +
-                "cannot be encoded to TOON"
-        )
 
     @Suppress("CyclomaticComplexMethod", "LongMethod", "ReturnCount")
     fun needsQuoting(
