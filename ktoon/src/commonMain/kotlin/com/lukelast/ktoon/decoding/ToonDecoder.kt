@@ -174,11 +174,10 @@ internal class ToonPrimitiveDecoder(
     }
 
     override fun decodeString(): String {
+        // §4/§7.4: the parser already separated quoted strings from unquoted numbers, booleans,
+        // and null. Rendering one of those as text here would hide a mistyped document.
         return when (value) {
             is ToonValue.String -> value.value
-            is ToonValue.Number -> value.value.toString()
-            is ToonValue.Boolean -> value.value.toString()
-            ToonValue.Null -> "null"
             else ->
                 throw KtoonDecodingException.typeMismatch(
                     "String",
