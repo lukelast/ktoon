@@ -643,7 +643,29 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         pushHeaderSpan()
         try {
             while (position < tokens.size) {
-                when (val token = peek()) {
+                val next = peek()
+                // §9.5: a keyed scope ends only when the depth decreases to the header's depth or
+                // less, and every entry row stands at exactly the entry depth whatever its lexical
+                // shape — a header-shaped entry key is still just an entry key.
+                val candidateIndent =
+                    when (next) {
+                        is Token.Key -> next.indent
+                        is Token.Header -> next.indent
+                        is Token.Dash -> next.indent
+                        else -> -1
+                    }
+                if (candidateIndent != -1) {
+                    if (candidateIndent <= header.indent) break
+                    if (config.strictMode && candidateIndent != entryIndent) {
+                        throw KtoonValidationException(
+                            "Invalid entry row indentation: expected $entryIndent, " +
+                                "got $candidateIndent",
+                            next.line,
+                        )
+                    }
+                }
+
+                when (val token = next) {
                     is Token.BlankLine -> {
                         if (
                             tryConsumeBlanksInSpan(
@@ -656,16 +678,6 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                         break
                     }
                     is Token.Key -> {
-                        // §9.5: a keyed scope ends only when the depth decreases to the header's
-                        // depth or less; every line at entry depth with an unquoted colon is an
-                        // entry row.
-                        if (token.indent <= header.indent) break
-                        if (config.strictMode && token.indent != entryIndent) {
-                            throw KtoonValidationException(
-                                "Invalid entry row indentation: expected $entryIndent, got ${token.indent}",
-                                token.line,
-                            )
-                        }
                         advance()
                         markHeaderSpanStarted()
                         var cellsContent: String? = null
@@ -689,7 +701,6 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     }
                     is Token.Header -> {
                         // A header-shaped line at entry depth is still an entry row (§9.5)
-                        if (token.indent <= header.indent) break
                         advance()
                         markHeaderSpanStarted()
                         val raw = token.rawContent
@@ -716,14 +727,6 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     is Token.Dash -> {
                         // §5.2/§9.5: a leading hyphen has no structural meaning at entry depth, so
                         // `- key: 1` is an entry row whose key is `- key`.
-                        if (token.indent <= header.indent) break
-                        if (config.strictMode && token.indent != entryIndent) {
-                            throw KtoonValidationException(
-                                "Invalid entry row indentation: expected $entryIndent, " +
-                                    "got ${token.indent}",
-                                token.line,
-                            )
-                        }
                         val colon = findUnquoted(token.rawContent, ':')
                         if (colon == -1 && config.strictMode) {
                             throw KtoonParsingException(

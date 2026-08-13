@@ -119,6 +119,24 @@ class IssueDecodeTest {
         assertFailsWith<KtoonException> { lenient.decodeToonToJson(nestedFieldGroups(1000)) }
     }
 
+    @Serializable data class OneValueInt(val v: Int)
+
+    @Test
+    fun `an over-indented header-shaped keyed entry is rejected in strict mode`() {
+        // §9.5/§12: an entry row stands at exactly the entry depth whatever its key looks like.
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<Map<String, OneValueInt>>("[1:]{v}:\n    k[1]: 1")
+        }
+        assertEquals(
+            mapOf("k[1]" to OneValueInt(1)),
+            strict.decodeFromString<Map<String, OneValueInt>>("[1:]{v}:\n  k[1]: 1"),
+        )
+        assertEquals(
+            mapOf("k[1]" to OneValueInt(1)),
+            lenient.decodeFromString<Map<String, OneValueInt>>("[1:]{v}:\n    k[1]: 1"),
+        )
+    }
+
     @Serializable data class OneInt(val value: Int)
 
     @Test
