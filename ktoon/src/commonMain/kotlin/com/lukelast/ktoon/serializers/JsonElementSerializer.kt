@@ -26,6 +26,7 @@ object JsonElementSerializer : KSerializer<JsonElement> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("JsonElement")
 
     @OptIn(ExperimentalSerializationApi::class)
+    @Suppress("ReturnCount")
     override fun serialize(encoder: Encoder, value: JsonElement) {
         when (value) {
             is JsonNull -> encoder.encodeNull()

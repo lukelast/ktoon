@@ -13,7 +13,7 @@ import com.lukelast.ktoon.KtoonConfiguration
  * - Batch copying via toCharArray() is faster than byte-by-byte operations
  * - inlining was shown to increase performance a few percent while benchmarking.
  */
-@Suppress("NOTHING_TO_INLINE")
+@Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 internal class ToonWriter(private val config: KtoonConfiguration) {
     private var array: CharArray = CharArray(2048)
     private var size = 0

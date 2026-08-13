@@ -21,6 +21,7 @@ private const val FIRST_LITERAL_CHAR = 0x20
  * quote or content after the closing quote is an error. Valid escapes are `\\`, `\"`, `\n`, `\r`,
  * `\t`, and `\uXXXX`.
  */
+@Suppress("CyclomaticComplexMethod", "LongMethod", "ThrowsCount")
 internal fun unquote(str: String, line: Int = -1, column: Int = -1): String {
     if (!str.startsWith('"')) return str
 

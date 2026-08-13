@@ -14,6 +14,7 @@ import kotlinx.serialization.modules.SerializersModule
  * known.
  */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ToonArrayEncoder(
     private val writer: ToonWriter,
     private val config: KtoonConfiguration,

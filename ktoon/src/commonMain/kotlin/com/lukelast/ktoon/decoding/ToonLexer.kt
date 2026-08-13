@@ -74,6 +74,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         tokenizeLineContent(trimmed, indent)
     }
 
+    @Suppress("ReturnCount")
     private fun tokenizeLineContent(content: String, indent: Int) {
         // §4/§9.1: the literal token [] (root, object-field, and list-item positions) is a value,
         // never a header candidate.
@@ -187,6 +188,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
      * groups. No whitespace or other content may appear between the key, bracket segment, field
      * list, and terminating colon.
      */
+    @Suppress("CyclomaticComplexMethod", "LongMethod", "ReturnCount")
     private fun parseHeader(content: String, bracketStart: Int): HeaderParse {
         val bracketEnd = findUnquoted(content, ']', bracketStart)
         if (bracketEnd == -1) return HeaderParse.NotAHeader
@@ -300,6 +302,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
      * groups (§6, §9.3). Returns null if the list is malformed: empty, containing empty entries or
      * empty groups, or using a delimiter other than the active one.
      */
+    @Suppress("ReturnCount")
     private fun parseFieldList(content: String, delimiter: Char): List<FieldNode>? {
         if (content.trimSpaces().isEmpty()) return null
 
@@ -330,6 +333,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
      * Splits field-list content on the active delimiter, respecting quotes and brace nesting.
      * Returns null if quotes and braces are not balanced.
      */
+    @Suppress("ReturnCount")
     private fun splitFieldEntries(content: String, delimiter: Char): List<String>? {
         val result = mutableListOf<String>()
         var current = StringBuilder()

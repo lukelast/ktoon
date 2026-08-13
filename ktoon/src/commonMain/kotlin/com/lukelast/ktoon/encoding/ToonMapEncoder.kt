@@ -10,6 +10,7 @@ import kotlinx.serialization.modules.SerializersModule
 
 /** Encoder for TOON maps (key-value pairs). */
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("TooManyFunctions")
 internal class ToonMapEncoder(
     private val writer: ToonWriter,
     private val config: KtoonConfiguration,

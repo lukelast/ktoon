@@ -13,6 +13,7 @@ internal class FieldTreeNode(val name: String, val children: List<FieldTreeNode>
  * Writes captured [EncodedElement] trees, selecting the form each value MUST take under §9: inline,
  * tabular (with nested field groups), list, or keyed tabular.
  */
+@Suppress("TooManyFunctions")
 internal class ElementWriter(
     private val writer: ToonWriter,
     private val config: KtoonConfiguration,
@@ -32,6 +33,7 @@ internal class ElementWriter(
          * §9.3 tabular detection: every element is a non-empty object, all share one key set, and
          * every column is uniform-primitive or nested-uniform. Returns the field tree, or null.
          */
+        @Suppress("ReturnCount")
         fun tabularTree(elements: List<EncodedElement>): List<FieldTreeNode>? {
             if (elements.isEmpty()) return null
             val objects = elements.map { (it as? EncodedElement.Structure)?.entries ?: return null }
@@ -42,6 +44,7 @@ internal class ElementWriter(
          * §9.5 keyed tabular detection: at least two entries whose entries are uniform non-empty
          * objects. Returns the field tree, or null.
          */
+        @Suppress("ReturnCount")
         fun keyedTree(entries: List<Pair<String, EncodedElement>>): List<FieldTreeNode>? {
             if (entries.size < 2) return null
             val objects = entries.map { (_, v) ->
@@ -50,6 +53,7 @@ internal class ElementWriter(
             return fieldTree(objects)
         }
 
+        @Suppress("ReturnCount")
         private fun fieldTree(
             objects: List<List<Pair<String, EncodedElement>>>
         ): List<FieldTreeNode>? {
