@@ -20,7 +20,10 @@ internal class ToonObjectEncoder(
     private val indentLevel: Int,
     private val isRoot: Boolean = false,
     private val onEnd: (() -> Unit)? = null,
-) : AbstractEncoder() {
+) : AbstractEncoder(), ToonNumberSink {
+
+    override fun encodeNumberLiteral(literal: String) =
+        writePrimitiveField(NumberNormalizer.normalizeLiteral(literal))
 
     private var elementIndex = 0
     private var currentKey: String? = null

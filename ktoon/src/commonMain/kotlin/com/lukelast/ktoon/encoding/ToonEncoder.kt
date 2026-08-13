@@ -17,7 +17,10 @@ internal class ToonEncoder(
     private val writer: ToonWriter,
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
-) : AbstractEncoder() {
+) : AbstractEncoder(), ToonNumberSink {
+
+    override fun encodeNumberLiteral(literal: String) =
+        writer.write(NumberNormalizer.normalizeLiteral(literal))
 
     override fun encodeNull() = writer.write("null")
 

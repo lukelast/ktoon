@@ -19,7 +19,10 @@ internal class ElementCapturer(
     override val serializersModule: SerializersModule,
     private val descriptor: SerialDescriptor,
     private val onComplete: (List<Pair<String, EncodedElement>>) -> Unit,
-) : AbstractEncoder() {
+) : AbstractEncoder(), ToonNumberSink {
+
+    override fun encodeNumberLiteral(literal: String) =
+        add(EncodedElement.Primitive(NumberNormalizer.normalizeLiteral(literal)))
 
     private val entries = mutableListOf<Pair<String, EncodedElement>>()
     private var currentIndex = -1
@@ -137,7 +140,10 @@ internal class MapElementCapturer(
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
     private val onComplete: (List<Pair<String, EncodedElement>>) -> Unit,
-) : AbstractEncoder() {
+) : AbstractEncoder(), ToonNumberSink {
+
+    override fun encodeNumberLiteral(literal: String) =
+        addPrimitive(NumberNormalizer.normalizeLiteral(literal))
 
     private val entries = mutableListOf<Pair<String, EncodedElement>>()
     private var isKey = true

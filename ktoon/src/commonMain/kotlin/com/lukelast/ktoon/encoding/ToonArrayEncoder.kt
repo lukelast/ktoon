@@ -24,7 +24,10 @@ internal class ToonArrayEncoder(
     private val indentLevel: Int,
     private val key: String?,
     private val onEnd: (() -> Unit)? = null,
-) : AbstractEncoder() {
+) : AbstractEncoder(), ToonNumberSink {
+
+    override fun encodeNumberLiteral(literal: String) =
+        addPrimitive(NumberNormalizer.normalizeLiteral(literal))
 
     private val elements = ArrayList<EncodedElement>(64)
 
