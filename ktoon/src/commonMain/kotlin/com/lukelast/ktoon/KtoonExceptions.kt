@@ -67,7 +67,8 @@ class KtoonParsingException(
         /** Creates a parsing exception for invalid escape sequence. */
         fun invalidEscapeSequence(sequence: String, line: Int, column: Int) =
             KtoonParsingException(
-                "Invalid escape sequence: '$sequence' (only \\\\, \\\", \\n, \\r, \\t are allowed)",
+                "Invalid escape sequence: '$sequence' " +
+                    "(only \\\\, \\\", \\n, \\r, \\t, \\uXXXX are allowed)",
                 line,
                 column,
             )
