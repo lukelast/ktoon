@@ -1,6 +1,5 @@
 package com.lukelast.ktoon.serializers
 
-import com.lukelast.ktoon.DEFAULT_MAX_NESTING_DEPTH
 import com.lukelast.ktoon.KtoonDecodingException
 import com.lukelast.ktoon.KtoonEncodingException
 import com.lukelast.ktoon.decoding.ToonValue
@@ -25,13 +24,6 @@ import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 
 /**
- * Maximum number of nested JSON containers this serializer will walk. Serialization recurses per
- * container, so an unbounded tree would exhaust the host stack; SPEC §15 lets implementations
- * document such a limit and report exceeding it as an error instead.
- */
-internal const val MAX_JSON_NESTING_DEPTH: Int = DEFAULT_MAX_NESTING_DEPTH
-
-/**
  * Serializer for [JsonElement] that bridges the JSON data model and the TOON format.
  *
  * Serialization works with any [Encoder], allowing a [JsonElement] to be encoded to TOON.
@@ -40,49 +32,12 @@ internal const val MAX_JSON_NESTING_DEPTH: Int = DEFAULT_MAX_NESTING_DEPTH
  * JsonDecoder. Decoded numbers keep the document's own literal, so their exact value survives even
  * when it needs more precision than a host `Long` or `Double` carries.
  *
- * Values nested deeper than [MAX_JSON_NESTING_DEPTH] containers are rejected with a
+ * Serialization recurses per container; the Ktoon encoders bound that recursion at
+ * `maxNestingDepth` (SPEC §15), so trees nested deeper are rejected with a
  * [KtoonEncodingException].
  */
 object KtoonJsonElementSerializer : KSerializer<JsonElement> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("JsonElement")
-
-    override fun serialize(encoder: Encoder, value: JsonElement) {
-        JsonElementSerializerAtDepth(0).serialize(encoder, value)
-    }
-
-    override fun deserialize(decoder: Decoder): JsonElement {
-        val source =
-            decoder as? ToonValueSource
-                ?: throw KtoonDecodingException(
-                    "KtoonJsonElementSerializer requires a Ktoon decoder, " +
-                        "got ${decoder::class.simpleName}"
-                )
-        return source.currentToonValue().toJsonElement()
-    }
-
-    private fun ToonValue.toJsonElement(): JsonElement =
-        when (this) {
-            is ToonValue.Null -> JsonNull
-            is ToonValue.Boolean -> JsonPrimitive(value)
-            // §4: the accepted token carries the exact value, which the host Int/Long/Double may
-            // only approximate, so schema-less JSON keeps the literal rather than the host form.
-            is ToonValue.Number -> JsonUnquotedLiteral(lexeme)
-            is ToonValue.String -> JsonPrimitive(value)
-            is ToonValue.Object -> JsonObject(properties.mapValues { (_, v) -> v.toJsonElement() })
-            is ToonValue.Array -> JsonArray(elements.map { it.toJsonElement() })
-        }
-}
-
-/**
- * Encodes a [JsonElement] whose containers sit [depth] levels below the root. The depth is carried
- * immutably so that [KtoonJsonElementSerializer] stays a shared, stateless singleton.
- */
-private class JsonElementSerializerAtDepth(private val depth: Int) : KSerializer<JsonElement> {
-
-    override val descriptor: SerialDescriptor = KtoonJsonElementSerializer.descriptor
-
-    override fun deserialize(decoder: Decoder): JsonElement =
-        KtoonJsonElementSerializer.deserialize(decoder)
 
     @OptIn(ExperimentalSerializationApi::class)
     @Suppress("ReturnCount")
@@ -125,10 +80,9 @@ private class JsonElementSerializerAtDepth(private val depth: Int) : KSerializer
                 }
             }
             is JsonArray -> {
-                ListSerializer(childSerializer()).serialize(encoder, value)
+                ListSerializer(this).serialize(encoder, value)
             }
             is JsonObject -> {
-                val child = childSerializer()
                 val descriptor =
                     buildClassSerialDescriptor("JsonObject") {
                         value.keys.forEach { k -> element(k, descriptor) }
@@ -136,29 +90,42 @@ private class JsonElementSerializerAtDepth(private val depth: Int) : KSerializer
                 val composite = encoder.beginStructure(descriptor)
                 var index = 0
                 for ((_, v) in value) {
-                    composite.encodeSerializableElement(descriptor, index++, child, v)
+                    composite.encodeSerializableElement(descriptor, index++, this, v)
                 }
                 composite.endStructure(descriptor)
             }
         }
     }
 
-    private fun childSerializer(): JsonElementSerializerAtDepth {
-        if (depth >= MAX_JSON_NESTING_DEPTH) {
-            throw KtoonEncodingException(
-                "Maximum JSON nesting depth of $MAX_JSON_NESTING_DEPTH exceeded"
-            )
-        }
-        return JsonElementSerializerAtDepth(depth + 1)
+    override fun deserialize(decoder: Decoder): JsonElement {
+        val source =
+            decoder as? ToonValueSource
+                ?: throw KtoonDecodingException(
+                    "KtoonJsonElementSerializer requires a Ktoon decoder, " +
+                        "got ${decoder::class.simpleName}"
+                )
+        return source.currentToonValue().toJsonElement()
     }
+
+    private fun ToonValue.toJsonElement(): JsonElement =
+        when (this) {
+            is ToonValue.Null -> JsonNull
+            is ToonValue.Boolean -> JsonPrimitive(value)
+            // §4: the accepted token carries the exact value, which the host Int/Long/Double may
+            // only approximate, so schema-less JSON keeps the literal rather than the host form.
+            is ToonValue.Number -> JsonUnquotedLiteral(lexeme)
+            is ToonValue.String -> JsonPrimitive(value)
+            is ToonValue.Object -> JsonObject(properties.mapValues { (_, v) -> v.toJsonElement() })
+            is ToonValue.Array -> JsonArray(elements.map { it.toJsonElement() })
+        }
 }
 
 /**
- * Rejects raw JSON text nested deeper than [MAX_JSON_NESTING_DEPTH] before it reaches the JSON
- * parser, whose own tree reader recurses per container. Only structural brackets outside string
- * literals are counted; all syntax validation is left to the parser.
+ * Rejects raw JSON text nested deeper than [maxDepth] containers before it reaches the JSON parser,
+ * whose own tree reader recurses per container. Only structural brackets outside string literals
+ * are counted; all syntax validation is left to the parser.
  */
-internal fun checkJsonNestingDepth(json: String) {
+internal fun checkJsonNestingDepth(json: String, maxDepth: Int) {
     var depth = 0
     var inString = false
     var escaped = false
@@ -170,10 +137,8 @@ internal fun checkJsonNestingDepth(json: String) {
             inString -> {}
             c == '[' || c == '{' -> {
                 depth++
-                if (depth > MAX_JSON_NESTING_DEPTH) {
-                    throw KtoonEncodingException(
-                        "Maximum JSON nesting depth of $MAX_JSON_NESTING_DEPTH exceeded"
-                    )
+                if (depth > maxDepth) {
+                    throw KtoonEncodingException("Maximum nesting depth of $maxDepth exceeded")
                 }
             }
             c == ']' || c == '}' -> depth--
