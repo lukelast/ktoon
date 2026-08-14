@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /** Regression tests for lexer/header issues reported in `.workflow/issues`. */
 class IssueLexerTest {
@@ -86,11 +87,23 @@ class IssueLexerTest {
 
     @Test
     fun `a space before a nested field group's brace is not part of the field name`() {
-        // §12: field names are extracted tokens, so surrounding spaces are trimmed.
+        // §12: field names are extracted tokens, so surrounding spaces are trimmed. Verified
+        // against `npx @toon-format/cli@4.1.1`, which accepts this in strict mode and decodes
+        // the column as `group`.
         val input = "items[1]{group {id,name}}:\n  1,Ada"
         assertEquals(
             GroupRoot(listOf(GroupHolder(Named(1, "Ada")))),
             strict.decodeFromString(input),
         )
+    }
+
+    @Test
+    fun `a quote after a non-active delimiter still opens a quoted token`() {
+        // A quote is token-initial after any delimiter character, not only the active one, so the
+        // colon in `x|"a:1",2` is quoted and the line is a row. Expected JSON is the strict-mode
+        // output of `npx @toon-format/cli@4.1.1`.
+        val input = "[2]{a,b}:\n  1,Ada\n  x|\"a:1\",2"
+        val expected = """[{"a":1,"b":"Ada"},{"a":"x|\"a:1\"","b":2}]"""
+        assertEquals(Json.parseToJsonElement(expected), strict.decodeToonToJson(input))
     }
 }
