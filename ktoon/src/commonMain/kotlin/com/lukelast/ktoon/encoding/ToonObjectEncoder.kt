@@ -105,7 +105,7 @@ internal class ToonObjectEncoder(
             descriptor.isObjectKind() -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     // §9.5: capture first so keyed tabular form can be selected from the values
-                    ElementCapturer(config, serializersModule, descriptor) { entries ->
+                    ElementCapturer.forObject(config, serializersModule, descriptor) { entries ->
                         ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
                         finishField()
                     }
@@ -140,14 +140,12 @@ internal class ToonObjectEncoder(
                 }
             }
             descriptor.kind == StructureKind.LIST ->
-                ToonArrayEncoder(
-                    writer = writer,
-                    config = config,
-                    serializersModule = serializersModule,
-                    indentLevel = indentLevel,
-                    key = key,
-                    onEnd = { finishField() },
-                )
+                // §9: capture first so the array's form follows from the elements themselves
+                ElementCapturer.forArray(config, serializersModule, descriptor) { elements ->
+                    ElementWriter(writer, config)
+                        .writeArray(key, elements, indentLevel, ElementWriter.ArrayPosition.FIELD)
+                    finishField()
+                }
             else -> this
         }
     }

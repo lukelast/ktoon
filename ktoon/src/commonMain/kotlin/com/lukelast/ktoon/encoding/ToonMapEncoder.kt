@@ -112,17 +112,15 @@ internal class ToonMapEncoder(
     private fun delegateStructure(descriptor: SerialDescriptor, key: String): CompositeEncoder {
         return when {
             descriptor.kind == StructureKind.LIST -> {
-                ToonArrayEncoder(
-                    writer = writer,
-                    config = config,
-                    serializersModule = serializersModule,
-                    indentLevel = indentLevel,
-                    key = key,
-                )
+                // §9: capture first so the array's form follows from the elements themselves
+                ElementCapturer.forArray(config, serializersModule, descriptor) { elements ->
+                    ElementWriter(writer, config)
+                        .writeArray(key, elements, indentLevel, ElementWriter.ArrayPosition.FIELD)
+                }
             }
             descriptor.isObjectKind() -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
-                    ElementCapturer(config, serializersModule, descriptor) { entries ->
+                    ElementCapturer.forObject(config, serializersModule, descriptor) { entries ->
                         ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
                     }
                 } else {

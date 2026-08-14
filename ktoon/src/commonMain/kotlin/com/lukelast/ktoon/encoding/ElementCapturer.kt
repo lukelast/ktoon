@@ -12,31 +12,66 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 
-/** Captures field values or array elements during encoding. */
+/**
+ * Where a finished capture is delivered. The two shapes differ in what a caller can use: an
+ * object's fields carry names, while an array's elements carry only their position.
+ */
+internal sealed interface CaptureSink {
+    fun interface Fields : CaptureSink {
+        fun complete(entries: List<Pair<String, EncodedElement>>)
+    }
+
+    fun interface Elements : CaptureSink {
+        fun complete(values: List<EncodedElement>)
+    }
+}
+
+/**
+ * Captures the values of one object or array during encoding, so that the form the value MUST take
+ * under §9 can be selected once every value is known.
+ *
+ * Build one with [forObject] or [forArray]; the sink is the single record of which was captured.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 @Suppress("TooManyFunctions")
-internal class ElementCapturer(
+internal class ElementCapturer
+private constructor(
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
     private val descriptor: SerialDescriptor,
-    private val onComplete: (List<Pair<String, EncodedElement>>) -> Unit,
+    private val sink: CaptureSink,
 ) : AbstractEncoder(), ToonNumberSink {
+
+    companion object {
+        /** Captures the fields of an object, a Kotlin object, or a polymorphic wrapper. */
+        fun forObject(
+            config: KtoonConfiguration,
+            serializersModule: SerializersModule,
+            descriptor: SerialDescriptor,
+            onComplete: CaptureSink.Fields,
+        ): ElementCapturer = ElementCapturer(config, serializersModule, descriptor, onComplete)
+
+        /** Captures the elements of an array, which have positions rather than names. */
+        fun forArray(
+            config: KtoonConfiguration,
+            serializersModule: SerializersModule,
+            descriptor: SerialDescriptor,
+            onComplete: CaptureSink.Elements,
+        ): ElementCapturer = ElementCapturer(config, serializersModule, descriptor, onComplete)
+    }
 
     override fun encodeNumberLiteral(literal: String) =
         add(EncodedElement.Primitive(NumberNormalizer.normalizeLiteral(literal)))
 
-    private val entries = mutableListOf<Pair<String, EncodedElement>>()
+    private val values = ArrayList<EncodedElement>()
+
+    /** Field names, parallel to [values]; left empty when capturing an array. */
+    private val names = ArrayList<String>()
     private var currentIndex = -1
-    private val isArray = descriptor.kind == StructureKind.LIST
 
     private fun add(value: EncodedElement) {
-        val name =
-            if (isArray) {
-                currentIndex.toString()
-            } else {
-                descriptor.getElementName(currentIndex)
-            }
-        entries.add(name to value)
+        if (sink is CaptureSink.Fields) names.add(descriptor.getElementName(currentIndex))
+        values.add(value)
     }
 
     private fun quoteElement(value: String) =
@@ -108,11 +143,11 @@ internal class ElementCapturer(
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
         when {
             descriptor.kind == StructureKind.LIST ->
-                ElementCapturer(config, serializersModule, descriptor) {
-                    add(EncodedElement.NestedArray(it.map { (_, v) -> v }))
+                forArray(config, serializersModule, descriptor) {
+                    add(EncodedElement.NestedArray(it))
                 }
             descriptor.isObjectKind() ->
-                ElementCapturer(config, serializersModule, descriptor) {
+                forObject(config, serializersModule, descriptor) {
                     add(EncodedElement.Structure(it))
                 }
             descriptor.kind == StructureKind.MAP ->
@@ -121,12 +156,20 @@ internal class ElementCapturer(
         }
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        // The sortFields option orders an object's declared fields alphabetically. Array elements
-        // and map entries keep their encounter order, so only class/object captures are sorted.
-        val sortable =
-            config.sortFields &&
-                (descriptor.kind == StructureKind.CLASS || descriptor.kind == StructureKind.OBJECT)
-        onComplete(if (sortable) entries.sortedBy { it.first } else entries)
+        when (sink) {
+            is CaptureSink.Elements -> sink.complete(values)
+            is CaptureSink.Fields -> {
+                // The sortFields option orders an object's declared fields alphabetically. Array
+                // elements and map entries keep their encounter order, so only class/object
+                // captures are sorted.
+                val entries = names.mapIndexed { i, name -> name to values[i] }
+                val sortable =
+                    config.sortFields &&
+                        (descriptor.kind == StructureKind.CLASS ||
+                            descriptor.kind == StructureKind.OBJECT)
+                sink.complete(if (sortable) entries.sortedBy { it.first } else entries)
+            }
+        }
     }
 }
 
@@ -222,11 +265,11 @@ internal class MapElementCapturer(
         require(!isKey) { "TOON does not support complex keys in maps" }
         return when {
             descriptor.kind == StructureKind.LIST ->
-                ElementCapturer(config, serializersModule, descriptor) {
-                    addValue(EncodedElement.NestedArray(it.map { (_, v) -> v }))
+                ElementCapturer.forArray(config, serializersModule, descriptor) {
+                    addValue(EncodedElement.NestedArray(it))
                 }
             descriptor.isObjectKind() ->
-                ElementCapturer(config, serializersModule, descriptor) {
+                ElementCapturer.forObject(config, serializersModule, descriptor) {
                     addValue(EncodedElement.Structure(it))
                 }
             descriptor.kind == StructureKind.MAP ->
