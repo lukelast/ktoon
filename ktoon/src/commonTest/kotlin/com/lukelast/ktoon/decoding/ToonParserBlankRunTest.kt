@@ -29,7 +29,7 @@ class ToonParserBlankRunTest {
     }
 
     @Test
-    fun `a blank run between fields is scanned once, not once per blank`() {
+    fun `a blank run between fields is scanned once rather than once per blank`() {
         // Looking ahead over the whole run and then consuming a single blank made the work grow
         // with the square of the run's length.
         val small = tokenReadsForBlanks(500)
