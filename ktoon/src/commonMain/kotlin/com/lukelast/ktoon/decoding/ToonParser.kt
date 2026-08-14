@@ -80,12 +80,16 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         }
     }
 
-    /** §14.1: a declared count must match the actual count in strict mode (never truncates). */
-    private fun validateCount(declared: Long, actual: Int, line: Int) {
-        if (config.strictMode && declared != actual.toLong()) {
+    /**
+     * §14.1: a declared count must match the actual count in strict mode (never truncates). The
+     * message quotes the header's own length text: the parsed length is saturated for literals
+     * beyond Long, and would misreport what the document declared.
+     */
+    private fun validateCount(header: Token.Header, actual: Int) {
+        if (config.strictMode && header.length != actual.toLong()) {
             throw KtoonValidationException(
-                "Array length mismatch: declared $declared, found $actual",
-                line,
+                "Array length mismatch: declared ${header.lengthText}, found $actual",
+                header.line,
             )
         }
     }
@@ -123,7 +127,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     }
                 }
                 is Token.Dash -> {
-                    readListItems(itemIndent = 0, declaredLength = null, headerLine = first.line)
+                    readListItems(itemIndent = 0, header = null)
                 }
                 is Token.Key -> {
                     readObject(baseIndent = 0)
@@ -376,7 +380,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 .map { parsePrimitive(it, valueToken.line) }
 
         // Validate array length in strict mode
-        validateCount(header.length, values.size, header.line)
+        validateCount(header, values.size)
 
         return ToonValue.Array(values)
     }
@@ -529,7 +533,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
             popHeaderSpan()
         }
 
-        validateCount(header.length, elements.size, header.line)
+        validateCount(header, elements.size)
 
         return ToonValue.Array(elements)
     }
@@ -796,7 +800,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
             popHeaderSpan()
         }
 
-        validateCount(header.length, entryCount, header.line)
+        validateCount(header, entryCount)
 
         return ToonValue.Object(properties)
     }
@@ -833,16 +837,12 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     /** Reads an array in list form: `key[2]:\n - val1\n - val2` */
     private fun readListArray(header: Token.Header): ToonValue.Array {
         val itemIndent = contentIndent(header)
-        return readListItems(itemIndent, header.length, header.line)
+        return readListItems(itemIndent, header)
     }
 
-    /** Reads list items at [itemIndent]; validates the count when [declaredLength] is present. */
+    /** Reads list items at [itemIndent]; validates the count when a [header] declared one. */
     @Suppress("CyclomaticComplexMethod", "LoopWithTooManyJumpStatements")
-    private fun readListItems(
-        itemIndent: Int,
-        declaredLength: Long?,
-        headerLine: Int,
-    ): ToonValue.Array {
+    private fun readListItems(itemIndent: Int, header: Token.Header?): ToonValue.Array {
         val elements = mutableListOf<ToonValue>()
 
         pushHeaderSpan()
@@ -886,8 +886,8 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
             popHeaderSpan()
         }
 
-        if (declaredLength != null) {
-            validateCount(declaredLength, elements.size, headerLine)
+        if (header != null) {
+            validateCount(header, elements.size)
         }
 
         return ToonValue.Array(elements)

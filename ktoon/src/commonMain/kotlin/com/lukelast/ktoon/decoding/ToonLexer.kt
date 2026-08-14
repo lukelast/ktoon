@@ -112,6 +112,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                         Token.Header(
                             key = header.key,
                             length = header.length,
+                            lengthText = header.lengthText,
                             fields = header.fields,
                             delimiter = header.delimiter,
                             keyed = header.keyed,
@@ -182,6 +183,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         class Match(
             val key: String,
             val length: Long,
+            val lengthText: String,
             val keyed: Boolean,
             val delimiter: KtoonConfiguration.Delimiter,
             val fields: List<FieldNode>?,
@@ -288,7 +290,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
             return HeaderParse.Malformed("content after a fields-bearing header's colon")
         }
 
-        return HeaderParse.Match(key, length, keyed, delimiter, fields, pos)
+        return HeaderParse.Match(key, length, lengthStr, keyed, delimiter, fields, pos)
     }
 
     /** Finds the unquoted '}' matching the unquoted '{' at [openIndex], or -1. */
@@ -468,7 +470,10 @@ internal sealed interface Token {
      * Array or keyed header token.
      *
      * @property key Header key name (empty for keyless headers)
-     * @property length Declared array length or entry count
+     * @property length Declared array length or entry count, saturated to Long.MAX_VALUE when the
+     *   literal is larger (§6 puts no bound on it)
+     * @property lengthText The declared length as written, for diagnostics — the saturated
+     *   [length] may not be the document's own number
      * @property fields Field entries for tabular/keyed form (null when absent)
      * @property delimiter Active delimiter declared by this header
      * @property keyed True for keyed headers `[N:...]` (§9.5)
@@ -480,6 +485,7 @@ internal sealed interface Token {
     data class Header(
         val key: String,
         val length: Long,
+        val lengthText: String,
         val fields: List<FieldNode>?,
         val delimiter: KtoonConfiguration.Delimiter,
         val keyed: Boolean,
