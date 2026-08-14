@@ -29,13 +29,6 @@ class KtoonValidationException(
     cause: Throwable? = null,
 ) : KtoonException(buildMessage(message, line, column), cause) {
     companion object {
-        /** Creates a validation exception for array length mismatch. */
-        fun arrayLengthMismatch(declared: Int, actual: Int, line: Int) =
-            KtoonValidationException(
-                "Array length mismatch: declared $declared, found $actual",
-                line,
-            )
-
         /** Creates a validation exception for duplicate object keys. */
         fun duplicateKey(key: String, line: Int) =
             KtoonValidationException("Duplicate key: '$key'", line)

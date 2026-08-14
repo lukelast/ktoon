@@ -31,6 +31,18 @@ class IssueLexerTest {
         }
     }
 
+    @Test
+    fun `a count mismatch reports the declared length as written`() {
+        // The parsed length saturates beyond Long, so the message must quote the document's own
+        // literal, not the saturated host value.
+        val literal = "99999999999999999999"
+        val error =
+            assertFailsWith<KtoonException> {
+                strict.decodeFromString<Map<String, List<String>>>("items[$literal]: x")
+            }
+        assertEquals("Array length mismatch: declared $literal, found 1 at line 1", error.message)
+    }
+
     @Serializable data class TwoStrings(val a: String, val b: String)
 
     @Serializable data class IntAndString(val a: Int, val b: String)
