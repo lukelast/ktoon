@@ -283,7 +283,8 @@ class IssueDecodeTest {
         assertEquals(1, error.line)
         assertEquals(-1, error.column)
         assertEquals(
-            "Invalid escape sequence: '\\q' (only \\\\, \\\", \\n, \\r, \\t are allowed) at line 1",
+            "Invalid escape sequence: '\\q' " +
+                "(only \\\\, \\\", \\n, \\r, \\t, \\uXXXX are allowed) at line 1",
             error.message,
         )
     }
