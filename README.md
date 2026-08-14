@@ -95,6 +95,11 @@ ktoon targets `toon-spec: 4.1`. Known deviations from the spec:
 - **`sortFields = true`** (opt-in, off by default): emits object fields in sorted order rather
   than the encounter order the spec requires.
 
+Documented limits (SPEC §15): values and documents nested deeper than `maxNestingDepth`
+containers (default 128) are rejected with a normal error on both encode and decode instead of
+exhausting the host stack. The same configurable limit applies to both sides, so anything the
+library encodes it can also decode.
+
 ## Dependencies
 
 * This library is built to target Java 17.

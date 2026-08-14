@@ -39,8 +39,13 @@ private constructor(
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
     private val descriptor: SerialDescriptor,
+    private val depth: Int,
     private val sink: CaptureSink,
 ) : AbstractEncoder(), ToonNumberSink {
+
+    init {
+        config.checkEncoderNesting(depth)
+    }
 
     companion object {
         /** Captures the fields of an object, a Kotlin object, or a polymorphic wrapper. */
@@ -48,16 +53,20 @@ private constructor(
             config: KtoonConfiguration,
             serializersModule: SerializersModule,
             descriptor: SerialDescriptor,
+            depth: Int,
             onComplete: CaptureSink.Fields,
-        ): ElementCapturer = ElementCapturer(config, serializersModule, descriptor, onComplete)
+        ): ElementCapturer =
+            ElementCapturer(config, serializersModule, descriptor, depth, onComplete)
 
         /** Captures the elements of an array, which have positions rather than names. */
         fun forArray(
             config: KtoonConfiguration,
             serializersModule: SerializersModule,
             descriptor: SerialDescriptor,
+            depth: Int,
             onComplete: CaptureSink.Elements,
-        ): ElementCapturer = ElementCapturer(config, serializersModule, descriptor, onComplete)
+        ): ElementCapturer =
+            ElementCapturer(config, serializersModule, descriptor, depth, onComplete)
     }
 
     override fun encodeNumberLiteral(literal: String) =
@@ -143,15 +152,17 @@ private constructor(
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder =
         when {
             descriptor.kind == StructureKind.LIST ->
-                forArray(config, serializersModule, descriptor) {
+                forArray(config, serializersModule, descriptor, depth + 1) {
                     add(EncodedElement.NestedArray(it))
                 }
             descriptor.isObjectKind() ->
-                forObject(config, serializersModule, descriptor) {
+                forObject(config, serializersModule, descriptor, depth + 1) {
                     add(EncodedElement.Structure(it))
                 }
             descriptor.kind == StructureKind.MAP ->
-                MapElementCapturer(config, serializersModule) { add(EncodedElement.Structure(it)) }
+                MapElementCapturer(config, serializersModule, depth + 1) {
+                    add(EncodedElement.Structure(it))
+                }
             else -> this
         }
 
@@ -182,8 +193,13 @@ private constructor(
 internal class MapElementCapturer(
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
+    private val depth: Int,
     private val onComplete: (List<Pair<String, EncodedElement>>) -> Unit,
 ) : AbstractEncoder(), ToonNumberSink {
+
+    init {
+        config.checkEncoderNesting(depth)
+    }
 
     override fun encodeNumberLiteral(literal: String) =
         addPrimitive(NumberNormalizer.normalizeLiteral(literal))
@@ -265,15 +281,15 @@ internal class MapElementCapturer(
         require(!isKey) { "TOON does not support complex keys in maps" }
         return when {
             descriptor.kind == StructureKind.LIST ->
-                ElementCapturer.forArray(config, serializersModule, descriptor) {
+                ElementCapturer.forArray(config, serializersModule, descriptor, depth + 1) {
                     addValue(EncodedElement.NestedArray(it))
                 }
             descriptor.isObjectKind() ->
-                ElementCapturer.forObject(config, serializersModule, descriptor) {
+                ElementCapturer.forObject(config, serializersModule, descriptor, depth + 1) {
                     addValue(EncodedElement.Structure(it))
                 }
             descriptor.kind == StructureKind.MAP ->
-                MapElementCapturer(config, serializersModule) {
+                MapElementCapturer(config, serializersModule, depth + 1) {
                     addValue(EncodedElement.Structure(it))
                 }
             else -> this

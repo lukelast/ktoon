@@ -93,8 +93,10 @@ class KtoonConfigurationBuilder {
 
     /**
      * Maximum number of nested containers (objects, arrays, and header field groups) a document may
-     * contain. Decoding a document nested deeper than this fails with a [KtoonParsingException]
-     * instead of exhausting the host stack (SPEC §15).
+     * contain. Decoding a document nested deeper than this fails with a [KtoonParsingException],
+     * and encoding a value nested deeper fails with a [KtoonEncodingException], instead of
+     * exhausting the host stack (SPEC §15). The same limit on both sides keeps `decode(encode(x))`
+     * possible at every setting.
      */
     var maxNestingDepth: Int = DEFAULT_MAX_NESTING_DEPTH
 

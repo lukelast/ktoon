@@ -13,15 +13,20 @@ import kotlinx.serialization.modules.SerializersModule
 
 /** Encoder for TOON objects (structures with named fields). */
 @OptIn(ExperimentalSerializationApi::class)
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 internal class ToonObjectEncoder(
     private val rawWriter: ToonWriter,
     private val config: KtoonConfiguration,
     override val serializersModule: SerializersModule,
     private val indentLevel: Int,
+    private val depth: Int,
     private val isRoot: Boolean = false,
     private val onEnd: (() -> Unit)? = null,
 ) : AbstractEncoder(), ToonNumberSink {
+
+    init {
+        config.checkEncoderNesting(depth)
+    }
 
     override fun encodeNumberLiteral(literal: String) =
         writePrimitiveField(NumberNormalizer.normalizeLiteral(literal))
@@ -105,7 +110,8 @@ internal class ToonObjectEncoder(
             descriptor.isObjectKind() -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     // §9.5: capture first so keyed tabular form can be selected from the values
-                    ElementCapturer.forObject(config, serializersModule, descriptor) { entries ->
+                    ElementCapturer.forObject(config, serializersModule, descriptor, depth + 1) {
+                        entries ->
                         ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
                         finishField()
                     }
@@ -116,6 +122,7 @@ internal class ToonObjectEncoder(
                         config = config,
                         serializersModule = serializersModule,
                         indentLevel = indentLevel + 1,
+                        depth = depth + 1,
                         isRoot = false,
                         onEnd = { finishField() },
                     )
@@ -123,7 +130,7 @@ internal class ToonObjectEncoder(
             }
             descriptor.kind == StructureKind.MAP -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
-                    MapElementCapturer(config, serializersModule) { entries ->
+                    MapElementCapturer(config, serializersModule, depth + 1) { entries ->
                         ElementWriter(writer, config).writeObjectField(key, entries, indentLevel)
                         finishField()
                     }
@@ -134,6 +141,7 @@ internal class ToonObjectEncoder(
                         config = config,
                         serializersModule = serializersModule,
                         indentLevel = indentLevel + 1,
+                        depth = depth + 1,
                         isRoot = false,
                         onEnd = { finishField() },
                     )
@@ -141,7 +149,8 @@ internal class ToonObjectEncoder(
             }
             descriptor.kind == StructureKind.LIST ->
                 // §9: capture first so the array's form follows from the elements themselves
-                ElementCapturer.forArray(config, serializersModule, descriptor) { elements ->
+                ElementCapturer.forArray(config, serializersModule, descriptor, depth + 1) {
+                    elements ->
                     ElementWriter(writer, config)
                         .writeArray(key, elements, indentLevel, ElementWriter.ArrayPosition.FIELD)
                     finishField()

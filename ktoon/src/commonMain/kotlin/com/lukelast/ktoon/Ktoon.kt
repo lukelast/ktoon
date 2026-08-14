@@ -124,7 +124,7 @@ class Ktoon(
     fun encodeJsonToToon(json: String): String {
         // The JSON tree reader recurses per container, so the depth budget has to be applied
         // before parsing rather than while serializing the parsed tree.
-        checkJsonNestingDepth(json)
+        checkJsonNestingDepth(json, configuration.maxNestingDepth)
         val jsonElement = Json.parseToJsonElement(json)
         return encodeJsonToToon(jsonElement)
     }

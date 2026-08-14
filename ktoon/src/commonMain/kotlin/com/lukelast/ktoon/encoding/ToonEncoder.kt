@@ -68,7 +68,8 @@ internal class ToonEncoder(
             descriptor.isObjectKind() -> {
                 if (ElementWriter.couldBeKeyed(descriptor)) {
                     // §9.5: capture first so keyed tabular form can be selected from the values
-                    ElementCapturer.forObject(config, serializersModule, descriptor) { entries ->
+                    ElementCapturer.forObject(config, serializersModule, descriptor, depth = 1) {
+                        entries ->
                         ElementWriter(writer, config).writeRootObject(entries)
                     }
                 } else {
@@ -77,13 +78,14 @@ internal class ToonEncoder(
                         config = config,
                         serializersModule = serializersModule,
                         indentLevel = 0,
+                        depth = 1,
                         isRoot = true,
                     )
                 }
             }
             descriptor.kind == StructureKind.MAP ->
                 if (ElementWriter.couldBeKeyed(descriptor)) {
-                    MapElementCapturer(config, serializersModule) { entries ->
+                    MapElementCapturer(config, serializersModule, depth = 1) { entries ->
                         ElementWriter(writer, config).writeRootObject(entries)
                     }
                 } else {
@@ -92,12 +94,14 @@ internal class ToonEncoder(
                         config = config,
                         serializersModule = serializersModule,
                         indentLevel = 0,
+                        depth = 1,
                         isRoot = true,
                     )
                 }
             descriptor.kind == StructureKind.LIST ->
                 // §9: capture first so the array's form follows from the elements themselves
-                ElementCapturer.forArray(config, serializersModule, descriptor) { elements ->
+                ElementCapturer.forArray(config, serializersModule, descriptor, depth = 1) {
+                    elements ->
                     ElementWriter(writer, config)
                         .writeArray(null, elements, 0, ElementWriter.ArrayPosition.ROOT)
                 }
