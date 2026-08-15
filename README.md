@@ -20,8 +20,8 @@ To learn about the TOON format and why you should use it read the official websi
 - **Maven Central** - Published to Maven Central for easy dependency management with Gradle and Maven.
 - **Fully Featured**
     - Encode Kotlin data classes to TOON
-    - Encode JSON to TOON
     - Decode TOON to Kotlin data classes
+    - Convert JSON to TOON and TOON to JSON
 - **Minimal Dependencies** - Only depends on kotlinx.serialization, no additional runtime dependencies.
 - **High Performance** - CharArray-based encoding optimized for minimal allocations and fast string operations.
 - **Flexible Configuration** - Configurable delimiter, indent size, strict mode, field sorting, and default encoding.
@@ -85,6 +85,10 @@ data class User(val id: Int, val name: String)
 fun main() {
     val encoded = Ktoon.Default.encodeToString(User(1, "Alice"))
     println(encoded)
+    // id: 1
+    // name: Alice
+
+    val decoded: User = Ktoon.Default.decodeFromString(encoded)
 }
 ```
 
