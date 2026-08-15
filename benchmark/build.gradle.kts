@@ -14,7 +14,7 @@ dependencies {
     implementation(project(":ktoon"))
     implementation(libs.kotlinx.benchmark.runtime)
     implementation(libs.kotlin.serialization)
-    implementation(libs.instancio.junit)
+    implementation(libs.instancio.core)
 
     // For performance comparison.
     implementation(libs.jtoon)
