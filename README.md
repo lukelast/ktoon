@@ -2,7 +2,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.lukelast.ktoon/ktoon)](https://central.sonatype.com/artifact/com.lukelast.ktoon/ktoon)
 [![.github/workflows/gradle.yml](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml/badge.svg)](https://github.com/lukelast/ktoon/actions/workflows/gradle.yml)
 [![SPEC v4.1.1](https://img.shields.io/badge/ToonSpec-v4.1.1-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec/blob/v4.1.1/SPEC.md)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.3.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 ![Kotlin](https://img.shields.io/badge/Java-17+-yellow?logo=java)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -15,8 +15,8 @@ To learn about the TOON format and why you should use it read the official websi
 
 ## Features
 
-- **Full TOON 4.1.1 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays with nested field groups, the keyed tabular form, comment-line stripping, and delimiters. Validated against the official spec fixture suite; 950+ tests.
-- **Kotlin Multiplatform** - Supports JVM and JavaScript targets. Others can be added on request.
+- **Full TOON 4.1.1 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays with nested field groups, the keyed tabular form, comment-line stripping, and delimiters. Validated against the official spec fixture suite; 1,100+ tests.
+- **Kotlin Multiplatform** - Supports JVM, Android, JavaScript, WebAssembly (JS and WASI), and native targets (iOS, macOS, Linux, Windows, watchOS, tvOS, Android Native).
 - **Maven Central** - Published to Maven Central for easy dependency management with Gradle and Maven.
 - **Fully Featured**
     - Encode Kotlin data classes to TOON
@@ -109,7 +109,7 @@ library encodes it can also decode.
 ## Demo project
 
 Check out the demo project in the `demo` directory for more examples on how to use `Ktoon`.
-[demo/README.md](demo/README.md))
+[demo/README.md](demo/README.md)
 
 ## Development
 See the [development guide](DEV.md) for how to do development.

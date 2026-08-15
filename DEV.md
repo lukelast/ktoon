@@ -43,8 +43,3 @@ ktoon/src/
 ## Publishing
 
 - `./gradlew :ktoon:publishToMavenLocal` — publish to local Maven repository
-
-Published artifacts:
-- `ktoon` — Gradle metadata module
-- `ktoon-jvm` — JVM artifact
-- `ktoon-js` — JavaScript artifact
