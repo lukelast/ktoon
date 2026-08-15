@@ -82,8 +82,8 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
 
     /**
      * §14.1: a declared count must match the actual count in strict mode (never truncates). The
-     * message quotes the header's own length text, so a declaration beyond the host's number
-     * range is reported as the document wrote it.
+     * message quotes the header's own length text, so a declaration beyond the host's number range
+     * is reported as the document wrote it.
      */
     private fun validateCount(header: Token.Header, actual: Int) {
         if (config.strictMode && !header.isLength(actual)) {
