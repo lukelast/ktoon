@@ -111,7 +111,6 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                     tokens.add(
                         Token.Header(
                             key = header.key,
-                            length = header.length,
                             lengthText = header.lengthText,
                             fields = header.fields,
                             delimiter = header.delimiter,
@@ -182,7 +181,6 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
     private sealed interface HeaderParse {
         class Match(
             val key: String,
-            val length: Long,
             val lengthText: String,
             val keyed: Boolean,
             val delimiter: KtoonConfiguration.Delimiter,
@@ -233,11 +231,6 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         if (lengthStr.length > 1 && lengthStr[0] == '0') {
             return HeaderParse.Malformed("leading zeros in bracket length")
         }
-        // §6 puts no bound on the declared length, so a value too large for the host is kept as
-        // a saturated count rather than rejected as a syntax error; it can never equal an actual
-        // element count, so the strict count check still reports the mismatch.
-        val length = lengthStr.toLongOrNull() ?: Long.MAX_VALUE
-
         var keyed = false
         if (i < bracket.length && bracket[i] == ':') {
             keyed = true
@@ -290,7 +283,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
             return HeaderParse.Malformed("content after a fields-bearing header's colon")
         }
 
-        return HeaderParse.Match(key, length, lengthStr, keyed, delimiter, fields, pos)
+        return HeaderParse.Match(key, lengthStr, keyed, delimiter, fields, pos)
     }
 
     /** Finds the unquoted '}' matching the unquoted '{' at [openIndex], or -1. */
@@ -470,10 +463,7 @@ internal sealed interface Token {
      * Array or keyed header token.
      *
      * @property key Header key name (empty for keyless headers)
-     * @property length Declared array length or entry count, saturated to Long.MAX_VALUE when the
-     *   literal is larger (§6 puts no bound on it)
-     * @property lengthText The declared length as written, for diagnostics — the saturated
-     *   [length] may not be the document's own number
+     * @property lengthText The declared length as written
      * @property fields Field entries for tabular/keyed form (null when absent)
      * @property delimiter Active delimiter declared by this header
      * @property keyed True for keyed headers `[N:...]` (§9.5)
@@ -484,7 +474,6 @@ internal sealed interface Token {
      */
     data class Header(
         val key: String,
-        val length: Long,
         val lengthText: String,
         val fields: List<FieldNode>?,
         val delimiter: KtoonConfiguration.Delimiter,
@@ -492,7 +481,11 @@ internal sealed interface Token {
         val rawContent: String,
         val indent: Int,
         override val line: Int,
-    ) : Token
+    ) : Token {
+        fun isLength(actual: Int): Boolean {
+            return lengthText.toIntOrNull() == actual
+        }
+    }
 
     /**
      * Inline array value (delimiter-separated values after array header).

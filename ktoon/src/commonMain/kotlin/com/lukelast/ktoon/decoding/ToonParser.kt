@@ -82,11 +82,11 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
 
     /**
      * §14.1: a declared count must match the actual count in strict mode (never truncates). The
-     * message quotes the header's own length text: the parsed length is saturated for literals
-     * beyond Long, and would misreport what the document declared.
+     * message quotes the header's own length text, so a declaration beyond the host's number
+     * range is reported as the document wrote it.
      */
     private fun validateCount(header: Token.Header, actual: Int) {
-        if (config.strictMode && header.length != actual.toLong()) {
+        if (config.strictMode && !header.isLength(actual)) {
             throw KtoonValidationException(
                 "Array length mismatch: declared ${header.lengthText}, found $actual",
                 header.line,
