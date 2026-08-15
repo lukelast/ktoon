@@ -61,13 +61,18 @@ abstract class Runner {
     }
 
     fun execToonCli(json: Path, toon: Path) {
+        // Windows needs the cmd shell to resolve npx.cmd, and shell quoting for the delimiter;
+        // elsewhere npx runs directly and arguments are passed verbatim.
+        val isWindows = System.getProperty("os.name").startsWith("Windows")
+        val cmd = if (isWindows) mutableListOf("cmd", "/c") else mutableListOf()
+
         // Pinned to the spec version ktoon targets, so golden regeneration is deterministic.
-        val cmd =
-            mutableListOf("cmd", "/c", "npx", "@toon-format/cli@4.1.1", json.name, "-o", toon.name)
+        cmd.addAll(listOf("npx", "@toon-format/cli@4.1.1", json.name, "-o", toon.name))
 
         if (ktoon.configuration.delimiter != KtoonConfiguration.Delimiter.COMMA) {
+            val delimiter = ktoon.configuration.delimiter.char.toString()
             cmd.add("--delimiter")
-            cmd.add("\"${ktoon.configuration.delimiter.char}\"")
+            cmd.add(if (isWindows) "\"$delimiter\"" else delimiter)
         }
         if (ktoon.configuration.indentSize != 2) {
             cmd.add("--indent")
