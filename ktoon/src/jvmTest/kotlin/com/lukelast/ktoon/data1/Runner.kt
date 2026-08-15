@@ -4,6 +4,7 @@ import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonConfiguration
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 import kotlin.io.path.isReadable
 import kotlin.io.path.name
 import kotlin.io.path.readText
@@ -75,11 +76,19 @@ abstract class Runner {
 
         val process =
             ProcessBuilder().command(cmd).directory(toon.parent.toFile()).inheritIO().start()
-        process.waitFor()
-        if (toon.isReadable()) {
-            // The v4 CLI appends a trailing newline; goldens are stored without one.
-            toon.writeText(toon.readText().trimEnd('\n', '\r'))
+        // Generous timeout: a cold npx run downloads the CLI package before converting.
+        if (!process.waitFor(1, TimeUnit.MINUTES)) {
+            process.destroyForcibly()
+            error("Golden regeneration timed out. Command: ${cmd.joinToString(" ")}")
         }
+        if (process.exitValue() != 0 || !toon.isReadable()) {
+            error(
+                "Golden regeneration failed (exit ${process.exitValue()}, requires npm). " +
+                    "Command: ${cmd.joinToString(" ")}"
+            )
+        }
+        // The v4 CLI appends a trailing newline; goldens are stored without one.
+        toon.writeText(toon.readText().trimEnd('\n', '\r'))
     }
 
     fun buildPath(fileName: String): Path {
