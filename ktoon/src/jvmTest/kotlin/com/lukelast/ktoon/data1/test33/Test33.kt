@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test33
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode
 import kotlinx.serialization.Serializable
@@ -11,8 +11,8 @@ import kotlinx.serialization.Serializable
  * - Non-default values are encoded explicitly Expected: Decoding restores defaults for missing
  *   fields
  */
-class Test33 : Runner() {
-    override fun run() = doTest(data)
+class Test33 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

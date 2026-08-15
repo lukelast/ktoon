@@ -1,7 +1,7 @@
 package com.lukelast.ktoon.data1.test40
 
 import com.lukelast.ktoon.Ktoon
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -15,10 +15,10 @@ import kotlinx.serialization.Serializable
  *   sits one level under the hyphen line per the §10 depth model (12 spaces, not hyphen-aligned
  *   at 10) Expected root: `name: root` at column 0, deepest field `size: 5` at column 12
  */
-class Test40 : Runner() {
+class Test40 : AbstractGoldenTest() {
     override val ktoon = Ktoon { indentSize = 4 }
 
-    override fun run() = doTest(data)
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable data class Window(val unit: String, val size: Int)

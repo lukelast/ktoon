@@ -1,11 +1,11 @@
 package com.lukelast.ktoon.data1.test01
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /** Example from https://toontools.vercel.app/tools/json-to-toon "Simple Example". */
-class Test01 : Runner() {
-    override fun run() = doTest(data)
+class Test01 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable data class UserList(val users: List<User>)

@@ -1,14 +1,14 @@
 package com.lukelast.ktoon.data1.test18
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
  * Tests that a nullable root object can be correctly serialized and deserialized. This ensures that
  * ToonDecoder correctly handles nullability checks on the root object before any fields are parsed.
  */
-class Test18 : Runner() {
-    override fun run() = doTest<SimpleTestData?>(manualData)
+class Test18 : AbstractGoldenTest() {
+    override fun verify() = assertGolden<SimpleTestData?>(manualData)
 }
 
 @Serializable

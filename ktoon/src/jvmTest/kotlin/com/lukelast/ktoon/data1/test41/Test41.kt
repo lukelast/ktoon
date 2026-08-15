@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test41
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -19,8 +19,8 @@ import kotlinx.serialization.Serializable
  *
  * Negative zero is deliberately excluded here; it is covered by test25.
  */
-class Test41 : Runner() {
-    override fun run() = doTest(data)
+class Test41 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

@@ -4,15 +4,15 @@
 
 package com.lukelast.ktoon.data1.test28
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
  * Test28: Deep object nesting (12 levels) with arrays (§12) Tests proper indentation at each level
  * (2-space increments) Includes arrays at multiple depths to test indentation consistency
  */
-class Test28 : Runner() {
-    override fun run() = doTest(data)
+class Test28 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

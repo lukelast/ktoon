@@ -2,7 +2,7 @@ package com.lukelast.ktoon.data1.test38
 
 import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonConfiguration
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -21,10 +21,10 @@ import kotlinx.serialization.Serializable
  *   an object field value, a tabular row cell, and a keyed entry-row cell.
  * - §9.1 – an empty array in field position is still `tags: []`, with no delimiter marker.
  */
-class Test38 : Runner() {
+class Test38 : AbstractGoldenTest() {
     override val ktoon = Ktoon { delimiter = KtoonConfiguration.Delimiter.PIPE }
 
-    override fun run() = doTest(data)
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable data class Row(val a: String, val b: Int, val c: String)

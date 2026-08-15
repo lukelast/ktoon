@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test25
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,8 +10,8 @@ import kotlinx.serialization.Serializable
  * - Trailing zeros removed (1.5000 → 1.5)
  * - No leading-zero violations (0.5 not .5)
  */
-class Test25 : Runner() {
-    override fun run() = doTest(data, testDecode = false)
+class Test25 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data, testDecode = false)
 }
 
 @Serializable

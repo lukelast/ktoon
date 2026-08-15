@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test03
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -16,8 +16,8 @@ import kotlinx.serialization.Serializable
  *   emitting `[1:]`.
  * - `counts`: primitive values are not objects, so it stays plain `key: value` lines.
  */
-class Test03 : Runner() {
-    override fun run() = doTest(data)
+class Test03 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable data class Metric(val count: Int, val label: String, val active: Boolean)

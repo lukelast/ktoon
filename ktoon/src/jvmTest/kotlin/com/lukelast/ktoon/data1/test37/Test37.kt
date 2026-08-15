@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test37
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -25,8 +25,8 @@ import kotlinx.serialization.Serializable
  * - §7.3 / §16: the bare-key pattern is ASCII-only, so non-ASCII map keys are always quoted even
  *   though the very same text is safe unquoted as a *value*.
  */
-class Test37 : Runner() {
-    override fun run() = doTest(data)
+class Test37 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable data class UnicodeRow(val label: String, val emoji: String, val count: Int)

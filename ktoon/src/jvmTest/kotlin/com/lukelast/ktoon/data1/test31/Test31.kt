@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test31
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,8 +12,8 @@ import kotlinx.serialization.Serializable
  * - Carriage return: U+000D → \\r
  * - Tab: U+0009 → \\t Expected: All control characters properly escaped in output
  */
-class Test31 : Runner() {
-    override fun run() = doTest(data)
+class Test31 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

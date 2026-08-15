@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test42
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 
 /**
  * Test42: Root inline primitive array (§5 root form, §9.1) The whole document is a single header
@@ -10,8 +10,8 @@ import com.lukelast.ktoon.data1.Runner
  * - "42" would decode as a number unquoted, so it MUST be quoted Expected document: `[4]:
  *   a,"x,y",c,"42"` on one line, no trailing newline
  */
-class Test42 : Runner() {
-    override fun run() = doTest(data)
+class Test42 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 val data = listOf("a", "x,y", "c", "42")

@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test30
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,8 +10,8 @@ import kotlinx.serialization.Serializable
  * - Arrays nested within objects
  * - Arrays at multiple depths Expected: All arrays use the same delimiter (comma by default)
  */
-class Test30 : Runner() {
-    override fun run() = doTest(data)
+class Test30 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

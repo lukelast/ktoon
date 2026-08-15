@@ -1,18 +1,18 @@
 package com.lukelast.ktoon.data1.test08
 
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import com.lukelast.ktoon.data1.EngineSpec
 import com.lukelast.ktoon.data1.Garage
 import com.lukelast.ktoon.data1.LapTime
 import com.lukelast.ktoon.data1.Modification
-import com.lukelast.ktoon.data1.Runner
 import com.lukelast.ktoon.data1.SportsCar
 
 /**
  * Edge cases with single-item arrays. Tests single-item inline arrays, single-row tabular arrays,
  * and single-item expanded lists.
  */
-class Test08 : Runner() {
-    override fun run() = doTest(data)
+class Test08 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 private val data =

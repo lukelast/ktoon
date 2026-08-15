@@ -1,11 +1,11 @@
 package com.lukelast.ktoon.data1.test10
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /** https://github.com/toon-format/spec/blob/main/examples/conversions/api-response.toon */
-class Test10 : Runner() {
-    override fun run() = doTest(data)
+class Test10 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 val data =

@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test26
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -13,8 +13,8 @@ import kotlinx.serialization.Serializable
  * - Keys with brackets
  * - Keys with quotes Expected: All keys quoted and escaped appropriately
  */
-class Test26 : Runner() {
-    override fun run() = doTest(data)
+class Test26 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

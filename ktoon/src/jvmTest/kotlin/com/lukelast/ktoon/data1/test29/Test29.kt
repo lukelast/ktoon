@@ -1,14 +1,14 @@
 package com.lukelast.ktoon.data1.test29
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
  * Test29: Nested arrays - arrays of arrays of arrays with objects (§9) Tests three-level array
  * nesting with expanded list format Expected: Proper list markers (-) at appropriate depths
  */
-class Test29 : Runner() {
-    override fun run() = doTest(data)
+class Test29 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

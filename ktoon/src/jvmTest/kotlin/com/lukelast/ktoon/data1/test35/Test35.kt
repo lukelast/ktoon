@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test35
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -21,8 +21,8 @@ import kotlinx.serialization.Serializable
  * unquoted; "-Infinity" is quoted only because of its position-0 hyphen, not because it is
  * numeric-like.
  */
-class Test35 : Runner() {
-    override fun run() = doTest(data)
+class Test35 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

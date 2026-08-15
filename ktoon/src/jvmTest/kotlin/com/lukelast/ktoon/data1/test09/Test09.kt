@@ -1,18 +1,18 @@
 package com.lukelast.ktoon.data1.test09
 
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import com.lukelast.ktoon.data1.EngineSpec
 import com.lukelast.ktoon.data1.Garage
 import com.lukelast.ktoon.data1.LapTime
 import com.lukelast.ktoon.data1.Modification
-import com.lukelast.ktoon.data1.Runner
 import com.lukelast.ktoon.data1.SportsCar
 
 /**
  * Special character and quoting tests. Tests quoted strings, delimiter handling, Unicode, null-like
  * strings, and negative zero.
  */
-class Test09 : Runner() {
-    override fun run() = doTest(data)
+class Test09 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 private val data =

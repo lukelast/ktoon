@@ -1,11 +1,11 @@
 package com.lukelast.ktoon.data1.test02
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /** From https://toontools.vercel.app/tools/json-to-toon "E-commerce Data" */
-class Test02 : Runner() {
-    override fun run() = doTest(data)
+class Test02 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 val data =

@@ -13,17 +13,23 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.serialization.json.Json
 
-abstract class Runner {
-    @Test
-    fun test() {
-        run()
-    }
+/**
+ * Base class for golden-file tests that check ktoon against the reference TOON CLI.
+ *
+ * Each subclass lives in its own package next to two generated files: `data.json`, rewritten on
+ * every run from the subclass's data object, and `data.toon`, the golden produced by the pinned
+ * `@toon-format/cli` when the file is absent. [assertGolden] asserts that the typed encode, the
+ * typed decode round-trip, and the JSON-path encode all agree with the golden. To regenerate a
+ * golden after changing the data object, delete its `data.toon` and rerun the test (requires npm).
+ */
+abstract class AbstractGoldenTest {
+    @Test fun test() = verify()
 
-    abstract fun run()
+    abstract fun verify()
 
     open val ktoon = Ktoon.Default
 
-    protected inline fun <reified T> doTest(data: T, testDecode: Boolean = true) {
+    protected inline fun <reified T> assertGolden(data: T, testDecode: Boolean = true) {
         val jsonPath = buildPath("data.json")
         val toonPath = buildPath("data.toon")
 
@@ -41,7 +47,8 @@ abstract class Runner {
         assertEquals(
             toonFileText,
             dataToToonText,
-            "ktoon encodeToString checked against the toon file",
+            "ktoon encodeToString checked against the toon file. If the data object changed " +
+                "intentionally, delete data.toon and rerun to regenerate the golden.",
         )
 
         if (testDecode) {

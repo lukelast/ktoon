@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test36
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -19,8 +19,8 @@ import kotlinx.serialization.Serializable
  *   per §7.1
  * - array headers carry the quotes: `"my-list"[3]:` and `"row-data"[2]{"field name",ok}:`
  */
-class Test36 : Runner() {
-    override fun run() = doTest(data)
+class Test36 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

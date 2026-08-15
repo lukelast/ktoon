@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test34
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -8,8 +8,8 @@ import kotlinx.serialization.Serializable
  * object of uniform objects, so the header drops the key and the whole document is
  * `[2:]{code,users,active}:` followed by one entry row per key (§6, §5).
  */
-class Test34 : Runner() {
-    override fun run() = doTest(data)
+class Test34 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable data class Region(val code: String, val users: Int, val active: Boolean)

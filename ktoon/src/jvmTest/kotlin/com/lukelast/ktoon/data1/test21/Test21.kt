@@ -2,17 +2,17 @@ package com.lukelast.ktoon.data1.test21
 
 import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonConfiguration
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
  * Test21: Tab delimiter with inline primitive arrays (§11) Tests TAB (U+0009) as active delimiter
  * for inline arrays
  */
-class Test21 : Runner() {
+class Test21 : AbstractGoldenTest() {
     override val ktoon = Ktoon { delimiter = KtoonConfiguration.Delimiter.TAB }
 
-    override fun run() = doTest(data)
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

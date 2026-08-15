@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test13
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -20,8 +20,8 @@ import kotlinx.serialization.Serializable
  * - §9.5 (negative) – an object of non-uniform / empty objects MUST NOT collapse into a keyed
  *   tabular `[N:]` header; it stays plainly nested.
  */
-class Test13 : Runner() {
-    override fun run() = doTest(data)
+class Test13 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 /** First field is an empty object in one element, which also disqualifies tabular form (§9.3). */

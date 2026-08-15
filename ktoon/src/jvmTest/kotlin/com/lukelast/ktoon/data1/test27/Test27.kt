@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test27
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -9,8 +9,8 @@ import kotlinx.serialization.Serializable
  * literal keys when path expansion is disabled (default) Unquoted keys can contain dots per §7.3:
  * ^[A-Za-z_][A-Za-z0-9_.]*$ Expected: Keys remain as literals, not expanded into nested objects
  */
-class Test27 : Runner() {
-    override fun run() = doTest(data)
+class Test27 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

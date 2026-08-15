@@ -2,7 +2,7 @@ package com.lukelast.ktoon.data1.test39
 
 import com.lukelast.ktoon.Ktoon
 import com.lukelast.ktoon.KtoonConfiguration
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -19,10 +19,10 @@ import kotlinx.serialization.Serializable
  *   is both the active delimiter and a U+0000-U+001F control - and is escaped as `\t` per §7.1,
  *   never emitted raw inside the quotes.
  */
-class Test39 : Runner() {
+class Test39 : AbstractGoldenTest() {
     override val ktoon = Ktoon { delimiter = KtoonConfiguration.Delimiter.TAB }
 
-    override fun run() = doTest(data)
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable data class Metric(val unit: String, val amount: Int)

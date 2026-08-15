@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test12
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -16,8 +16,8 @@ import kotlinx.serialization.Serializable
  * - A field name inside a group requiring quotes per §7.3: `person{"first name",last}`
  * - A group cell containing the active delimiter, so the cell is quoted per §7.2
  */
-class Test12 : Runner() {
-    override fun run() = doTest(data)
+class Test12 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable

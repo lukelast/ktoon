@@ -1,6 +1,6 @@
 package com.lukelast.ktoon.data1.test32
 
-import com.lukelast.ktoon.data1.Runner
+import com.lukelast.ktoon.data1.AbstractGoldenTest
 import kotlinx.serialization.Serializable
 
 /**
@@ -11,8 +11,8 @@ import kotlinx.serialization.Serializable
  * - Single-element arrays of each type
  * - Nested empty structures Expected: Proper encoding of empty markers and single elements
  */
-class Test32 : Runner() {
-    override fun run() = doTest(data)
+class Test32 : AbstractGoldenTest() {
+    override fun verify() = assertGolden(data)
 }
 
 @Serializable
