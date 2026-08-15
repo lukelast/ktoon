@@ -18,7 +18,9 @@ class IssueDecodeTest {
     fun `a literal unpaired surrogate is rejected while decoding`() {
         // §7.1: `unescaped-char` excludes U+D800–U+DFFF, and the encoder rejects such strings,
         // so accepting one on decode would produce a value that cannot be encoded again.
-        val lone = "\uD800"
+        // Built at runtime: a "\uD800" literal is constant-folded into the compiled JS bundle,
+        // where the unencodable lone surrogate is mangled to U+FFFD in transit to the browser.
+        val lone = Char(0xD800).toString()
         assertFailsWith<KtoonException> { strict.decodeFromString<OneString>("key: a${lone}b") }
         assertFailsWith<KtoonException> { strict.decodeFromString<OneString>("key: \"a${lone}b\"") }
         assertFailsWith<KtoonException> { lenient.decodeFromString<OneString>("key: a${lone}b") }

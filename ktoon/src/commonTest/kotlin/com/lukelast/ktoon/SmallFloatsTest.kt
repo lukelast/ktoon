@@ -8,11 +8,11 @@ import kotlinx.serialization.json.Json
 /**
  * Very small floats and subnormal edge cases (§2), formerly the data1 Test24 golden test.
  *
- * These values cannot be checked byte-for-byte against the reference CLI: below 1e-6 exponent
- * form is a §2 MAY and hosts render doubles differently — the CLI (JS) emits shortest-form
- * exponent (`5e-324`) while ktoon expands plain decimal, from a host spelling that itself varies
- * by platform (`4.9E-324` on the JVM). All spellings are conforming and decode to the same
- * doubles, which is what this test asserts.
+ * These values cannot be checked byte-for-byte against the reference CLI: below 1e-6 exponent form
+ * is a §2 MAY and hosts render doubles differently — the CLI (JS) emits shortest-form exponent
+ * (`5e-324`) while ktoon expands plain decimal, from a host spelling that itself varies by platform
+ * (`4.9E-324` on the JVM). All spellings are conforming and decode to the same doubles, which is
+ * what this test asserts.
  */
 class SmallFloatsTest {
 
