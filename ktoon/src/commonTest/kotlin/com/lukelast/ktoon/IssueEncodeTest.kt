@@ -39,7 +39,9 @@ class IssueEncodeTest {
         // §2: the emitted number must carry enough precision to decode back unchanged.
         val ktoon = Ktoon()
         assertEquals("9223372036854775808", ktoon.encodeToString(9223372036854775808.0))
-        assertEquals("9223372036854775808", ktoon.encodeToString(9223372036854775808.0f))
+        // Kotlin/JS embeds a Float literal as its shortest decimal spelling, which for 2^63 is a
+        // different double; the runtime conversion preserves the exact value on every platform.
+        assertEquals("9223372036854775808", ktoon.encodeToString(9223372036854775808.0.toFloat()))
         assertEquals("-9223372036854775808", ktoon.encodeToString(Long.MIN_VALUE.toDouble()))
         assertEquals("-9223372036854775808", ktoon.encodeToString(Long.MIN_VALUE.toFloat()))
     }
