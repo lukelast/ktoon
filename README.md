@@ -16,7 +16,7 @@ To learn about the TOON format and why you should use it read the official websi
 ## Features
 
 - **Full TOON 4.1.1 Spec Support** - Complete implementation of the TOON format specification, including tabular arrays with nested field groups, the keyed tabular form, comment-line stripping, and delimiters. Validated against the official spec fixture suite; 1,100+ tests.
-- **Kotlin Multiplatform** - Supports JVM, Android, JavaScript, WebAssembly (JS and WASI), and native targets (iOS, macOS, Linux, Windows, watchOS, tvOS, Android Native).
+- **Kotlin Multiplatform** - Supports JVM, Android, JavaScript, WebAssembly, and native targets (iOS, macOS, Linux, Windows).
 - **Maven Central** - Published to Maven Central for easy dependency management with Gradle and Maven.
 - **Fully Featured**
     - Encode Kotlin data classes to TOON
