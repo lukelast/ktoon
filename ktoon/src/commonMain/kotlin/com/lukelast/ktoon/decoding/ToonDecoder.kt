@@ -309,9 +309,12 @@ internal class ToonObjectDecoder(
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        // If currentFieldName is null, we're beginning the root structure itself
+        // A root value reaches this decoder directly, so it needs the same dispatch nested values
+        // get: the root shape is checked against the descriptor, and a MAP descriptor gets a map
+        // decoder even when the top-level serializer's own descriptor was a class (an inline value
+        // class or a contextual serializer wrapping a map).
         if (currentFieldName == null) {
-            return this
+            return createDecoderForStructure(descriptor, value, serializersModule, config, this)
         }
 
         val fieldName = getCurrentFieldName()
@@ -401,9 +404,10 @@ internal class ToonArrayDecoder(
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        // If currentIndex is 0, we're beginning the root array itself
+        // The root array reaches this decoder directly and needs the same shape check nested
+        // values get; without it a class or map deserializer would read the array positionally.
         if (currentIndex == 0) {
-            return this
+            return createDecoderForStructure(descriptor, value, serializersModule, config, this)
         }
 
         val element = getCurrentElement()
@@ -467,8 +471,10 @@ internal class ToonMapDecoder(
 
     @Suppress("ReturnCount")
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
+        // As above: the root object reaches this decoder directly, so the descriptor decides the
+        // shape here too rather than being taken on trust.
         if (position == 0) {
-            return this
+            return createDecoderForStructure(descriptor, value, serializersModule, config, this)
         }
 
         val index = position - 1

@@ -14,6 +14,17 @@ class IssueDecodeTest {
 
     @Serializable data class OneString(val key: String)
 
+    @Serializable data class Point(val x: Int, val y: Int)
+
+    @Test
+    fun `a root whose shape does not match the target type is rejected`() {
+        // The root value gets the same shape check as a nested one, so a class or map deserializer
+        // never reads a root array positionally: `[2]: 1,2` is an array, not a Point.
+        assertFailsWith<KtoonException> { strict.decodeFromString<Point>("[2]: 1,2") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<Map<String, Int>>("[4]: a,1,b,2") }
+        assertFailsWith<KtoonException> { lenient.decodeFromString<Point>("[2]: 1,2") }
+    }
+
     @Test
     fun `a literal unpaired surrogate is rejected while decoding`() {
         // §7.1: `unescaped-char` excludes U+D800–U+DFFF, and the encoder rejects such strings,
