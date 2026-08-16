@@ -296,8 +296,7 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
             when {
                 escapeNext -> escapeNext = false
                 c == '\\' && inQuotes -> escapeNext = true
-                c == '"' && inQuotes -> inQuotes = false
-                c == '"' -> inQuotes = opensQuotedToken(str, i)
+                c == '"' -> inQuotes = !inQuotes
                 inQuotes -> {}
                 c == '{' -> depth++
                 c == '}' -> {
@@ -373,8 +372,9 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
                     escapeNext = true
                     current.append(c)
                 }
-                c == '"' && (inQuotes || current.isBlank()) -> {
-                    // Only a quote at the start of this field entry opens a quoted name (§7.4).
+                c == '"' -> {
+                    // Appendix B.3: every quote toggles the quote state, so an unbalanced quote
+                    // in a field name leaves the list unterminated and the header malformed.
                     inQuotes = !inQuotes
                     current.append(c)
                 }

@@ -123,13 +123,14 @@ class IssueDecodeTest {
     }
 
     @Test
-    fun `a quote inside an unquoted token does not hide a colon or delimiter`() {
-        // §7.4: only a token whose first character is a quote is a quoted token.
-        assertEquals(
-            mapOf("a\"b" to 1),
-            strict.decodeFromString<Map<String, Int>>("a\"b: 1"),
-        )
-        assertEquals(listOf("a\"b", "c"), strict.decodeFromString<List<String>>("[2]: a\"b,c"))
+    fun `a quote inside an unquoted token hides a colon or delimiter`() {
+        // Appendix B.3: a quote toggles the quote state wherever it appears, so `a"b: 1` has no
+        // unquoted colon and is not a key-value line. §7.4's token-initial rule decides whether an
+        // extracted token is unescaped, not where a quoted run starts. `npx
+        // @toon-format/cli@4.1.1` rejects both inputs (`Missing colon after key`, and
+        // `Expected 2 inline-form values, but got 1`).
+        assertFailsWith<KtoonException> { strict.decodeFromString<Map<String, Int>>("a\"b: 1") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<List<String>>("[2]: a\"b,c") }
     }
 
     @Test

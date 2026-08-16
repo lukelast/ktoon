@@ -110,6 +110,35 @@ class IssueLexerTest {
     }
 
     @Test
+    fun `a quote inside an unquoted cell hides the delimiters that follow it`() {
+        // SPEC Appendix B.3 `parseDelimitedValues` toggles the quote state on every `"`, so the
+        // comma in `a"b,c"` is quoted and the line carries one value, not two. Every expectation
+        // below is the output of `npx @toon-format/cli@4.1.1`.
+        assertEquals(
+            mapOf("items" to listOf("a\"b,c\"")),
+            strict.decodeFromString<Map<String, List<String>>>("items[1]: a\"b,c\""),
+        )
+        // The CLI reports `Expected 2 inline-form values, but got 1`.
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<Map<String, List<String>>>("items[2]: a\"b,c\"")
+        }
+        // ... and `Expected 2 tabular row values, but got 1` for the same cell in a row.
+        assertFailsWith<KtoonException> {
+            strict.decodeToonToJson("items[1]{x,y}:\n  a\"b,c\"")
+        }
+        // An unbalanced quote swallows the rest of the line the same way.
+        assertEquals(listOf("a\"b,c"), strict.decodeFromString<List<String>>("[1]: a\"b,c"))
+        assertFailsWith<KtoonException> { strict.decodeFromString<List<String>>("[2]: a\"b,c") }
+    }
+
+    @Test
+    fun `a quote inside a field name leaves the field list unterminated`() {
+        // Appendix B.3 applies to the field list too: `a"b,c` never closes its quote, so the
+        // header is malformed. The CLI rejects `items[1]{a"b,c}:` in strict mode.
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("items[1]{a\"b,c}:\n  1,2") }
+    }
+
+    @Test
     fun `a quote after a non-active delimiter still opens a quoted token`() {
         // A quote is token-initial after any delimiter character, not only the active one, so the
         // colon in `x|"a:1",2` is quoted and the line is a row. Expected JSON is the strict-mode
