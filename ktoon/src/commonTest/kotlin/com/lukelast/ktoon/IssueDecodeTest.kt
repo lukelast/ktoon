@@ -26,6 +26,48 @@ class IssueDecodeTest {
     }
 
     @Test
+    fun `a hyphen outside a list scope is ordinary key text`() {
+        // §5.2: the list-item class applies only inside an array in list form; everywhere else the
+        // line is classified by the remaining classes, so the hyphen belongs to the key. Every
+        // expectation is the strict-mode output of `npx @toon-format/cli@4.1.1`.
+        val json = { toon: String -> strict.decodeToonToJson(toon) }
+        assertEquals(
+            Json.parseToJsonElement("""{"outer":{"- key":1}}"""),
+            json("outer:\n  - key: 1"),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"outer":{"- a":1,"- b":2}}"""),
+            json("outer:\n  - a: 1\n  - b: 2"),
+        )
+        // A hyphen key opening a nested object, and one carrying an array header.
+        assertEquals(
+            Json.parseToJsonElement("""{"outer":{"- key":{"a":1}}}"""),
+            json("outer:\n  - key:\n    a: 1"),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"outer":{"- key":[1,2]}}"""),
+            json("outer:\n  - key[2]: 1,2"),
+        )
+        // Still ordinary key text inside a nested object that sits within a list item.
+        assertEquals(
+            Json.parseToJsonElement("""{"items":[{"outer":{"- key":1}}]}"""),
+            json("items[1]:\n  - outer:\n      - key: 1"),
+        )
+        // A hyphen line with no colon is a key without one, in both modes.
+        assertFailsWith<KtoonException> { json("outer:\n  - foo") }
+        assertFailsWith<KtoonException> { json("outer:\n  -") }
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson("outer:\n  - foo") }
+    }
+
+    @Test
+    fun `a hyphen at a list item's field depth still belongs to the list`() {
+        // The exception to the rule above: inside an array in list form the hyphen keeps its
+        // marker meaning, so a hyphen line at the item object's field depth ends the item rather
+        // than becoming a field of it. The CLI rejects this document as over-indented.
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("items[1]:\n  - a: 1\n    - b: 2") }
+    }
+
+    @Test
     fun `a literal unpaired surrogate is rejected while decoding`() {
         // §7.1: `unescaped-char` excludes U+D800–U+DFFF, and the encoder rejects such strings,
         // so accepting one on decode would produce a value that cannot be encoded again.

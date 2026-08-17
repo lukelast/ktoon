@@ -178,9 +178,16 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         }
     }
 
-    /** Reads an object (collection of key-value pairs). */
-    private fun readObject(baseIndent: Int): ToonValue.Object =
-        withNesting(nextTokenLine()) { readObjectFields(baseIndent) }
+    /**
+     * Reads an object (collection of key-value pairs).
+     *
+     * [hyphenIsKeyText] carries §5.2's rule that a leading hyphen has structural meaning only
+     * inside an array in list form: everywhere else the line is classified by the remaining
+     * classes, so `- key: 1` is the field `- key`. It is false only for a list-item object's own
+     * fields, where a hyphen line at field depth still belongs to the enclosing list.
+     */
+    private fun readObject(baseIndent: Int, hyphenIsKeyText: Boolean = true): ToonValue.Object =
+        withNesting(nextTokenLine()) { readObjectFields(baseIndent, hyphenIsKeyText) }
 
     @Suppress(
         "CyclomaticComplexMethod",
@@ -188,7 +195,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         "LoopWithTooManyJumpStatements",
         "ThrowsCount",
     )
-    private fun readObjectFields(baseIndent: Int): ToonValue.Object {
+    private fun readObjectFields(baseIndent: Int, hyphenIsKeyText: Boolean): ToonValue.Object {
         val properties = mutableMapOf<String, ToonValue>()
 
         while (position < tokens.size) {
@@ -211,6 +218,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 when (token) {
                     is Token.Key -> token.indent
                     is Token.Header -> token.indent
+                    // A hyphen line that is ordinary key text stands at its own indent like any
+                    // other field; inside a list-item object it still belongs to the list below.
+                    is Token.Dash -> if (hyphenIsKeyText) token.indent else -1
                     else -> -1
                 }
 
@@ -226,40 +236,48 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                 }
             }
 
-            when (token) {
+            // §5.2: the hyphen is not a marker here, so the line is reclassified with it as
+            // ordinary key text. The marker token is consumed; the rest of the line is already
+            // tokenized and only needs the hyphen restored to its key and its own indent.
+            val classified =
+                if (token is Token.Dash && hyphenIsKeyText) dashAsKeyLine(token) else token
+
+            when (classified) {
                 is Token.Key -> {
                     // §6/§14.2: a header-shaped line that failed the header grammar is an error
                     // in a key position; only §9.3 rows and §9.5 entry rows reclassify it.
-                    val headerError = token.headerError
+                    val headerError = classified.headerError
                     if (headerError != null && config.strictMode) {
-                        throw KtoonParsingException.invalidArrayFormat(headerError, token.line)
+                        throw KtoonParsingException.invalidArrayFormat(headerError, classified.line)
                     }
                     advance()
-                    val rawKey = token.name
-                    val key = unquote(rawKey, token.line)
-                    val value = readValueForKey(token)
+                    val rawKey = classified.name
+                    val key = unquote(rawKey, classified.line)
+                    val value = readValueForKey(classified)
 
-                    insertProperty(properties, key, value, token.line)
+                    insertProperty(properties, key, value, classified.line)
                 }
                 is Token.Header -> {
                     // §14.2: a keyless header cannot occupy an object field position
-                    if (token.key.isEmpty()) {
+                    if (classified.key.isEmpty()) {
                         throw KtoonParsingException(
                             "Array header without a key in object field position",
-                            token.line,
+                            classified.line,
                         )
                     }
-                    val arrayValue = if (token.keyed) readKeyedObject() else readArray()
-                    val rawKey = token.key
-                    val key = unquote(rawKey, token.line)
-                    insertProperty(properties, key, arrayValue, token.line)
+                    val arrayValue =
+                        if (classified.keyed) readKeyedObject(classified)
+                        else readArray(classified)
+                    val rawKey = classified.key
+                    val key = unquote(rawKey, classified.line)
+                    insertProperty(properties, key, arrayValue, classified.line)
                 }
                 is Token.Value -> {
                     // §5.2: a scalar line is valid only as a root primitive; anywhere else it is
                     // a structural error, in strict and non-strict mode alike.
                     throw KtoonParsingException(
                         "Misplaced scalar line (missing colon?)",
-                        token.line,
+                        classified.line,
                     )
                 }
                 else -> {
@@ -270,6 +288,38 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         }
 
         return ToonValue.Object(properties)
+    }
+
+    /**
+     * Reclassifies a hyphen line inside an object scope (§5.2). The marker is consumed and the
+     * line's remaining token is returned with the hyphen text restored to its key and the line's
+     * own indent, so `- key: 1` is the field `- key` and `- key[2]: 1,2` the field `- key`.
+     */
+    private fun dashAsKeyLine(dash: Token.Dash): Token {
+        advance()
+        val next = if (position < tokens.size) peek() else null
+        if (next == null || next.line != dash.line) {
+            // A bare `-` outside a list scope is a key with no colon (§4, §7.4, any mode).
+            throw KtoonParsingException("Missing colon after key", dash.line)
+        }
+        // The hyphen and the spaces the lexer trimmed after it are part of the key token (§12
+        // trims only the token's surrounding spaces, and the key token starts at the hyphen).
+        return when (next) {
+            is Token.Key ->
+                next.copy(
+                    name = (dash.rawContent.removeSuffix(next.rawContent) + next.name).trimSpaces(),
+                    rawContent = dash.rawContent,
+                    indent = dash.indent,
+                )
+            is Token.Header ->
+                next.copy(
+                    key = (dash.rawContent.removeSuffix(next.rawContent) + next.key).trimSpaces(),
+                    rawContent = dash.rawContent,
+                    indent = dash.indent,
+                )
+            // A scalar remainder (`- foo`) has no colon; the caller reports it.
+            else -> next
+        }
     }
 
     /** True when the next non-blank token still belongs to an object scope at [baseIndent]. */
@@ -332,6 +382,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
             when (token) {
                 is Token.Key -> token.indent > keyToken.indent
                 is Token.Header -> token.indent > keyToken.indent
+                // A bare `key:` opens an object, never a list (§8), so a deeper hyphen line is a
+                // field whose key starts with the hyphen (§5.2), not a list item.
+                is Token.Dash -> token.indent > keyToken.indent
                 else -> false
             }
         if (!opensScope) return ToonValue.Object(emptyMap())
@@ -347,11 +400,15 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         return p
     }
 
-    /** Reads an array in any form (inline, tabular, or list). */
-    private fun readArray(): ToonValue.Array = withNesting(nextTokenLine()) { readArrayForm() }
+    /**
+     * Reads an array in any form (inline, tabular, or list). [reclassified] replaces the header
+     * token the stream carries, for a hyphen line read as an ordinary field (§5.2, [dashAsKeyLine]).
+     */
+    private fun readArray(reclassified: Token.Header? = null): ToonValue.Array =
+        withNesting(nextTokenLine()) { readArrayForm(reclassified) }
 
-    private fun readArrayForm(): ToonValue.Array {
-        val header = consume<Token.Header>()
+    private fun readArrayForm(reclassified: Token.Header?): ToonValue.Array {
+        val header = consume<Token.Header>().let { reclassified ?: it }
 
         return when {
             // Tabular form (has fields)
@@ -647,8 +704,8 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** Reads a keyed tabular object: `key[2:]{host,port}:\n alpha: a,1\n beta: b,2` (§9.5). */
-    private fun readKeyedObject(): ToonValue.Object =
-        withNesting(nextTokenLine()) { readKeyedEntries() }
+    private fun readKeyedObject(reclassified: Token.Header? = null): ToonValue.Object =
+        withNesting(nextTokenLine()) { readKeyedEntries(reclassified) }
 
     @Suppress(
         "CyclomaticComplexMethod",
@@ -657,8 +714,8 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
         "NestedBlockDepth",
         "ThrowsCount",
     )
-    private fun readKeyedEntries(): ToonValue.Object {
-        val header = consume<Token.Header>()
+    private fun readKeyedEntries(reclassified: Token.Header?): ToonValue.Object {
+        val header = consume<Token.Header>().let { reclassified ?: it }
         val fields =
             header.fields
                 ?: throw KtoonParsingException("Keyed header without a field list", header.line)
@@ -936,12 +993,15 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     readArray()
                 } else {
                     // List-item object whose first field is an array or keyed object (§10)
-                    readObject(baseIndent = dash.indent + config.indentSize)
+                    readObject(
+                        baseIndent = dash.indent + config.indentSize,
+                        hyphenIsKeyText = false,
+                    )
                 }
             }
             is Token.Key -> {
                 // List-item object with its first field on the hyphen line (§10)
-                readObject(baseIndent = dash.indent + config.indentSize)
+                readObject(baseIndent = dash.indent + config.indentSize, hyphenIsKeyText = false)
             }
             else -> ToonValue.Object(emptyMap())
         }
