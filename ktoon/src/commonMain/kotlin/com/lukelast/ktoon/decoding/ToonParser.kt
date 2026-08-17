@@ -273,6 +273,10 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     insertProperty(properties, key, arrayValue, classified.line)
                 }
                 is Token.Value -> {
+                    // A dedented scalar is not in this scope: the enclosing reader decides, so a
+                    // list item's object does not swallow a line that follows the whole array
+                    // (§5 trailing content, ignored in non-strict mode by readRoot).
+                    if (classified.indent < baseIndent) break
                     // §5.2: a scalar line is valid only as a root primitive; anywhere else it is
                     // a structural error, in strict and non-strict mode alike.
                     throw KtoonParsingException(

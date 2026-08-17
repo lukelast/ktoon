@@ -26,6 +26,26 @@ class IssueDecodeTest {
     }
 
     @Test
+    fun `a trailing scalar after a root list array is ignored in non-strict mode`() {
+        // The list-form sibling of the tabular case below: the last item's object reader threw on
+        // the dedented scalar before readRoot's §5 trailing-content check could run, so a root
+        // list whose items are objects behaved differently from one with scalar items.
+        // Expectations from `npx @toon-format/cli@4.1.1`.
+        assertEquals(
+            Json.parseToJsonElement("""[{"a":1},{"a":2}]"""),
+            lenient.decodeToonToJson("[2]:\n  - a: 1\n  - a: 2\nloose"),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""[{"a":{"b":1}}]"""),
+            lenient.decodeToonToJson("[1]:\n  - a:\n      b: 1\nloose"),
+        )
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("[2]:\n  - a: 1\n  - a: 2\nloose") }
+        // A scalar at the object's own depth is still a structural error in either mode (§5.2).
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson("outer:\n  a: 1\n  loose") }
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("outer:\n  a: 1\n  loose") }
+    }
+
+    @Test
     fun `a trailing scalar after a root tabular array is ignored in non-strict mode`() {
         // §5: once a root array is complete no further line may follow — strict mode errors,
         // non-strict may ignore it. The tabular reader treated any leftover value as a row, so
