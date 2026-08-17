@@ -101,11 +101,13 @@ internal class ToonPrimitiveDecoder(
     }
 
     override fun decodeBoolean(): Boolean {
-        return when (value) {
-            is ToonValue.Boolean -> value.value
-            // §2/§4: only the lowercase literals are booleans. `toBoolean` would turn every other
+        return when {
+            value is ToonValue.Boolean -> value.value
+            // §4: a quoted primitive stays a string even when it looks like a boolean, so only a
+            // map key converts — keys are always strings in TOON (§2), and the sibling integral
+            // and number paths gate the same way. `toBoolean` would additionally turn every other
             // token into false, inventing a value the document never carried.
-            is ToonValue.String ->
+            value is ToonValue.String && isMapKey ->
                 value.value.toBooleanStrictOrNull()
                     ?: throw KtoonDecodingException("Cannot parse '${value.value}' as Boolean")
             else ->
