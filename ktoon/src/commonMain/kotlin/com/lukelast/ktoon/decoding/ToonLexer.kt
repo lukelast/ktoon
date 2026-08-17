@@ -60,6 +60,10 @@ internal class ToonLexer(private val input: String, private val config: KtoonCon
         // Emit blank line token. Only indentation characters are blank here; other Unicode
         // whitespace such as NBSP remains token content (§12).
         if (line.all { it == ' ' || it == '\t' }) {
+            // §12 trims only U+0020, so this line does not trim to empty and is not blank. With
+            // no space indentation before it the tab cannot be a row's empty first cell either,
+            // which leaves indentation — rejected in strict mode by countIndentation.
+            if (config.strictMode && line.startsWith('\t')) countIndentation(line)
             tokens.add(Token.BlankLine(currentLine))
             return
         }

@@ -90,6 +90,27 @@ class IssueLexerTest {
     }
 
     @Test
+    fun `a whitespace-only line containing a tab is not blank in strict mode`() {
+        // §12: trimming strips only U+0020, so such a line does not trim to empty — it is a
+        // tab-indented line, which strict mode must reject. `npx @toon-format/cli@4.1.1` reports
+        // "Tabs are not allowed in indentation in strict mode" for every spelling below and
+        // decodes them as blank with --no-strict. The space-first spelling ` \t` reaches the same
+        // verdict through the row branch above, which keeps it available as a row of empty cells.
+        for (blank in listOf("\t", "\t\t", "\t ", " \t")) {
+            assertFailsWith<KtoonException>("strict accepted \"$blank\"") {
+                strict.decodeFromString<TwoInts>("a: 1\n$blank\nb: 2")
+            }
+            assertEquals(
+                TwoInts(1, 2),
+                lenient.decodeFromString<TwoInts>("a: 1\n$blank\nb: 2"),
+                "non-strict rejected \"$blank\"",
+            )
+        }
+    }
+
+    @Serializable data class TwoInts(val a: Int, val b: Int)
+
+    @Test
     fun `a tab used as indentation is still an error`() {
         assertFailsWith<KtoonException> { strict.decodeFromString<TwoStrings>("\ta: 1\nb: 2") }
         assertFailsWith<KtoonException> {
