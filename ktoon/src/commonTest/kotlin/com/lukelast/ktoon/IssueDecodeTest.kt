@@ -26,6 +26,24 @@ class IssueDecodeTest {
     }
 
     @Test
+    fun `a trailing scalar after a root tabular array is ignored in non-strict mode`() {
+        // §5: once a root array is complete no further line may follow — strict mode errors,
+        // non-strict may ignore it. The tabular reader treated any leftover value as a row, so
+        // the leniency the inline, `[]`, and keyed roots already had never applied here.
+        // Expectations from `npx @toon-format/cli@4.1.1`.
+        val expected = Json.parseToJsonElement("""[{"id":1}]""")
+        assertEquals(expected, lenient.decodeToonToJson("[1]{id}:\n  1\nloose"))
+        assertEquals(expected, lenient.decodeToonToJson("[1]{id}:\n  1\n\nloose"))
+        assertEquals(expected, lenient.decodeToonToJson("[1]{id}:\n  1\nextra: 1"))
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("[1]{id}:\n  1\nloose") }
+        // Not a root form: the leftover belongs to the enclosing object, where a scalar line is a
+        // structural error in either mode (§5.2, §14.2).
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson("items[1]{id}:\n  1\nloose") }
+        // A row that is genuinely inside the scope still reports its own indentation error.
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("[1]{id}:\n      1") }
+    }
+
+    @Test
     fun `a hyphen outside a list scope is ordinary key text`() {
         // §5.2: the list-item class applies only inside an array in list form; everywhere else the
         // line is classified by the remaining classes, so the hyphen belongs to the key. Every

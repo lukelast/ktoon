@@ -491,7 +491,9 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                     is Token.BlankLine -> {
                         if (
                             tryConsumeBlanksInSpan(
-                                scopeContinues = { nextNonBlankIsRow(rowIndent, delimiter) },
+                                scopeContinues = {
+                                    nextNonBlankIsRow(rowIndent, header.indent, delimiter)
+                                },
                                 blankLine = token.line,
                             )
                         ) {
@@ -500,6 +502,12 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                         break
                     }
                     is Token.Value -> {
+                        // A value at or above the header's own depth is outside this scope, like
+                        // the Key and Header cases below: leave it to the enclosing reader, which
+                        // ignores it after a completed root form in non-strict mode (§5) or
+                        // reports it (§5.2, §14.2). Inside the scope it is a row, or a row
+                        // indentation error in strict mode.
+                        if (token.indent <= header.indent) break
                         validateRowIndent(token.indent, rowIndent, header.indent, token.line)
                         advance()
                         markHeaderSpanStarted()
@@ -607,12 +615,14 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
     }
 
     /** True when the next non-blank token is another row of this tabular scope. */
-    private fun nextNonBlankIsRow(rowIndent: Int, delimiter: Char): Boolean {
+    private fun nextNonBlankIsRow(rowIndent: Int, headerIndent: Int, delimiter: Char): Boolean {
         var p = position
         while (p < tokens.size && tokens[p] is Token.BlankLine) p++
         return p < tokens.size &&
             when (val token = tokens[p]) {
-                is Token.Value -> true
+                // A dedented value ends the scope, so the blank run before it is not inside the
+                // header's span; the row branch applies the same test.
+                is Token.Value -> token.indent > headerIndent
                 is Token.Key -> token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
                 is Token.Header ->
                     token.indent == rowIndent && isRowLine(token.rawContent, delimiter)
