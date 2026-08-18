@@ -21,7 +21,9 @@ class IssueDecodeTest {
         // The root value gets the same shape check as a nested one, so a class or map deserializer
         // never reads a root array positionally: `[2]: 1,2` is an array, not a Point.
         assertFailsWith<KtoonException> { strict.decodeFromString<Point>("[2]: 1,2") }
-        assertFailsWith<KtoonException> { strict.decodeFromString<Map<String, Int>>("[4]: a,1,b,2") }
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<Map<String, Int>>("[4]: a,1,b,2")
+        }
         assertFailsWith<KtoonException> { lenient.decodeFromString<Point>("[2]: 1,2") }
     }
 
@@ -39,7 +41,9 @@ class IssueDecodeTest {
             Json.parseToJsonElement("""[{"a":{"b":1}}]"""),
             lenient.decodeToonToJson("[1]:\n  - a:\n      b: 1\nloose"),
         )
-        assertFailsWith<KtoonException> { strict.decodeToonToJson("[2]:\n  - a: 1\n  - a: 2\nloose") }
+        assertFailsWith<KtoonException> {
+            strict.decodeToonToJson("[2]:\n  - a: 1\n  - a: 2\nloose")
+        }
         // A scalar at the object's own depth is still a structural error in either mode (§5.2).
         assertFailsWith<KtoonException> { lenient.decodeToonToJson("outer:\n  a: 1\n  loose") }
         assertFailsWith<KtoonException> { strict.decodeToonToJson("outer:\n  a: 1\n  loose") }
@@ -102,7 +106,9 @@ class IssueDecodeTest {
         // The exception to the rule above: inside an array in list form the hyphen keeps its
         // marker meaning, so a hyphen line at the item object's field depth ends the item rather
         // than becoming a field of it. The CLI rejects this document as over-indented.
-        assertFailsWith<KtoonException> { strict.decodeToonToJson("items[1]:\n  - a: 1\n    - b: 2") }
+        assertFailsWith<KtoonException> {
+            strict.decodeToonToJson("items[1]:\n  - a: 1\n    - b: 2")
+        }
     }
 
     @Test

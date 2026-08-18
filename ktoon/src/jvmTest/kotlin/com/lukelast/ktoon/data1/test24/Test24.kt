@@ -23,8 +23,7 @@ class Test24 : AbstractGoldenTest() {
     }
 }
 
-@Serializable
-data class Flags(val enabled: String, val verbose: String, val count: String)
+@Serializable data class Flags(val enabled: String, val verbose: String, val count: String)
 
 @Serializable data class BooleanFlags(val enabled: Boolean, val verbose: Boolean)
 

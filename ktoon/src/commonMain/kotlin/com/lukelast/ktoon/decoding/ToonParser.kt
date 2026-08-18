@@ -266,8 +266,7 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
                         )
                     }
                     val arrayValue =
-                        if (classified.keyed) readKeyedObject(classified)
-                        else readArray(classified)
+                        if (classified.keyed) readKeyedObject(classified) else readArray(classified)
                     val rawKey = classified.key
                     val key = unquote(rawKey, classified.line)
                     insertProperty(properties, key, arrayValue, classified.line)
@@ -406,7 +405,8 @@ internal class ToonParser(private val tokens: List<Token>, private val config: K
 
     /**
      * Reads an array in any form (inline, tabular, or list). [reclassified] replaces the header
-     * token the stream carries, for a hyphen line read as an ordinary field (§5.2, [dashAsKeyLine]).
+     * token the stream carries, for a hyphen line read as an ordinary field (§5.2,
+     * [dashAsKeyLine]).
      */
     private fun readArray(reclassified: Token.Header? = null): ToonValue.Array =
         withNesting(nextTokenLine()) { readArrayForm(reclassified) }

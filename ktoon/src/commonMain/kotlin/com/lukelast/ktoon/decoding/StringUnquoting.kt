@@ -137,9 +137,9 @@ internal fun String.trimSpaces(): String = trim(' ')
 /**
  * Scanning for unquoted characters follows SPEC Appendix B.3 `parseDelimitedValues`: every `"`
  * toggles the quote state, wherever it stands in the token. A quote inside an otherwise unquoted
- * token therefore hides the delimiters and colons that follow it until the next quote, so
- * `a"b,c"` is one value and `a"b: 1` has no unquoted colon. §7.4's token-initial rule governs
- * whether an *extracted* token is unescaped (see [unquote]), not where a quoted run begins.
+ * token therefore hides the delimiters and colons that follow it until the next quote, so `a"b,c"`
+ * is one value and `a"b: 1` has no unquoted colon. §7.4's token-initial rule governs whether an
+ * *extracted* token is unescaped (see [unquote]), not where a quoted run begins.
  */
 internal fun splitRespectingQuotes(content: String, delimiter: Char): List<String> {
     val result = mutableListOf<String>()

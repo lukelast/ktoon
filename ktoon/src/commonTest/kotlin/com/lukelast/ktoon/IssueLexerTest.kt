@@ -144,9 +144,7 @@ class IssueLexerTest {
             strict.decodeFromString<Map<String, List<String>>>("items[2]: a\"b,c\"")
         }
         // ... and `Expected 2 tabular row values, but got 1` for the same cell in a row.
-        assertFailsWith<KtoonException> {
-            strict.decodeToonToJson("items[1]{x,y}:\n  a\"b,c\"")
-        }
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("items[1]{x,y}:\n  a\"b,c\"") }
         // An unbalanced quote swallows the rest of the line the same way.
         assertEquals(listOf("a\"b,c"), strict.decodeFromString<List<String>>("[1]: a\"b,c"))
         assertFailsWith<KtoonException> { strict.decodeFromString<List<String>>("[2]: a\"b,c") }
