@@ -31,8 +31,26 @@ ktoon/src/
 
 ## Benchmarks
 
-- `./gradlew :benchmark:benchmark` — run all kotlinx-benchmark targets
+- `./gradlew :benchmark:benchmark` — quick smoke run of every benchmark (seconds; verifies wiring, not for measuring; used by CI)
+- `./gradlew :benchmark:devBenchmark` — ktoon-only benchmarks with meaningful run times, for iterating on performance work
+- `./gradlew :benchmark:compareBenchmark` — performance comparison against other libraries
 - Reports: HTML/JSON under `benchmark/build/reports/benchmarks/`
+
+### Profiling with JFR
+
+Build the executable JMH jar, then run it directly with JMH's built-in JFR profiler
+(records inside each forked measurement JVM, one `.jfr` per benchmark and fork):
+
+```
+./gradlew :benchmark:mainBenchmarkJar
+java -jar benchmark/build/benchmarks/main/jars/benchmark-main-jmh-JMH.jar encodeTabular -f 1 -prof jfr
+```
+
+The trailing argument is a regex over benchmark names, so `encodeTabular` profiles one path and
+`KtoonBenchmark` profiles all of them. `-l <regex>` lists what a regex would select without running it.
+
+Useful flags: `-prof gc` (allocation rates), `-p inputType=long_string` (pin a param),
+`-wi`/`-i`/`-r` (shorten runs while profiling), `-prof jfr:help` (output options).
 
 ## Demo apps
 

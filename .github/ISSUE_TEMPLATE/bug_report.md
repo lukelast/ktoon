@@ -49,7 +49,7 @@ link the relevant section or fixture.
  - ktoon version: [e.g. 1.2.0]
  - Kotlin version: [e.g. 2.3.20]
  - kotlinx.serialization version: [e.g. 1.9.0]
- - Target/platform: [e.g. JVM, JS, WasmJs, WasmWasi, Android, iosArm64, linuxX64, mingwX64]
+ - Target/platform: [e.g. JVM, JS, WasmJs, Android, iosArm64, linuxX64, mingwX64]
  - JDK / runtime version (if relevant): [e.g. Temurin 21]
  - Build tool: [e.g. Gradle 9.x, Maven]
 

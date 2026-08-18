@@ -12,6 +12,16 @@ private const val MIN_KEYED_ENTRIES = 2
 internal class FieldNode(val name: String, val group: List<FieldNode>?)
 
 /**
+ * The value stored under [name], read at [column] first: a header's fields follow the first
+ * object's order, which every object of one class repeats, so the positional read almost always
+ * hits. Detection has already established that the name is present exactly once.
+ */
+private fun List<Pair<String, EncodedElement>>.valueOf(name: String, column: Int): EncodedElement {
+    val candidate = this[column]
+    return if (candidate.first == name) candidate.second else first { it.first == name }.second
+}
+
+/**
  * Writes captured [EncodedElement] trees, selecting the form each value MUST take under §9: inline,
  * tabular (with nested field groups), list, or keyed tabular.
  */
@@ -60,35 +70,79 @@ internal class ElementWriter(
             val first = objects.first()
             if (first.isEmpty()) return null // empty objects are excluded (§9.3)
             val names = first.map { it.first }
-            val nameSet = names.toSet()
-            if (names.size != nameSet.size) return null
-            for (other in objects) {
-                // §9.3: every object must carry the same *set* of keys. Comparing sets rather than
-                // membership also rejects an object that repeats one name and so lacks another;
-                // the column lookup below assumes each name is present exactly once.
-                if (other.size != names.size) return null
-                if (other.mapTo(mutableSetOf()) { it.first } != nameSet) return null
-            }
+            if (names.size != names.toSet().size) return null
+            val positions = columnPositions(objects, names) ?: return null
 
-            // Index each object once: looking a name up by scanning its entry list would make
-            // detection quadratic in the field count.
-            val indexed = objects.map { obj -> obj.toMap() }
             val nodes = ArrayList<FieldNode>(names.size)
-            for (name in names) {
-                val column = indexed.map { obj -> obj.getValue(name) }
-                when {
-                    column.all { it is EncodedElement.Primitive } ->
-                        nodes.add(FieldNode(name, null))
-                    column.all { it is EncodedElement.Structure && it.entries.isNotEmpty() } -> {
-                        val sub =
-                            fieldTree(column.map { (it as EncodedElement.Structure).entries })
-                                ?: return null
-                        nodes.add(FieldNode(name, sub))
-                    }
-                    else -> return null
-                }
+            for (column in names.indices) {
+                nodes.add(columnNode(objects, positions, names, column) ?: return null)
             }
             return nodes
+        }
+
+        /**
+         * The header entry for one column: a plain field when every value is primitive, a group
+         * when every value is a non-empty object (§9.3). Null when the column is neither, which the
+         * first value ruling both out settles — so a rejected column costs one pass and no
+         * allocation.
+         */
+        @Suppress("ReturnCount")
+        private fun columnNode(
+            objects: List<List<Pair<String, EncodedElement>>>,
+            positions: IntArray,
+            names: List<String>,
+            column: Int,
+        ): FieldNode? {
+            val width = names.size
+            var allPrimitive = true
+            var allNested = true
+            for (row in objects.indices) {
+                val value = objects[row][positions[row * width + column]].second
+                if (value !is EncodedElement.Primitive) allPrimitive = false
+                if (value !is EncodedElement.Structure || value.entries.isEmpty()) allNested = false
+                if (!allPrimitive && !allNested) return null
+            }
+            if (allPrimitive) return FieldNode(names[column], null)
+
+            val nested = ArrayList<List<Pair<String, EncodedElement>>>(objects.size)
+            for (row in objects.indices) {
+                val value = objects[row][positions[row * width + column]].second
+                nested.add((value as EncodedElement.Structure).entries)
+            }
+            return FieldNode(names[column], fieldTree(nested) ?: return null)
+        }
+
+        /**
+         * §9.3: every object must carry the same *set* of keys. Returns where each of [names] sits
+         * within each object, as one row-major `row * names.size + column` table, or null when some
+         * object's keys differ.
+         *
+         * Objects of one class list their fields in descriptor order, so the positional guess below
+         * almost always holds and the search never runs; map entries, which keep the host map's
+         * order, are the case that can differ. Locating every name within an object of matching
+         * size also rejects one that repeats a name and so lacks another, which the column reads
+         * assume cannot happen.
+         */
+        @Suppress("ReturnCount")
+        private fun columnPositions(
+            objects: List<List<Pair<String, EncodedElement>>>,
+            names: List<String>,
+        ): IntArray? {
+            val width = names.size
+            val positions = IntArray(objects.size * width)
+            for (row in objects.indices) {
+                val entries = objects[row]
+                if (entries.size != width) return null
+                for (column in 0 until width) {
+                    val name = names[column]
+                    val at =
+                        if (entries[column].first == name) column
+                        else entries.indexOfFirst { it.first == name }
+                    if (at < 0) return null
+                    positions[row * width + column] = at
+                }
+            }
+            return positions
         }
 
         /**
@@ -348,11 +402,10 @@ internal class ElementWriter(
         tree: List<FieldNode>,
         first: Boolean,
     ): Boolean {
-        // Index once per object for the same reason detection does (see fieldTree).
-        val byName = entries.toMap()
         var isFirst = first
-        for (node in tree) {
-            val value = byName.getValue(node.name)
+        for (column in tree.indices) {
+            val node = tree[column]
+            val value = entries.valueOf(node.name, column)
             if (node.group == null) {
                 if (!isFirst) writer.writeDelimiter()
                 isFirst = false

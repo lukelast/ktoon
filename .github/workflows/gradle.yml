@@ -15,6 +15,8 @@ jobs:
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew check
+      - name: Benchmark smoke run
+        run: ./gradlew :benchmark:benchmark
       - name: Publish Test Report
         if: always()
         uses: dorny/test-reporter@v3

@@ -41,7 +41,7 @@ abstract class AbstractGoldenTest {
         if (!toonPath.isReadable()) {
             execToonCli(jsonPath, toonPath)
         }
-        val toonFileText = toonPath.readText()
+        val toonFileText = goldenToon()
 
         val dataToToonText = ktoon.encodeToString(data)
         assertEquals(
@@ -66,6 +66,13 @@ abstract class AbstractGoldenTest {
             "ktoon encodeJsonToToon checked against the toon file",
         )
     }
+
+    /**
+     * This test's `data.toon` golden as text. [assertGolden] generates it from `data.json` when it
+     * is absent, so a test that wants to decode the golden a second time — with a different type,
+     * say — should call [assertGolden] first.
+     */
+    fun goldenToon(): String = buildPath("data.toon").readText()
 
     fun execToonCli(json: Path, toon: Path) {
         // Windows needs the cmd shell to resolve npx.cmd, and shell quoting for the delimiter;

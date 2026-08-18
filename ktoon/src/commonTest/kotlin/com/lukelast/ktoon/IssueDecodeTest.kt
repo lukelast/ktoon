@@ -14,6 +14,103 @@ class IssueDecodeTest {
 
     @Serializable data class OneString(val key: String)
 
+    @Serializable data class Point(val x: Int, val y: Int)
+
+    @Test
+    fun `a root whose shape does not match the target type is rejected`() {
+        // The root value gets the same shape check as a nested one, so a class or map deserializer
+        // never reads a root array positionally: `[2]: 1,2` is an array, not a Point.
+        assertFailsWith<KtoonException> { strict.decodeFromString<Point>("[2]: 1,2") }
+        assertFailsWith<KtoonException> {
+            strict.decodeFromString<Map<String, Int>>("[4]: a,1,b,2")
+        }
+        assertFailsWith<KtoonException> { lenient.decodeFromString<Point>("[2]: 1,2") }
+    }
+
+    @Test
+    fun `a trailing scalar after a root list array is ignored in non-strict mode`() {
+        // The list-form sibling of the tabular case below: the last item's object reader threw on
+        // the dedented scalar before readRoot's §5 trailing-content check could run, so a root
+        // list whose items are objects behaved differently from one with scalar items.
+        // Expectations from `npx @toon-format/cli@4.1.1`.
+        assertEquals(
+            Json.parseToJsonElement("""[{"a":1},{"a":2}]"""),
+            lenient.decodeToonToJson("[2]:\n  - a: 1\n  - a: 2\nloose"),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""[{"a":{"b":1}}]"""),
+            lenient.decodeToonToJson("[1]:\n  - a:\n      b: 1\nloose"),
+        )
+        assertFailsWith<KtoonException> {
+            strict.decodeToonToJson("[2]:\n  - a: 1\n  - a: 2\nloose")
+        }
+        // A scalar at the object's own depth is still a structural error in either mode (§5.2).
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson("outer:\n  a: 1\n  loose") }
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("outer:\n  a: 1\n  loose") }
+    }
+
+    @Test
+    fun `a trailing scalar after a root tabular array is ignored in non-strict mode`() {
+        // §5: once a root array is complete no further line may follow — strict mode errors,
+        // non-strict may ignore it. The tabular reader treated any leftover value as a row, so
+        // the leniency the inline, `[]`, and keyed roots already had never applied here.
+        // Expectations from `npx @toon-format/cli@4.1.1`.
+        val expected = Json.parseToJsonElement("""[{"id":1}]""")
+        assertEquals(expected, lenient.decodeToonToJson("[1]{id}:\n  1\nloose"))
+        assertEquals(expected, lenient.decodeToonToJson("[1]{id}:\n  1\n\nloose"))
+        assertEquals(expected, lenient.decodeToonToJson("[1]{id}:\n  1\nextra: 1"))
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("[1]{id}:\n  1\nloose") }
+        // Not a root form: the leftover belongs to the enclosing object, where a scalar line is a
+        // structural error in either mode (§5.2, §14.2).
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson("items[1]{id}:\n  1\nloose") }
+        // A row that is genuinely inside the scope still reports its own indentation error.
+        assertFailsWith<KtoonException> { strict.decodeToonToJson("[1]{id}:\n      1") }
+    }
+
+    @Test
+    fun `a hyphen outside a list scope is ordinary key text`() {
+        // §5.2: the list-item class applies only inside an array in list form; everywhere else the
+        // line is classified by the remaining classes, so the hyphen belongs to the key. Every
+        // expectation is the strict-mode output of `npx @toon-format/cli@4.1.1`.
+        val json = { toon: String -> strict.decodeToonToJson(toon) }
+        assertEquals(
+            Json.parseToJsonElement("""{"outer":{"- key":1}}"""),
+            json("outer:\n  - key: 1"),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"outer":{"- a":1,"- b":2}}"""),
+            json("outer:\n  - a: 1\n  - b: 2"),
+        )
+        // A hyphen key opening a nested object, and one carrying an array header.
+        assertEquals(
+            Json.parseToJsonElement("""{"outer":{"- key":{"a":1}}}"""),
+            json("outer:\n  - key:\n    a: 1"),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"outer":{"- key":[1,2]}}"""),
+            json("outer:\n  - key[2]: 1,2"),
+        )
+        // Still ordinary key text inside a nested object that sits within a list item.
+        assertEquals(
+            Json.parseToJsonElement("""{"items":[{"outer":{"- key":1}}]}"""),
+            json("items[1]:\n  - outer:\n      - key: 1"),
+        )
+        // A hyphen line with no colon is a key without one, in both modes.
+        assertFailsWith<KtoonException> { json("outer:\n  - foo") }
+        assertFailsWith<KtoonException> { json("outer:\n  -") }
+        assertFailsWith<KtoonException> { lenient.decodeToonToJson("outer:\n  - foo") }
+    }
+
+    @Test
+    fun `a hyphen at a list item's field depth still belongs to the list`() {
+        // The exception to the rule above: inside an array in list form the hyphen keeps its
+        // marker meaning, so a hyphen line at the item object's field depth ends the item rather
+        // than becoming a field of it. The CLI rejects this document as over-indented.
+        assertFailsWith<KtoonException> {
+            strict.decodeToonToJson("items[1]:\n  - a: 1\n    - b: 2")
+        }
+    }
+
     @Test
     fun `a literal unpaired surrogate is rejected while decoding`() {
         // §7.1: `unescaped-char` excludes U+D800–U+DFFF, and the encoder rejects such strings,
@@ -123,13 +220,14 @@ class IssueDecodeTest {
     }
 
     @Test
-    fun `a quote inside an unquoted token does not hide a colon or delimiter`() {
-        // §7.4: only a token whose first character is a quote is a quoted token.
-        assertEquals(
-            mapOf("a\"b" to 1),
-            strict.decodeFromString<Map<String, Int>>("a\"b: 1"),
-        )
-        assertEquals(listOf("a\"b", "c"), strict.decodeFromString<List<String>>("[2]: a\"b,c"))
+    fun `a quote inside an unquoted token hides a colon or delimiter`() {
+        // Appendix B.3: a quote toggles the quote state wherever it appears, so `a"b: 1` has no
+        // unquoted colon and is not a key-value line. §7.4's token-initial rule decides whether an
+        // extracted token is unescaped, not where a quoted run starts. `npx
+        // @toon-format/cli@4.1.1` rejects both inputs (`Missing colon after key`, and
+        // `Expected 2 inline-form values, but got 1`).
+        assertFailsWith<KtoonException> { strict.decodeFromString<Map<String, Int>>("a\"b: 1") }
+        assertFailsWith<KtoonException> { strict.decodeFromString<List<String>>("[2]: a\"b,c") }
     }
 
     @Test
